@@ -7,9 +7,6 @@
 }
 void PBO_FBO_Facade::DrawAndGet()
 {
-	m_FBOMgr.InToFrameBuffer();
-	m_FBOMgr.DrawFrame();
-	m_PBORcr.getData();
-	m_FBOMgr.OutOfFrameBuffer();
+	m_FBOMgr.PboDraw(m_PBORcr);
 }
 

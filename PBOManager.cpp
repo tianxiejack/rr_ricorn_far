@@ -39,7 +39,6 @@ PBOBase::~PBOBase()
 /***********************PBOSender******************************/
 
 PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, unsigned int cc,GLenum format)
-//:width(w),height(h),chncnt(cc),pboMode(2),pixel_format(format),bUsePBO(true),PBOChannelCount(PBOchcnt)
 {
 	width=w;
 	height=h;
@@ -361,3 +360,7 @@ void PBOReceiver::getData(int startX,int startY,int w,int h,GLuint idx, bool bPB
 	}
 }
 
+void PBOReceiver::callbackPBODraw()
+{
+      getData();
+}

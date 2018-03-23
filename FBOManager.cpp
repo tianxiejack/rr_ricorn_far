@@ -10,9 +10,7 @@
 using namespace cv;
 extern Render render;
 
-FBOManager::FBOManager(//p_InterFaceDrawBehaviour  DrawBehaviour,
-		int TextureW,int TextureH):
-	//	mp_DrawBehaviour(DrawBehaviour),
+FBOManager::FBOManager(	int TextureW,int TextureH):
 				fboSupported(false),fboUsed(false),
 				TextureHeight(TextureH),TextureWidth(TextureW),
 				rboColorId(0),rboDepthId(0),fboId(0),textureId(0)
@@ -473,6 +471,14 @@ void FBOManager::DrawFrame()
 void FBOManager::SetDrawBehaviour(p_InterFaceDrawBehaviour DrawBehaviour)
 {
 	mp_DrawBehaviour=DrawBehaviour;
+}
+
+void FBOManager::PboDraw(InterfacepboDrawCB& icb)
+{
+	InToFrameBuffer();
+	DrawFrame();
+	icb.callbackPBODraw();
+     OutOfFrameBuffer();
 }
 
 
