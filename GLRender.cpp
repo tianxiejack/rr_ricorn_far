@@ -980,7 +980,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 
 		pthread_t th_rec;
 	   	int arg_rec = 10;
-
+		mp_FboPboFacade=new PBO_FBO_Facade(FBOmgr,PBORcr);
 	   	mPresetCamGroup.LoadCameras();
 		// Load up CAM_COUNT textures
 		glGenTextures(PETAL_TEXTURE_COUNT, textures);
