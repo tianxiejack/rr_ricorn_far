@@ -30,7 +30,7 @@ void *pbo_process_thread(void *arg)
 		OSA_semWait(&sem,100000);
 		int processId=render.GetPBORcr()->getCurrentPBOIdx();
 #if GSTREAM_CAP
-			gstCapturePushData(record_handle, (char *)*render.GetPBORcr()->getSrc(processId) , CURRENT_SCREEN_WIDTH*CURRENT_SCREEN_HEIGHT*4);
+			gstCapturePushData(record_handle, (char *)*render.GetPBORcr()->getPixelBuffer(processId) , CURRENT_SCREEN_WIDTH*CURRENT_SCREEN_HEIGHT*4);
 #else
 		a++;
 		if(a>50)

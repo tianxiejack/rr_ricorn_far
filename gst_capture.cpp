@@ -1,5 +1,5 @@
 #include "gst_capture.h"
-
+#include "StlGlDefines.h"
 #if GSTREAM_CAP
 #define TARGET_IP  "127.0.0.1"
 GstCapture_data gstCapture_data;

@@ -630,7 +630,7 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_VGA_VIEW_MODE),
+		fboMode(FBO_ALL_VIEW_MODE),
 		PBOMgr(PBOSender(CAM_COUNT,FLEXIBLE_DEFAULT_IMAGE_WIDTH,FLEXIBLE_DEFAULT_IMAGE_HEIGHT)),
 	FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT)),
 	PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT)),
@@ -5014,7 +5014,6 @@ else
 				my_shaderm->set_gain_(i,1.0,1.0,1.0);
 			}
 		}
-
 	}
 
 	if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
