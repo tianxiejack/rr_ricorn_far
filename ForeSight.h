@@ -13,7 +13,7 @@ class BaseForeSight:public InterfaceForeSight
 {
 public :
 	BaseForeSight(){};
-	virtual ~BaseForeSight()=0;
+	virtual ~BaseForeSight(){};
 };
 
 //core

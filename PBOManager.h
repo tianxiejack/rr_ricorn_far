@@ -14,7 +14,7 @@
 #include "FBOManager.h"
 
 typedef void(*PFN_PBOFILLBUFFER)(GLubyte *,int);
-
+typedef struct _OSA_SemHndl OSA_SemHndl,* pOSA_SemHndl;
 class PBOBase
 {
 public:
@@ -55,7 +55,9 @@ public:
 	inline int getCurrentPBOIdx(){return nowPboId;};
 	GLubyte** getPixelBuffer(int idx){return &pPixelBuffer[idx];};
     virtual void callbackPBODraw();
+    pOSA_SemHndl getSemPBO(){return pSemPBO;};
 private:
+    pOSA_SemHndl pSemPBO;
 	void getDataPBO(int startX,int startY,int w,int h,GLuint idx=0);
 	void delete_POBReceiver();
 	void getData(int startX=0,int startY=0,int w=CURRENT_SCREEN_WIDTH,int h=CURRENT_SCREEN_HEIGHT,  GLuint idx=0, bool bPBO=true);

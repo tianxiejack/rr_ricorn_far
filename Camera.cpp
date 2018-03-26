@@ -24,17 +24,11 @@
 using namespace std;
 using namespace cv;
 
-extern unsigned char *sdi_data;
+extern unsigned char *sdi_data[CAM_COUNT];
 extern unsigned char *vga_data;
-void save_yuyv_pic2(void *pic)
-{
-	FILE * fp;
-	fp=fopen("./save_transYUV.yuv","w");
-	char data[20];
-	fwrite(pic,1920*1080*2,1,fp);
-	fclose(fp);
-}
-
+extern OSA_SemHndl sem[CAM_COUNT];
+extern int CAM_READ[CAM_COUNT];
+extern int CAM_WRITE[CAM_COUNT];
 BaseVCap::~BaseVCap()
 {
 }
@@ -184,9 +178,66 @@ void YUYV2UYVx(unsigned char *ptr,unsigned char *Yuyv, int ImgWidth, int ImgHeig
 	}
 }
 
+void HDVCap::SavePic(const char* name)
+{
+	static unsigned char buffer[SDI_WIDTH*SDI_HEIGHT*2];
+	static unsigned char ptr[SDI_WIDTH*SDI_HEIGHT*4];
+	Mat img(SDI_HEIGHT,SDI_WIDTH,CV_8UC3);
+	memcpy(buffer,&sdi_data[m_chId],sizeof(buffer));
+	YUYV2UYVx(ptr,buffer,SDI_WIDTH,SDI_HEIGHT);
+	UYVx2RGB(ptr, SDI_WIDTH, SDI_HEIGHT, &img);
+	try{
+		imwrite(name,img);
+//		waitKey(0);
+	}catch(cv::Exception& os)
+	{
+
+	}
+}
+
+void save_yuyv_pic2(void *pic,int idx)
+{
+	FILE * fp;
+	char buf[30];
+	sprintf(buf,"./save_transYUV_%d.yuv",idx);
+	fp=fopen(buf,"w");
+	char data[20];
+	fwrite(pic,1920*1080*2,1,fp);
+	fclose(fp);
+}
+
+void HDVCap::YUV2RGB(unsigned char * ptr)
+{
+			static int ttt=0;
+			static int array[CAM_COUNT]={0,1,2,3,4,5};
+//			static int array[CAM_COUNT]={0,1,2,3};
+/*			ttt++;
+			if(ttt>50)
+			{
+				for(int i=0;i<CAM_COUNT;i++)
+				{
+					if(array[i]==m_chId)
+					{
+						save_yuyv_pic2(sdi_data[m_chId],m_chId);
+						array[i]=-1;
+					}
+				}
+			}*/
 
 
+			OSA_semWait(&sem[m_chId],OSA_TIMEOUT_NONE);
+			if(CAM_WRITE[m_chId]==1)
+			{
+				printf("read CAM[%d] error \n",m_chId);
+			}
+			else
+				CAM_READ[m_chId]=1;
+			YUYV2UYVx(ptr,sdi_data[m_chId],SDI_WIDTH,SDI_HEIGHT);
+			CAM_READ[m_chId]=0;
+			OSA_semSignal(&sem[m_chId]);
 
+}
+/*
 void HDVCap::YUV2RGB(unsigned char * ptr,int dev_num)
 {
 		if(dev_num==VGA_DEV_NUM)
@@ -198,7 +249,7 @@ void HDVCap::YUV2RGB(unsigned char * ptr,int dev_num)
 			YUYV2UYVx(ptr,sdi_data,SDI_WIDTH,SDI_HEIGHT);
 		}
 }
-
+*/
 
 
 //--------------the decorator cap class------------
@@ -386,6 +437,7 @@ bool BMPVcap::Open()
 		{
 			for (int c = 0; c < ycrcb.cols; c++)
 			{
+
 				pix = ycrcb.at<Vec3b>(r,c);
 				pix_alpha.val[0]=pix.val[1];
 				pix_alpha.val[1]=pix.val[0];
@@ -394,7 +446,7 @@ bool BMPVcap::Open()
 				yuv_alpha.at<Vec4b>(r,c) = pix_alpha;
 			}
 		}
-	//	cout<<"BMPVCap Open "<<pFileName<<" OK."<<endl;
+		cout<<"BMPVCap Open "<<pFileName<<" OK."<<endl;
 		ret = true;
 	}
 	return ret;

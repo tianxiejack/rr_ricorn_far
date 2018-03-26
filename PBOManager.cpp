@@ -5,7 +5,6 @@
  *      Author: hoover
  */
 #include "GL/glew.h"
-#include "PBOManager.h"
 #include "GL/glext.h"
 
 #include "glInfo.h"
@@ -15,9 +14,9 @@
 #include "GLRender.h"
 #include "pboProcessSrcThread.h"
 #include <osa_sem.h>
+#include "PBOManager.h"
 using namespace std;
 extern Render render;
-extern OSA_SemHndl sem;
 PBOBase::PBOBase(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format):
 		width(w),height(h),chncnt(cc),pboMode(2),pixel_format(format),bUsePBO(true),PBOChannelCount(PBOchcnt)
 {
@@ -213,16 +212,24 @@ PBOReceiver::PBOReceiver(unsigned int PBOchcnt, unsigned int w, unsigned int h, 
 	}
 	for(int i=0;i<2;i++)
 		pPixelBuffer[i]=(unsigned char *)malloc(dataSize);
+	pSemPBO=(OSA_SemHndl *)malloc(sizeof(OSA_SemHndl)) ;
 }
 PBOReceiver::~PBOReceiver()
 {
 	glDeleteBuffersARB(PBOBufferCount,pboIds);
 	delete [] pboIds;
 	delete [] pIndex;
+	free (pSemPBO);
 }
 
 bool PBOReceiver::Init()
 {
+	int ret=OSA_semCreate(pSemPBO,1,0);
+	if(ret<0)
+	{
+		printf("OSA_semCreate failed\n");
+	}
+
 	bool pboSupported = false;
     // get OpenGL info
     glInfo glInfo;
@@ -321,7 +328,7 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 			nowPboId=nextIndex;
 			if(pPixelBuffer[nextIndex])
 	{
-				OSA_semSignal(&sem);
+				OSA_semSignal(pSemPBO);
 		static bool once=true;
 		if(once)
 		{

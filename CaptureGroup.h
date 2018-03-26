@@ -35,11 +35,11 @@ public:
 	static CaptureGroup* GetRuler90CaptureGroup();
 	static CaptureGroup* GetRuler180CaptureGroup();
 	bool saveSingleCapImg(int cam_num);
-
+#if USE_12
 	bool saveExposureCompensationCapImg();
 	static CaptureGroup* GetSDICaptureGroup();
 	static CaptureGroup* GetVGACaptureGroup();
-
+#endif
 private:
 	CaptureGroup():m_TotalCamCount(0),m_currentIdx(0){};
 	void Close();

@@ -5,14 +5,14 @@
 
 #include <osa.h>
 
-typedef struct {
+typedef struct _OSA_SemHndl{
 
   Uint32 count;
   Uint32 maxCount;
   pthread_mutex_t lock;
   pthread_cond_t  cond;
 
-} OSA_SemHndl;
+} OSA_SemHndl, *pOSA_SemHndl;
 
 
 // sem

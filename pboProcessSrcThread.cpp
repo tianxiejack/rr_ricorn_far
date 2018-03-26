@@ -14,7 +14,6 @@
 #include "gst_capture.h"
 using namespace cv;
 extern Render render;
-extern OSA_SemHndl sem;
 
 #if GSTREAM_CAP
 extern RecordHandle * record_handle;
@@ -27,7 +26,7 @@ void *pbo_process_thread(void *arg)
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
 	while(1)
 	{
-		OSA_semWait(&sem,100000);
+		OSA_semWait(render.GetPBORcr()->getSemPBO(),100000);
 		int processId=render.GetPBORcr()->getCurrentPBOIdx();
 #if GSTREAM_CAP
 			gstCapturePushData(record_handle, (char *)*render.GetPBORcr()->getPixelBuffer(processId) , CURRENT_SCREEN_WIDTH*CURRENT_SCREEN_HEIGHT*4);

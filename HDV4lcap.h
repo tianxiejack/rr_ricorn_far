@@ -125,7 +125,7 @@ public:
 	void CaptureFish(char*p){};
 	void saveOverLap(){};
 
-	void mainloop();
+	void mainloop(int now_pic_format);
 	void run(void);
 	void stop();
 
@@ -149,7 +149,7 @@ private:
 	void init_read(unsigned int buffer_size);
 	void start_capturing(void);
 	void stop_capturing(void);
-	int  read_frame(void);
+	int  read_frame(int now_pic_format);
 	void errno_exit(const char *s);
 
 //	int  alloc_split_buffer(void);  //shou ji shuju

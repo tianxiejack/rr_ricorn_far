@@ -22,7 +22,6 @@ void Render::FBOdraw()
 		{
 			needSendData=false;
 		}
-		RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
 		break;
 	default:
 				break;

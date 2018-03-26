@@ -21,7 +21,7 @@
 #include <osa_buf.h>
 #include "buffer.h"
 #include"StlGlDefines.h"
-
+#include <osa_sem.h>
 #if TRACK_MODE
 #include "VideoProcessTrack.hpp"
 #endif
@@ -38,8 +38,11 @@ static int once_buffer;
 int m_bufId[8]={0};
 extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
 //Mat SDI_frame,VGA_frame;
-unsigned char * sdi_data=NULL;
+unsigned char * sdi_data[CAM_COUNT];
 unsigned char * vga_data=NULL;
+OSA_SemHndl sem[CAM_COUNT];
+int CAM_READ[6]={-1,-1,-1,-1,-1,-1};
+int CAM_WRITE[6]={-1,-1,-1,-1,-1,-1};
 HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_MMAP/*IO_METHOD_MMAP*/),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
 force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId)
@@ -249,27 +252,7 @@ int HDv4l_cam::xioctl(int fh, int request, void *arg)
 	return ret;
 }
 
-
-int  HDv4l_cam::setCurChannum()
-{
-	if(imgwidth==1024 && imgheight==768)
-	{
-		cur_CHANnum=VGA_CHAN_NUM;
-		return 0;
-	}
-	else if(imgwidth==1920 && imgheight==1080)
-	{
-		cur_CHANnum=SDI_CHAN_NUM;
-		return 0;
-	}
-	else
-		return -1;
-}
-
-
-
-
-int HDv4l_cam::read_frame(void)
+int HDv4l_cam::read_frame(int now_pic_format)
 {
 	struct v4l2_buffer buf;
 	int i=0;
@@ -292,31 +275,8 @@ int HDv4l_cam::read_frame(void)
 				}
 				assert(buf.index < n_buffers);
 
-			if(Id==VGA_DEV_NUM&&buffers[buf.index].start!=NULL)
-			{
-				static bool VOnce=true;
-				#if TRACK_MODE
-				static  unsigned char * vga_data2= NULL;
-				#endif
-				if(VOnce)
-				{
-					vga_data=(unsigned char *)malloc(1024*768*2);
-					#if TRACK_MODE
-					vga_data2=(unsigned char *)malloc(1024*768*2);
-					#endif
-					VOnce=false;
-				}
-						memcpy(vga_data,buffers[buf.index].start,1024*768*2);
-						#if TRACK_MODE
-						memcpy(vga_data2,vga_data,1024*768*2);
-						
-						CVideoProcess* trackMode=CVideoProcess::getInstance();
-						Mat frame(768,1024,CV_8UC2,vga_data2);
-						trackMode->process_frame(vga_Track,frame);
-						#endif
-			}
 
-			else if (Id==SDI_DEV_NUM&&buffers[buf.index].start!=NULL)
+			 if (buffers[buf.index].start!=NULL)
 			{
 				static bool Once=true;
 				#if TRACK_MODE
@@ -324,20 +284,27 @@ int HDv4l_cam::read_frame(void)
 				#endif
 					if(Once)
 					{
-						sdi_data=(unsigned char *)malloc(1920*1080*2);
-						#if TRACK_MODE
-						sdi_data2=(unsigned char *)malloc(1920*1080*2);
-						#endif
+						for(int i=0;i<CAM_COUNT;i++)
+						{
+							int ret=OSA_semCreate(&sem[i],1,1);
+							if(ret<0)
+							{
+								printf("%d OSA_semCreate failed\n",i);
+							}
+							sdi_data[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
+						}
 						Once=false;
 					}
-							memcpy(sdi_data,buffers[buf.index].start,1920*1080*2);
-							#if TRACK_MODE
-							memcpy(sdi_data2,sdi_data,1920*1080*2);
-							
-							CVideoProcess* trackMode=CVideoProcess::getInstance();
-							Mat frame(1080,1920,CV_8UC2,sdi_data2);
-							trackMode->process_frame(sdi_Track,frame);
-							#endif
+
+					OSA_semWait(&sem[now_pic_format],OSA_TIMEOUT_NONE);
+					if(CAM_READ[now_pic_format]==1)
+							printf("wirte but read busy,error\n");
+					else
+						CAM_WRITE[now_pic_format]=1;
+							memcpy(sdi_data[now_pic_format],buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+						CAM_WRITE[now_pic_format]=0;
+						OSA_semSignal(&sem[now_pic_format]);
+
 			}
 					if (-1 ==xioctl(m_devFd, VIDIOC_QBUF, &buf)){
 						fprintf(stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno));
@@ -571,8 +538,9 @@ void HDv4l_cam::close_device(void)
 	m_devFd = -1;
 }
 
-void HDv4l_cam::mainloop(void)
+void HDv4l_cam::mainloop(int now_pic_format)
 {
+
 	fd_set fds;
 	struct timeval tv;
 	int ret;
@@ -597,7 +565,7 @@ void HDv4l_cam::mainloop(void)
 			fprintf(stderr, "select timeout\n");
 			exit(EXIT_FAILURE);
 		}
-		if (-1 == read_frame())  /* EAGAIN - continue select loop. */
+		if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
 			return;
 }
 
@@ -662,7 +630,7 @@ void HDAsyncVCap4::Run()
 	{
 		HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
 		if(pcore){
-			pcore->mainloop();
+			pcore->mainloop(pic_format);
 		}
 //		usleep(sleepMs*1000);
 	}
@@ -683,10 +651,7 @@ void HDAsyncVCap4::lock_read(char *ptr)
 	int pic_size=0;
 	char *pImg = m_core->GetDefaultImg();
 	pthread_rwlock_rdlock(&rwlock);
-	if(pic_format==VGA_DEV_NUM)
-		pic_size=1024*768*2;
-	else if(pic_format==SDI_DEV_NUM)
-		pic_size=1920*1080*2;
+	pic_size=SDI_WIDTH*SDI_HEIGHT*2;
 	MEMCPY(ptr, pImg,pic_size);
 	pthread_rwlock_unlock(&rwlock);
 }
@@ -696,10 +661,7 @@ void HDAsyncVCap4::lock_write(char *ptr)
 	int pic_size=0;
 	char *pImg = m_core->GetDefaultImg();
 	pthread_rwlock_wrlock(&rwlock);
-	if(pic_format==VGA_DEV_NUM)
-			pic_size=1024*768*2;
-		else if(pic_format==SDI_DEV_NUM)
-			pic_size=1920*1080*2;
+	pic_size=SDI_WIDTH*SDI_HEIGHT*2;
 	MEMCPY(pImg,ptr,pic_size);
 	pthread_rwlock_unlock(&rwlock);
 }

@@ -32,6 +32,7 @@
 #include <GLFrustum.h>
 
 #include <iostream>
+#include "PBOManager.h"
 #include "OitVehicle.h"
 #include "STLASCIILoader.h"
 #include "ShaderParamArrays.h"
@@ -44,11 +45,11 @@
 
 #include "DataofAlarmarea.h"
 #include"ForeSight.h"
+
 #include"FBOManager.h"
 #include"PBOManager.h"
 #include "PBO_FBO_Facade.h"
 #include "RenderDrawBehaviour.h"
-
 using namespace std;
 
 class RenderMain;
@@ -107,8 +108,6 @@ public:
     void sendBack();
     void sendTrackSpeed(int w,int h);
 private:
-    PBO_FBO_Facade *PboFboFacade;
-
 	#if TRACK_MODE
 	int getTrkId(int displayMode,int nextMode);
 	void clearTrackParams();
@@ -117,6 +116,7 @@ private:
 
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
+		PREVIEW_MODE,
 		ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE,//全景
 		VGA_WHITE_VIEW_MODE,
 		VGA_HOT_BIG_VIEW_MODE,
@@ -142,7 +142,7 @@ private:
 			PAL2_HOT_SMALL_VIEW_MODE,
 
 	//	PREVIEW_MODE,	//allow use to browse the whole scene using a mouse
-			PREVIEW_MODE,
+
 		INIT_VIEW_MODE,
 		SINGLE_PORT_MODE ,	//view an individual camera
 		FREE_VIEW_MODE,		// operate the preset cameras
@@ -507,7 +507,6 @@ private:
 	void RenderScene(void);
 	void DrawOitVehicle();
 	void InitOitVehicle();
-	void InitFBOmgr(int w,int h);
 	void InitAlarmAeraonPano();
 	void GenerateGLTextureIds();
 	void generateAlphaList(Point2f AlphaList[], float alpha_index_x, float alpha_index_y, int i);
@@ -584,7 +583,6 @@ public:
 						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
 						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
 						PBOReceiver *GetPBORcr(){return &PBORcr;};
-						OitVehicle *GetpVehicle(){return pVehicle;};
 private:
 	GLBatch Petal[CAM_COUNT];
 	GLBatch Panel_Petal[CAM_COUNT];
@@ -617,7 +615,6 @@ private:
 	GLBatch CrossFrameBatch;
 	GLBatch RulerFrameBatch;
 	GLBatch NeedleFrameBatch;
-
 
 	float RulerAngle;
 	GLBatch triangleBatch;
@@ -685,7 +682,6 @@ private:
 	PBOSender PBOSDIMgr;
 	FBOManager FBOmgr;
 	pPBO_FBO_Facade mp_FboPboFacade;
-	GLubyte *mytest_data;
 	DynamicTrack *p_DynamicTrack;
 	CornerMarkerGroup *p_CornerMarkerGroup;
 	float* pConerMarkerColors[CORNER_COUNT];
@@ -714,7 +710,6 @@ private:
 	int GetWindowHeight(){return g_windowHeight;};
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
-
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
 	GLuint SDITextures[SDI_TEXTURE_COUNT];
 	GLuint GL_ExtensionTextureIDs[EXTENSION_TEXTURE_COUNT];

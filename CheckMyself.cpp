@@ -86,17 +86,17 @@ void SelfCheck::Check12CAM()//0~11
 }
 void SelfCheck::CheckExtra2CAM()//12~13
 {
-	GLubyte  *Extraptr=(GLubyte *)malloc(DEFAULT_IMAGE_WIDTH*DEFAULT_IMAGE_HEIGHT*4);
+/*	GLubyte  *Extraptr=(GLubyte *)malloc(DEFAULT_IMAGE_WIDTH*DEFAULT_IMAGE_HEIGHT*4);
 	int index=0;
 	for(int index=0;index<2;index++){
 	CaptureGroup::GetExtCaptureGroup()->captureCam(Extraptr,index);
 	CheckCaptureState(Extraptr,CAM_COUNT+index,DEFAULT_IMAGE_WIDTH,DEFAULT_IMAGE_HEIGHT);
 	}
-	free(Extraptr);
+	free(Extraptr);*/
 }
 void SelfCheck::Check2HD()//14~15
 {
-	GLubyte  *HDptr=(GLubyte *)malloc(SDI_WIDTH*SDI_HEIGHT*4);
+	/*GLubyte  *HDptr=(GLubyte *)malloc(SDI_WIDTH*SDI_HEIGHT*4);
 	int index=0;
 #if USE_GPIO
 	if(!isinSDI)
@@ -121,11 +121,11 @@ void SelfCheck::Check2HD()//14~15
 		}
 #else
 		for(int index=0;index<1;index++){
-			CaptureGroup::GetSDICaptureGroup()->captureCam(HDptr,index);
-			CheckCaptureState(HDptr,CAM_COUNT+2+index,SDI_WIDTH,SDI_HEIGHT);
+	//		CaptureGroup::GetSDICaptureGroup()->captureCam(HDptr,index);
+//			CheckCaptureState(HDptr,CAM_COUNT+2+index,SDI_WIDTH,SDI_HEIGHT);
 		}
 #endif
-	free(HDptr);
+	free(HDptr);*/
 }
 
 

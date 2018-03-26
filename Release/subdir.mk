@@ -16,7 +16,6 @@ CPP_SRCS += \
 ../FishCalib.cpp \
 ../ForeSight.cpp \
 ../GLRender.cpp \
-../GetScreenBUffer.cpp \
 ../HDV4lcap.cpp \
 ../LineofRuler.cpp \
 ../Loader.cpp \
@@ -69,7 +68,6 @@ OBJS += \
 ./FishCalib.o \
 ./ForeSight.o \
 ./GLRender.o \
-./GetScreenBUffer.o \
 ./HDV4lcap.o \
 ./LineofRuler.o \
 ./Loader.o \
@@ -119,7 +117,6 @@ CPP_DEPS += \
 ./FishCalib.d \
 ./ForeSight.d \
 ./GLRender.d \
-./GetScreenBUffer.d \
 ./HDV4lcap.d \
 ./LineofRuler.d \
 ./Loader.d \
@@ -161,8 +158,8 @@ CPP_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: NVCC Compiler'
-	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DNO_ARM_NEON=1 -DUSE_BMPCAP=1 -DUSE_GAIN=1 -DCAM_COUNT=12 -DTRACK_MODE=0 -DTEST_GAIN=1 -DGSTREAM_CAP=0 -DUSE_UART=0 -DUSE_12=1 -I../Track/inc -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/local/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -O3 -ccbin aarch64-linux-gnu-g++ -gencode arch=compute_50,code=sm_50 -m64 -odir "." -M -o "$(@:%.o=%.d)" "$<"
-	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DNO_ARM_NEON=1 -DUSE_BMPCAP=1 -DUSE_GAIN=1 -DCAM_COUNT=12 -DTRACK_MODE=0 -DTEST_GAIN=1 -DGSTREAM_CAP=0 -DUSE_UART=0 -DUSE_12=1 -I../Track/inc -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/local/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -O3 --compile -m64 -ccbin aarch64-linux-gnu-g++  -x c++ -o  "$@" "$<"
+	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DNO_ARM_NEON=1 -DUSE_BMPCAP=0 -DUSE_GAIN=1 -DCAM_COUNT=12 -DTRACK_MODE=0 -DTEST_GAIN=1 -DGSTREAM_CAP=1 -DUSE_UART=0 -DUSE_12=1 -I../Track/inc -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/local/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -O3 -ccbin aarch64-linux-gnu-g++ -gencode arch=compute_50,code=sm_50 -m64 -odir "." -M -o "$(@:%.o=%.d)" "$<"
+	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DNO_ARM_NEON=1 -DUSE_BMPCAP=0 -DUSE_GAIN=1 -DCAM_COUNT=12 -DTRACK_MODE=0 -DTEST_GAIN=1 -DGSTREAM_CAP=1 -DUSE_UART=0 -DUSE_12=1 -I../Track/inc -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/local/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -O3 --compile -m64 -ccbin aarch64-linux-gnu-g++  -x c++ -o  "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

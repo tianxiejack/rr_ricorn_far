@@ -351,14 +351,12 @@ void OitVehicle::initFBOs(int screenWidth, int screenHeight)
     glGenTextures(1, &depthTextureName);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthTextureName);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_DEPTH_COMPONENT24, screenWidth, screenHeight, GL_FALSE);
-
+             
     // Setup HDR render texture
     glGenTextures(1, msTexture);
-
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msTexture[0]);
-
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_RGBA8, screenWidth, screenHeight, GL_FALSE);
-
+    
     // Create and bind an FBO
     glGenFramebuffers(1, &msFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, msFBO);
@@ -390,7 +388,7 @@ void OitVehicle::initFBOs(int screenWidth, int screenHeight)
     // Make sure all went well
     gltCheckErrors(oitResolve);
     gltCheckErrors(msResolve);
-
+    
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // Create a matrix that maps geometry to the screen. 1 unit in the x directionequals one pixel
@@ -456,13 +454,13 @@ void OitVehicle::SetupResolveProg()
     // Now setup the right textures
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msTexture[0]);
-
     glUniform1i(glGetUniformLocation(msResolve, "origImage"), 0);
 
     glUniform1i(glGetUniformLocation(msResolve, "sampleCount"), 8);
 
     glActiveTexture(GL_TEXTURE0);
 
+	gltCheckErrors(msResolve);
 }
 
 void OitVehicle::SetupOITResolveProg()
@@ -496,6 +494,7 @@ void OitVehicle::SetupOITResolveProg()
 void OitVehicle::ChangeSize(int screenWidth, int screenHeight)
 {
    GenerateOrtho2DMat(screenWidth, screenHeight);
+
     // Resize textures
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthTextureName);
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 8, GL_DEPTH_COMPONENT24, screenWidth, screenHeight, GL_FALSE);
@@ -527,18 +526,15 @@ void OitVehicle::updateFBOs()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         if (mode == USER_OIT)
-        {
-        	SetupOITResolveProg();
-        }
+            SetupOITResolveProg();
         else if (mode == USER_BLEND)
-        {
-        	SetupResolveProg();
-        }
+            SetupResolveProg();
+
 		// Draw a full-size quad to resolve the multisample surfaces
-	screenQuad.Draw();
+        screenQuad.Draw();
       modelViewMatrix.PopMatrix();
     projectionMatrix.PopMatrix();
-
+    
 	// Reset texture state
     glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);

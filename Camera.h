@@ -127,15 +127,21 @@ public:
 	HDVCap(int chId,int wide,int height):m_chId(chId){};
 	bool Open(){return true;};
 	void Close(){};
-	void Capture(char* ptr){if(m_chId==VGA_DEV_NUM)
+/*	void Capture(char* ptr){if(m_chId==VGA_DEV_NUM)
 		YUV2RGB((unsigned char*)ptr,VGA_DEV_NUM);
 	else if (m_chId==SDI_DEV_NUM)
 		YUV2RGB((unsigned char*)ptr,SDI_DEV_NUM);};
+*/
+void Capture(char* ptr){
+//	if(m_chId>=0&&m_chId<CAM_COUNT)
+		YUV2RGB((unsigned char*)ptr);};
+
 	void CaptureFish(char* ptr){};
-	void SavePic(const char* name){};
+	void SavePic(const char* name);
 	void saveOverLap(){};
 private:
-	void YUV2RGB(unsigned char * ptr,int dev_num);
+//	void YUV2RGB(unsigned char * ptr,int dev_num);
+	void YUV2RGB(unsigned char * ptr);
 	int m_chId;
 };
 

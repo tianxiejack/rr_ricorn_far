@@ -30,7 +30,7 @@ public:
 	void SetSingleHightLightState(bool state){EnableSingleHightLight=state;};
 	bool GetSingleHightLightState(){return EnableSingleHightLight;};
 	private:
-	overLapRegion(){CHANGE_GAIN=true;};
+	overLapRegion(){CHANGE_GAIN=false;};//false start open
 	static  overLapRegion *overlapregion;
 	std::vector<int> vectors[CAM_COUNT];
 	std::vector<int> max_min[CAM_COUNT];

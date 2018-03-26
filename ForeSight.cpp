@@ -31,11 +31,6 @@ float tel_lastfourposX=0.0;
 float tel_four_lastposY=0.0;
 float tel_four_camPosY=0.0;
 
-BaseForeSight::~BaseForeSight()
-{
-
-}
-
 	ForeSight_decorator::	ForeSight_decorator(GLMatrixStack &modelViewMat,
 			GLMatrixStack	&projectionMat,
 			GLShaderManager* mgr,
