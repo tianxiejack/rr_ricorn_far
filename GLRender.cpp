@@ -4932,11 +4932,11 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 else
 {
 	petal2[0]=0;
-		petal2[1]=1;
-		petal2[2]=2;
 	DrawPanel(false,petal2);
 	petal2[0]=0;
 	petal2[1]=1;
+	petal2[2]=2;
+	petal2[3]=3;
 	modelViewMatrix.PushMatrix();
 	modelViewMatrix.Translate(-PanoLen,0.0,0.0);
 	DrawPanel(false,petal2);
@@ -5166,16 +5166,14 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 }
 else
 {
-	petal1[3]=3;
-	petal1[4]=4;
-		petal1[5]=5;
-	DrawPanel(true,petal1);
-
 	petal2[3]=3;
 	petal2[4]=4;
+	petal2[5]=5;
+	petal2[0]=0;
+	petal2[0]=0;
 	modelViewMatrix.PushMatrix();
 	modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-	DrawPanel(false,petal2);
+	DrawPanel(true,petal2);
 	modelViewMatrix.PopMatrix();
 }
 /*
