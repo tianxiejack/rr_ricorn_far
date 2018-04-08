@@ -15,22 +15,13 @@ RenderMain::~RenderMain()
 void RenderMain::DrawGLScene()
 {
 
-
-
-
-
     static bool ONCE_FULLSCREEN = true;
 
 	if(ONCE_FULLSCREEN){
 		ONCE_FULLSCREEN = false;
-
 		render.ProcessOitKeys('F', 0, 0);
-
 	}
-
 		render.DrawGLScene();
-
-
 }
 void RenderMain::ReSizeGLScene(int Width, int Height)
 {
@@ -57,16 +48,17 @@ void RenderMain::DrawIdle()
 	glutPostRedisplay();
 }
 
-void RenderMain::initGlut(int argc, char **argv)
+
+void RenderMain::initGlut(int argc, char **argv,int startx,int starty)
 {
 	char arg1[256], arg2[256];
 	// GLUT Window Initialization:
 	glutInit (&argc, argv);
 	glutInitWindowSize (1000, 700);
-	glutInitWindowPosition(100, 100);
+	glutInitWindowPosition(startx,  starty);
 	glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	{
-	sprintf(arg1,"Argus %s (%s, %s):",VERSION_STRING, __DATE__,__TIME__);
+	sprintf(arg1,"First %s (%s, %s):",VERSION_STRING, __DATE__,__TIME__);
 	strcat (arg1, argv[1]);
 	strcat (arg1, "+");
 	strcat (arg1, argv[2]);
@@ -180,14 +172,19 @@ void RenderMain::parseArgs(int argc, char** argv)
 //--------main entry------------------
 int RenderMain::start(int argc, char** argv)
 {
+		parseArgs(argc, argv);
+		initGlut(argc, argv);
+		initGlew();
+		render.initPixle();
+		glutFullScreen();
+		render.SetupRC(1920, 1080);//1920,1080);//
+#if DOUBLE_SCREEN
 
-	parseArgs(argc, argv);
-	initGlut(argc, argv);
+	doubleScreenInit(argc, argv);
 	initGlew();
-	render.initPixle();
-
-	render.SetupRC(1920, 1080);//1920,1080);//
 	glutFullScreen();
+	render.SetupRCDS(1920, 1080);//1920,1080);//
+#endif
 	glutMainLoop();
 	return 0;
 }

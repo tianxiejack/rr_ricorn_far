@@ -68,9 +68,12 @@ public:
 	void SetWheelAngle(float a){m_DynamicWheelAngle=a;};
 	void destroyPixList();
 	void SetupRC(int windowWidth, int windowHeight);
+	void SetupRCDS(int windowWidth, int windowHeight);
 	void initCorners(void);
 	void ReSizeGLScene(int Width, int Height);
+	void ReSizeGLSceneDS(int Width, int Height);
 	void DrawGLScene();
+	void DrawGLSceneDS();
 	void initClass(void);
 	void initPixle(void);
 	void readPixleFile(const char* file, int index);
@@ -117,6 +120,7 @@ private:
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
 		PREVIEW_MODE,
+		ALL_VIEW_MODE,
 		ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE,//全景
 		VGA_WHITE_VIEW_MODE,
 		VGA_HOT_BIG_VIEW_MODE,
@@ -143,7 +147,7 @@ private:
 
 	//	PREVIEW_MODE,	//allow use to browse the whole scene using a mouse
 
-		INIT_VIEW_MODE,
+
 		SINGLE_PORT_MODE ,	//view an individual camera
 		FREE_VIEW_MODE,		// operate the preset cameras
 		TRIPLE_VIEW_MODE,		// birdview + presetCamera + individual camera
@@ -154,8 +158,11 @@ private:
 		PANO_VIEW_MODE,//pano view
 		TWO_HALF_PANO_VIEW_MODE,//two pano view :first -22.5~202.5 degree;second: 157.5~382.5 degree
 		//two pano and monitor(big)
-		FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE,
+
+		INIT_VIEW_MODE,
 		FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE,//two pano and monitor(small)
+		FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE,
+
 
 		TOTAL_MODE_COUNT
 		} displayMode; 
@@ -414,6 +421,8 @@ private:
 
 	void RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
 	void RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
+	void RenderMyLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
+
 	void RenderIndividualView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderBillBoardAt(GLint x, GLint y,GLint w, GLint h);
 	void RenderCompassBillBoardAt(GLint x, GLint y,GLint w, GLint h);
@@ -482,10 +491,12 @@ private:
 	void GenerateFrontView();
 	void GenerateRearTopView();
 	void GetFPS();
+	void GetFPSDS();
 	void SetView(int Width, int Height);
 	void ChangeSize(int w, int h);
 	void calcCommonZone();
 	void InitBowl();
+	void InitBowlDS();
 	void InitFollowCross();
 	void InitCalibrate();
 	void InitPanel(bool reset=false);
@@ -505,6 +516,7 @@ private:
 	 void set_SightWide(int recvWide);
 
 	void RenderScene(void);
+	void RenderSceneDS(void);
 	void DrawOitVehicle();
 	void InitOitVehicle();
 	void InitAlarmAeraonPano();
@@ -528,6 +540,18 @@ private:
 	 void ReadPanoScaleArrayData(char * filename);
 	 void WritePanoScaleArrayData(char * filename,float * arraydata_left,float * arraydata_right,float * arraydata_level);
 public:
+
+	 GLShaderManager		shaderManager2;			// Shader Manager
+	 GLMatrixStack		modelViewMatrix2;		// Modelview Matrix
+	 GLMatrixStack		projectionMatrix2;		// Projection Matrix
+	 GLFrustum			viewFrustum2;			// View Frustum
+	 GLGeometryTransform	transformPipeline2;		// Geometry Transform Pipeline
+	 GLTriangleBatch		torusBatch2;
+	 GLBatch				floorBatch2;
+	 GLTriangleBatch     sphereBatch2;
+	 GLFrame             cameraFrame2;
+
+
 		bool isStitchingMode(){return displayMode == INIT_VIEW_MODE; };
 		 float * getTankDistance(){return distance_of_tank;};
 		 void setTankDistance(float distance[4]){distance_of_tank[0]=distance[0];

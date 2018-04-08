@@ -131,8 +131,15 @@ void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 			}
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+#if !WHOLE_PIC
+if(idx==0)
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*3/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else if(idx==1)
+	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+#else
+glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 
+#endif
 	// bind PBO to update pixel values
 	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[nextIndex]);
 	error =glGetError();
@@ -325,7 +332,45 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 			cout<<"2 GLError = "<<gluErrorString(error)<<endl;
 		}
 	pPixelBuffer[nextIndex] = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
-			nowPboId=nextIndex;
+	nowPboId=nextIndex;
+#if 0
+			int processId=render.GetPBORcr()->getCurrentPBOIdx();
+			Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
+			static int a=0;
+			a++;
+			if(a==50)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/111TEST_PBO.bmp",testData);
+			}
+			if(a==100)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/100TEST_PBO.bmp",testData);
+			}
+			if(a==150)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/150TEST_PBO.bmp",testData);
+			}
+			if(a==200)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/200TEST_PBO.bmp",testData);
+			}
+			if(a==250)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/250TEST_PBO.bmp",testData);
+			}
+			if(a==300)
+			{
+				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+				imwrite("./data/300TEST_PBO.bmp",testData);
+			}
+
+#endif
+
 			if(pPixelBuffer[nextIndex])
 	{
 				OSA_semSignal(pSemPBO);

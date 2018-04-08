@@ -256,7 +256,7 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 	width   = alg_handle->bufHndl[chId].bufInfo[bufId].width;
 	height  = alg_handle->bufHndl[chId].bufInfo[bufId].height;
 
-	memcpy(ptr,bufdata,FLEXIBLE_DEFAULT_IMAGE_HEIGHT*FLEXIBLE_DEFAULT_IMAGE_HEIGHT*2);
+	memcpy(ptr,bufdata,FLEXIBLE_DEFAULT_IMAGE_WIDTH*FLEXIBLE_DEFAULT_IMAGE_HEIGHT*2);
 //    yuv2UYVx(bufdata, ptr, width, height,chId);
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }

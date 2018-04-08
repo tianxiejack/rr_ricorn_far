@@ -7,6 +7,9 @@
 #include"SelfCheckThread.h"
 #include"Zodiac_Message.h"
 #include"Zodiac_GPIO_Message.h"
+
+
+
 #if TRACK_MODE
 #include "VideoProcessTrack.hpp"
 #endif
@@ -14,10 +17,13 @@
 #if MVDETECTOR_MODE
 #include "mvDetector.hpp"
 #endif
-
+#include"MvDetect.hpp"
 RenderMain mainWin;
 Common common;
 AlarmTarget mainAlarmTarget;
+#if MVDECT
+MvDetect mv_detect;
+#endif
 float track_pos[4];
 
 #if TRACK_MODE
@@ -52,6 +58,7 @@ void mvDetectorDraw(std::vector<TRK_RECT_INFO> &resTarget,int chId)
 #endif
 int main(int argc, char** argv)
 {
+
 	Parayml param;
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
@@ -60,6 +67,9 @@ int main(int argc, char** argv)
 //	start_overLap();
 //	startrecv( );
 
+#if MVDECT
+	mv_detect.init();
+#endif
 #if USE_GPIO
 	InitIPCModule();
 	init_GPIO_IPCMessage();
@@ -88,6 +98,7 @@ int main(int argc, char** argv)
 	delete_GPIO_IPCMessage();
 #endif
 	//gpio_deinit();
+
 	return 0;
 }
 

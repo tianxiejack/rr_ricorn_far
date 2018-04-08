@@ -22,9 +22,9 @@ void *exposure_thread(void *arg)
 				{
 					 CaptureGroup::GetPanoCaptureGroup()->saveExposureCompensationCapImg();
 					 sleep(2);
-					 if(overLapRegion::GetoverLapRegion()->van_save_coincidence())
+			//		 if(overLapRegion::GetoverLapRegion()->van_save_coincidence())
 					 {  //此处我如果不能打开文件就返回，GetSingleHightLightState() 是否会继续使用亮度均衡的值？
-						 overLapRegion::GetoverLapRegion()->brightness_blance();
+			//			 overLapRegion::GetoverLapRegion()->brightness_blance();
 					 }
 				}
 			 sleep(3);

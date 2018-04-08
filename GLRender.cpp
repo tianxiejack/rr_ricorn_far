@@ -633,7 +633,9 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		m_SDIVideoId(SDI_CAM_0),
 		PBOVGAMgr(PBOSender(VGA_CAM_COUNT,VGA_WIDTH,VGA_HEIGHT)),
 		PBOSDIMgr(PBOSender(SDI_CAM_COUNT,SDI_WIDTH,SDI_HEIGHT)),
-		p_CornerMarkerGroup(NULL), shaderManager(GLShaderManager(CAM_COUNT)),pPano(NULL)
+		p_CornerMarkerGroup(NULL),
+		shaderManager2(GLShaderManager(CAM_COUNT)),
+		shaderManager(GLShaderManager(CAM_COUNT)),pPano(NULL)
 {
 	MOUSEx = 0, MOUSEy = 0, BUTTON = 0;
 	ROTx = ROTy = ROTz =0;
@@ -847,6 +849,7 @@ void Render::GetFPS()
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // This function does any needed initialization on the rendering context.
 // This is the first opportunity to do any OpenGL related tasks.
@@ -943,7 +946,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	//camonforesight.setPanolen(PanoLen);
 
 		InitALPHA_ZOOM_SCALE();
-		InitBowl();
+	//	InitBowl();
 		InitScanAngle();
 		InitPanoScaleArrayData();
 		InitPanel();
@@ -952,7 +955,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		InitCalibrate();
 		InitOitVehicle();
 		//    glmDelete(VehicleLoader);
-		pVehicle->initFBOs(windowWidth, windowHeight);
+	//	pVehicle->initFBOs(windowWidth, windowHeight);
 
 		InitShadow();
 		InitBillBoard();
@@ -985,6 +988,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		// Load up CAM_COUNT textures
 		glGenTextures(PETAL_TEXTURE_COUNT, textures);
 
+#if WHOLE_PIC
+#endif
 		for(int i = 0; i < CAM_COUNT; i++){
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -994,7 +999,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 			glTexImage2D(GL_TEXTURE_2D,0,nComponents,FLEXIBLE_DEFAULT_IMAGE_WIDTH, FLEXIBLE_DEFAULT_IMAGE_HEIGHT, 0,
-					format, GL_UNSIGNED_BYTE, 0);
+								format, GL_UNSIGNED_BYTE, 0);
+
 		}
 
 		// Alpha mask: 1/16 size of 1920x1080
@@ -1478,6 +1484,7 @@ bool Render::getOverLapPointsValue(int direction, int x, Point2f *Point1, Point2
 	return ret;
 }
 
+
 void Render::InitBowl()
 {
 	if ((!common.isUpdate()) && (!common.isIdleDraw()))
@@ -1871,12 +1878,22 @@ void Render::InitPanel(bool reset)
 					else if(direction==((testPanoNumber-1+CAM_COUNT)%CAM_COUNT))
 					{
 						Point2[k].x=Point2[k].x+move_hor[(testPanoNumber)%CAM_COUNT];
-					}*/
+					}
+					*/
+
 					Point1[k].x=Point1[k].x+move_hor[direction];
 					Point2[k].x=Point2[k].x+move_hor[(direction+1)%CAM_COUNT];
 
 					Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
 					Point2[k].y=(Point2[k].y-base_y_scale)*(channel_right_scale[(direction+1)%CAM_COUNT])+base_y_scale+PanoFloatData[(direction+1)%CAM_COUNT];
+#if WHOLE_PIC
+
+			//			Point1[k].x = Point1[k].x / NUM_OF_W   +   ( (direction%PARTITIONS1) %NUM_OF_W  * (  MAX_SCREEN_WIDTH /NUM_OF_W) );
+			//			Point2[k].x = Point2[k].x / NUM_OF_W   +    ( ((direction+1)%PARTITIONS1) %NUM_OF_W  * ( MAX_SCREEN_WIDTH /NUM_OF_W) );
+			//			Point1[k].y = Point1[k].y /NUM_OF_H   +   ( (int)((direction%PARTITIONS1) /NUM_OF_W) * ( MAX_SCREEN_HEIGHT /NUM_OF_H) ) ;
+			//			Point2[k].y = Point2[k].y / NUM_OF_H   +  ( (int)(((direction+1)%PARTITIONS1) /NUM_OF_W) * ( MAX_SCREEN_HEIGHT /NUM_OF_H) ) ;
+
+			#endif
 				}
 			}
 		}else if(!pixleList[direction].empty())
@@ -1889,6 +1906,33 @@ void Render::InitPanel(bool reset)
 				{
 					Point[k].x=Point[k].x+move_hor[direction];
 					Point[k].y=(Point[k].y-base_y_scale)*(channel_right_scale[direction]+(channel_left_scale[direction]-channel_right_scale[direction])*scale_count/thechannel_max_count)+base_y_scale+PanoFloatData[direction];
+
+							#if WHOLE_PIC
+
+					if(direction%CAM_COUNT<6)
+					{
+						Point[k].x = Point[k].x / NUM_OF_W;
+						Point[k].y = Point[k].y / NUM_OF_H;
+						Point[k].x = Point[k].x +  ( (direction%PARTITIONS1) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM_OF_W));
+						Point[k].y = Point[k].y + ( (int)((direction%PARTITIONS1) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM_OF_H) ) ;
+					}
+					else
+					{
+						Point[k].x = (Point[k].x -Point[0].x)/ KX+Point[0].x;
+						Point[k].y = (Point[k].y -Point[0].y)/ KY+Point[0].y;
+
+						//direction-=PARTITIONS1;
+						//Point[k].x = Point[k].x / NUM2_OF_W;
+						//Point[k].y = Point[k].y / NUM2_OF_H;
+			//			Point[k].x = Point[k].x +  ( (5%PARTITIONS1) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM_OF_W));
+				//		Point[k].y = Point[k].y + ( (int)((5%PARTITIONS1) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM_OF_H) ) ;
+
+					//	Point[k].x = Point[k].x +  ( (direction%PARTITIONS2) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM2_OF_W));
+					//	Point[k].y = Point[k].y + ( (int)((direction%PARTITIONS2) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM2_OF_H) ) ;
+
+					}
+					#endif
+
 				}
 			}
 		}else
@@ -2110,21 +2154,37 @@ void Render::DrawExtensionVideo(bool needSendData)
 
 int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
+/*PBOMgr.sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\*/
+
 #define SEND_TEXTURE_TO_PETAL(i) 		{\
 											if(needSendData)\
-												PBOMgr.sendData(textures[i], (PFN_PBOFILLBUFFER)captureCam,i);\
+											PBOMgr.sendData(textures[i], (PFN_PBOFILLBUFFER)captureCam,i);\
 											else{\
-												glBindTexture(GL_TEXTURE_2D, textures[i]);\
+												glBindTexture(GL_TEXTURE_2D, textures[0]);\
 											}\
 										}
 
 
 #if USE_GAIN
+#if WHOLE_PIC
+#define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
+                                               shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
+                                                   transformPipeline.GetModelViewProjectionMatrix(),0,\
+                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+                                                       }
+
+#define USE_TEXTURE_ON_PETAL_OVERLAP2(i)        {\
+                                               shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
+                                                   transformPipeline.GetModelViewProjectionMatrix(),1,\
+                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+                                                       }
+#else
 #define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
                                                    transformPipeline.GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
                                                    (i+1)%CAM_COUNT,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
+#endif
 #else
 #define USE_TEXTURE_ON_PETAL_OVERLAP(i)	{\
 						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
@@ -2193,7 +2253,6 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pVehicle->msFBO);
 #endif
 	glDisable(GL_BLEND);
-
 	modelViewMatrix.PushMatrix();
 	//#pragma omp parallel sections
 	{
@@ -2207,28 +2266,58 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 
 		if(p_petalNum==NULL)
 		{
-			for(int i = 0; i < CAM_COUNT; i++){
-					glActiveTexture(GL_TextureIDs[i]);
+#if WHOLE_PIC
+
+			for(int i = 0; i < 2; i++){
+				glActiveTexture(GL_TextureIDs[i]);
 				    SEND_TEXTURE_TO_PETAL(i);
 		}
+#else
+			for(int i = 0; i < CAM_COUNT; i++){
+								glActiveTexture(GL_TextureIDs[i]);
+							    SEND_TEXTURE_TO_PETAL(i);
+					}
+#endif
 
 		for(int i = 0; i < CAM_COUNT; i++){
 #if USE_GAIN
+#if WHOLE_PIC
+			if(i<PARTITIONS1)
+			{
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+			}
+			else
+			{
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
+			}
+			#else
                        shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
-#else
+#endif
+ #else
 			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 #endif
 			Panel_Petal[i].Draw();
-
+			if(i<PARTITIONS1)
+			{
 			USE_TEXTURE_ON_PETAL_OVERLAP(i);
+			}
+			else
+			{
+				USE_TEXTURE_ON_PETAL_OVERLAP2(i);
+			}
 			Panel_Petal_OverLap[i]->Draw();
 		}
-
-
 		}
 
 		else
 		{
+#if 0
+#if WHOLE_PIC
+			for(int i = 0; i < 2; i++){
+					glActiveTexture(GL_TextureIDs[i]);
+				    SEND_TEXTURE_TO_PETAL(i);
+		}
+#else
 			for(int i=0;i<CAM_COUNT;i++)
 			{
 				glActiveTexture(GL_TextureIDs[i]);
@@ -2239,22 +2328,47 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 					SEND_TEXTURE_TO_PETAL(p_petalNum[i]);
 				}*/
 			}
+#endif
 		for(int i=0;i<CAM_COUNT;i++)
 				{
 					if(p_petalNum[i]!=-1)
 					{
+						static int count=0;
 	#if USE_GAIN
+#if WHOLE_PIC
+						if(count<6)
+						{
+							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+						}
+						else
+						{
+							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
+						}
+#else
 	                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
+#endif
 	#else
 				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				Panel_Petal[p_petalNum[i]].Draw();
+#if WHOLE_PIC
 
+				if(count<6)
+				{
+					USE_TEXTURE_ON_PETAL_OVERLAP(p_petalNum[i]);
+				}
+				else
+				{
+					USE_TEXTURE_ON_PETAL_OVERLAP2(p_petalNum[i]);
+				}
+#else
 				USE_TEXTURE_ON_PETAL_OVERLAP(p_petalNum[i]);
+#endif
 				Panel_Petal_OverLap[p_petalNum[i]]->Draw();
+				count++;
 					}
 				}
-
+#endif
 		}
 		modelViewMatrix.PopMatrix();
 		}
@@ -4754,13 +4868,40 @@ void Render::RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h)
 		}
 		modelViewMatrix.PopMatrix();
 }
+void Render::RenderMyLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+{
+		glViewport(x,y,w,h);
+		viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		pVehicle->PrepareBlendMode();
+		modelViewMatrix.PushMatrix();
 
+		//get center camera matrix apply to the modelviewmatrix
+
+			M3DMatrix44f mCamera;
+			repositioncamera();
+			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
+			modelViewMatrix.PushMatrix(mCamera);
+			modelViewMatrix.Scale(2.50,1.0,3.3);
+				modelViewMatrix.Translate(9.50,0.0,0.0);
+				modelViewMatrix.Translate(0.0,0.0,-2.0);
+				if(RulerAngle<180.0)
+					{
+					modelViewMatrix.Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+					}
+				modelViewMatrix.PushMatrix();
+				modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+				DrawPanel(true,NULL);
+				modelViewMatrix.PopMatrix();
+				modelViewMatrix.PopMatrix();
+				modelViewMatrix.PopMatrix();
+}
 void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
 	int petal1[CAM_COUNT];
-		memset(petal1,-1,sizeof(petal1));
-		int petal2[CAM_COUNT];
-		memset(petal2,-1,sizeof(petal2));
+	memset(petal1,-1,sizeof(petal1));
+	int petal2[CAM_COUNT];
+	memset(petal2,-1,sizeof(petal2));
 
 	glViewport(x,y,w,h);
 	viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
@@ -4775,7 +4916,9 @@ void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSend
 		repositioncamera();
 		if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 				||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
-				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
+				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+				||fboMode==FBO_ALL_VIEW_MODE
+				||displayMode==ALL_VIEW_MODE)
 		{
 			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -4786,7 +4929,9 @@ void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSend
 		modelViewMatrix.PushMatrix(mCamera);
 	}
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
-		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE)
+		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
+
 {
 	modelViewMatrix.Scale(2.50,1.0,3.3);
 	modelViewMatrix.Translate(9.50,0.0,0.0);
@@ -4801,9 +4946,12 @@ else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 {
 	modelViewMatrix.Scale(4.0,1.0,4.5);
-
 }
-
+else if(displayMode==ALL_VIEW_MODE)
+{
+	modelViewMatrix.Scale(2.50,1.0,3.3);
+	modelViewMatrix.Translate(9.50,0.0,0.0);
+}
 modelViewMatrix.Translate(0.0,0.0,-2.0);
 
 
@@ -4929,6 +5077,19 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	//	DrawPanel(false,petal2);
 	}
 }
+else if(displayMode==ALL_VIEW_MODE)
+{
+		petal2[0]=0;
+		DrawPanel(false,petal2);
+		for(int i=0;i<5;i++)
+		{
+			petal2[i]=i;
+		}
+		modelViewMatrix.PushMatrix();
+		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+		DrawPanel(false,petal2);
+		modelViewMatrix.PopMatrix();
+}
 else
 {
 	petal2[0]=0;
@@ -4941,7 +5102,6 @@ else
 	modelViewMatrix.Translate(-PanoLen,0.0,0.0);
 	DrawPanel(false,petal2);
 	modelViewMatrix.PopMatrix();
-
 }
 /*
 	modelViewMatrix.PushMatrix();
@@ -5009,6 +5169,8 @@ void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scisso
 	if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE||
 			displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 			||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+			||displayMode==ALL_VIEW_MODE
+			||fboMode==FBO_ALL_VIEW_MODE
 			)
 	{
 		viewFrustum.SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
@@ -5026,7 +5188,9 @@ void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scisso
 		M3DMatrix44f mCamera;
 		if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE||
 				displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE ||
-				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
+				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+				||displayMode==ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_MODE)
 		{
 			RightSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5038,7 +5202,8 @@ void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scisso
 	}
 
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
-		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE)
+		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	modelViewMatrix.Scale(2.50,1.0,3.3);
 	modelViewMatrix.Translate(-2.2,0.0,0.0);
@@ -5046,6 +5211,11 @@ if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
 //	modelViewMatrix.Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
+	modelViewMatrix.Scale(2.50,1.0,3.3);
+	modelViewMatrix.Translate(-2.2,0.0,0.0);
+}
+else if(displayMode==ALL_VIEW_MODE)
+{
 	modelViewMatrix.Scale(2.50,1.0,3.3);
 	modelViewMatrix.Translate(-2.2,0.0,0.0);
 }
@@ -5057,6 +5227,11 @@ else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 
 modelViewMatrix.Translate(0.0,0.0,-2.0);
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
+{
+	 modelViewMatrix.Translate(0.0,0.0,2.0);
+	 modelViewMatrix.Translate(0.0,0.0,-2.6);
+}
+else if(displayMode==ALL_VIEW_MODE)
 {
 	 modelViewMatrix.Translate(0.0,0.0,2.0);
 	 modelViewMatrix.Translate(0.0,0.0,-2.6);
@@ -5164,17 +5339,27 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 //DrawPanel(true,petal2);
 	DrawPanel(true,NULL);
 }
+else if(displayMode==ALL_VIEW_MODE)
+{
+	for(int i=0;i<12;i++)
+		{
+			petal2[i]=i;
+		}
+		modelViewMatrix.PushMatrix();
+		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+		DrawPanel(true,petal2);
+		modelViewMatrix.PopMatrix();
+}
 else
 {
-	petal2[3]=3;
-	petal2[4]=4;
-	petal2[5]=5;
-	petal2[0]=0;
-	petal2[0]=0;
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-	DrawPanel(true,petal2);
-	modelViewMatrix.PopMatrix();
+	for(int i=0;i<12;i++)
+			{
+				petal2[i]=i;
+			}
+			modelViewMatrix.PushMatrix();
+			modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+			DrawPanel(true,petal2);
+			modelViewMatrix.PopMatrix();
 }
 /*
 	modelViewMatrix.PushMatrix();
@@ -5746,6 +5931,11 @@ void Render::SetdisplayMode( )
 }
 
 
+
+
+
+
+
 void Render::RenderScene(void)
 {
 	bool bShowDirection = false, isBillBoardExtOn = false;
@@ -5940,23 +6130,28 @@ void Render::RenderScene(void)
 		{
 			InitScanAngle();//each time enter pano_view_mode read the angle file again
 		}
+
+
 		RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 		RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-//		RenderExtensionView(g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0, g_windowHeight*360.0/1080.0, needSendData);
+
+		//		RenderExtensionView(g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0, g_windowHeight*360.0/1080.0, needSendData);
 		break;
 	case INIT_VIEW_MODE:
 		DrawInitView(new Rect(0, 0, g_windowWidth, g_windowHeight), needSendData);
 		break;
-
+	case	ALL_VIEW_MODE:
+	{
+		RenderRightPanoView(0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		RenderLeftPanoView(0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+	}
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
 	{
-		//	RenderRightPanoView(0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-	//		RenderLeftPanoView(0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-		RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-			RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-
-
-				PrepareAlarmAera(0,0,g_windowWidth,g_windowHeight);
+			RenderRightPanoView(0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+			RenderLeftPanoView(0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+	//	RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+		//	RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+			PrepareAlarmAera(0,0,g_windowWidth,g_windowHeight);
 			p_ForeSightFacade->Reset(ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE);
 		    RenderRulerView(g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
 		    RenderRulerView(g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
@@ -6015,7 +6210,7 @@ void Render::RenderScene(void)
 		static bool Once=true;
 		if(Once)
 		{
-			start_SelfCheck_thread();
+		//	start_SelfCheck_thread();
 			Once=false;
 		}
 		//Show_first_mode(readFirstMode());
@@ -6546,10 +6741,14 @@ void Render::RenderScene(void)
 	glDeleteQueries(3, queries);
 	cout<<"mode="<<displayMode<<":rearTime="<<rearTime/1000000<<",birdTime="<<birdTime/1000000<<",fboTime="<<fboTime/1000000<<endl;
 #endif
+
+//	RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+//	RenderMyLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+
 	if(mp_FboPboFacade->IsFboUsed())
 	{
-		FBOmgr.SetDrawBehaviour(&render);
-		mp_FboPboFacade->DrawAndGet();
+	//	FBOmgr.SetDrawBehaviour(&render);
+	//	mp_FboPboFacade->DrawAndGet();
 	}
 }
 

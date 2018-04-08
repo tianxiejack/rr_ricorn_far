@@ -27,8 +27,8 @@ using namespace cv;
 extern unsigned char *sdi_data[CAM_COUNT];
 extern unsigned char *vga_data;
 extern OSA_SemHndl sem[CAM_COUNT];
-extern int CAM_READ[CAM_COUNT];
-extern int CAM_WRITE[CAM_COUNT];
+extern int currentWR[CAM_COUNT];
+
 BaseVCap::~BaseVCap()
 {
 }
@@ -183,9 +183,11 @@ void HDVCap::SavePic(const char* name)
 	static unsigned char buffer[SDI_WIDTH*SDI_HEIGHT*2];
 	static unsigned char ptr[SDI_WIDTH*SDI_HEIGHT*4];
 	Mat img(SDI_HEIGHT,SDI_WIDTH,CV_8UC3);
+//	OSA_semWait(&sem[m_chId],OSA_TIMEOUT_FOREVER);
 	memcpy(buffer,&sdi_data[m_chId],sizeof(buffer));
 	YUYV2UYVx(ptr,buffer,SDI_WIDTH,SDI_HEIGHT);
 	UYVx2RGB(ptr, SDI_WIDTH, SDI_HEIGHT, &img);
+//	OSA_semSignal(&sem[m_chId]);
 	try{
 		imwrite(name,img);
 //		waitKey(0);
@@ -210,30 +212,13 @@ void HDVCap::YUV2RGB(unsigned char * ptr)
 {
 			static int ttt=0;
 			static int array[CAM_COUNT]={0,1,2,3,4,5};
-//			static int array[CAM_COUNT]={0,1,2,3};
-/*			ttt++;
-			if(ttt>50)
+			OSA_semWait(&sem[m_chId],OSA_TIMEOUT_FOREVER);
+			currentWR[m_chId]=0;
+			if(currentWR[m_chId]==1) //1的时候main里在写
 			{
-				for(int i=0;i<CAM_COUNT;i++)
-				{
-					if(array[i]==m_chId)
-					{
-						save_yuyv_pic2(sdi_data[m_chId],m_chId);
-						array[i]=-1;
-					}
-				}
-			}*/
-
-
-			OSA_semWait(&sem[m_chId],OSA_TIMEOUT_NONE);
-			if(CAM_WRITE[m_chId]==1)
-			{
-				printf("read CAM[%d] error \n",m_chId);
+				printf("%d OSA_sem failed\n",m_chId);
 			}
-			else
-				CAM_READ[m_chId]=1;
 			YUYV2UYVx(ptr,sdi_data[m_chId],SDI_WIDTH,SDI_HEIGHT);
-			CAM_READ[m_chId]=0;
 			OSA_semSignal(&sem[m_chId]);
 
 }

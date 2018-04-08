@@ -34,13 +34,19 @@ class RenderMain{
 public:
 	RenderMain();
 	~RenderMain();
+
+	void doubleScreenInit(int argc, char **argv);
+	static void DrawGLSceneDS();
+	static void ReSizeGLSceneDS(int Width, int Height);
+
 	void parseArgs(int argc, char** argv);
-	void initGlut(int argc, char **argv);
+	void initGlut(int argc, char **argv, int startx=100, int starty=100);
 	void captureUSB(GLubyte *ptr);
 	void captureCSI(GLubyte *ptr);
 	static void DrawGLScene();
 	static void DrawIdle();
 	static void ReSizeGLScene(int Width, int Height);
+
 	static void keyPressed(unsigned char key, int x, int y);
 	static void specialkeyPressed (int key, int x, int y);
 	static void mouseButtonPress(int button, int state, int x, int y);

@@ -211,10 +211,21 @@ CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 		CaptureGroup::GetRuler45CaptureGroup();
 
 #if  USE_BMPCAP
+#if WHOLE_PIC
+
+		for(int i=0; i < 2; i++){
+			sprintf(fileName,"./data/pic%d.bmp",i);
+				m_PanoGroup.Append(new BMPVcap(fileName));
+		}
+
+
+#else
 		for(int i=0; i < CAM_COUNT; i++){
 			sprintf(fileName,"./data/%02d.bmp",i);
 			m_PanoGroup.Append(new BMPVcap(fileName));
 		}
+
+#endif
 #else
 		for(int i=0;i<CAM_COUNT;i++)
 		{

@@ -176,6 +176,8 @@ class BMPVcap : public BaseVCap{
 		Mat yuv_alpha;
 };
 
+
+
 class NVcamVcap : public BaseVCap{
 	public:
 		NVcamVcap(int sensorId):m_sensorId(sensorId),capCSI(NULL){};

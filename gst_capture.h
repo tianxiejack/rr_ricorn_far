@@ -1,10 +1,6 @@
 #ifndef  _GST_CAPTURE_H
 #define _GST_CAPTURE_H
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 
 
@@ -67,9 +63,8 @@ int gstCaptureUninit(RecordHandle *handle);
 
 int gstCaptureEnable(RecordHandle *handle, unsigned short bEnable);
 
-#ifdef __cplusplus
-}
-#endif
+
+
 
 
 /*
