@@ -137,7 +137,10 @@ if(idx==0)
 else if(idx==1)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 #else
+if(idx==0)
 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else if(idx==1)
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1280, 1080, pixel_format, GL_UNSIGNED_BYTE, 0);
 
 #endif
 	// bind PBO to update pixel values

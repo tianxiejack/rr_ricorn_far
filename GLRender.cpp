@@ -998,8 +998,15 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			if(i==1)
+			{
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,1280, 1080, 0,
+										format, GL_UNSIGNED_BYTE, 0);
+			}
+			else
 			glTexImage2D(GL_TEXTURE_2D,0,nComponents,FLEXIBLE_DEFAULT_IMAGE_WIDTH, FLEXIBLE_DEFAULT_IMAGE_HEIGHT, 0,
 								format, GL_UNSIGNED_BYTE, 0);
+
 
 		}
 
@@ -1909,7 +1916,7 @@ void Render::InitPanel(bool reset)
 
 							#if WHOLE_PIC
 
-					if(direction%CAM_COUNT<6)
+					if(direction%CAM_COUNT<PARTITIONS1)
 					{
 						Point[k].x = Point[k].x / NUM_OF_W;
 						Point[k].y = Point[k].y / NUM_OF_H;
@@ -1918,18 +1925,10 @@ void Render::InitPanel(bool reset)
 					}
 					else
 					{
-						Point[k].x = (Point[k].x -Point[0].x)/ KX+Point[0].x;
-						Point[k].y = (Point[k].y -Point[0].y)/ KY+Point[0].y;
-
-						//direction-=PARTITIONS1;
-						//Point[k].x = Point[k].x / NUM2_OF_W;
-						//Point[k].y = Point[k].y / NUM2_OF_H;
-			//			Point[k].x = Point[k].x +  ( (5%PARTITIONS1) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM_OF_W));
-				//		Point[k].y = Point[k].y + ( (int)((5%PARTITIONS1) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM_OF_H) ) ;
-
-					//	Point[k].x = Point[k].x +  ( (direction%PARTITIONS2) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM2_OF_W));
-					//	Point[k].y = Point[k].y + ( (int)((direction%PARTITIONS2) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM2_OF_H) ) ;
-
+						Point[k].x = Point[k].x / NUM2_OF_W;
+						Point[k].y = Point[k].y / NUM2_OF_H;
+						Point[k].x = Point[k].x +  ( ((direction-PARTITIONS1)%PARTITIONS2) %NUM2_OF_W  * ( 1280 /NUM2_OF_W));
+						Point[k].y = Point[k].y + ( (int)(((direction-PARTITIONS1)%PARTITIONS2) /NUM2_OF_W) * (1080 /NUM2_OF_H) ) ;
 					}
 					#endif
 
