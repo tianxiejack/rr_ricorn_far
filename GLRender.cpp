@@ -616,7 +616,7 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		PBOMgr(PBOSender(CAM_COUNT,FLEXIBLE_DEFAULT_IMAGE_WIDTH,FLEXIBLE_DEFAULT_IMAGE_HEIGHT)),
+		PBOMgr(PBOSender(CAM_COUNT,PANO_TEXTURE_WIDTH,PANO_TEXTURE_HEIGHT)),
 		FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT)),
 		PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT)),
 		PBOExtMgr(PBOSender(CAM_COUNT+EXT_CAM_COUNT)),
@@ -989,7 +989,18 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		glGenTextures(PETAL_TEXTURE_COUNT, textures);
 
 #if WHOLE_PIC
-#endif
+		for(int i = 0; i < 1; i++){
+				glBindTexture(GL_TEXTURE_2D, textures[i]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+				glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
+											format, GL_UNSIGNED_BYTE, 0);
+			}
+#else
 		for(int i = 0; i < CAM_COUNT; i++){
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1004,11 +1015,11 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 										format, GL_UNSIGNED_BYTE, 0);
 			}
 			else
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,FLEXIBLE_DEFAULT_IMAGE_WIDTH, FLEXIBLE_DEFAULT_IMAGE_HEIGHT, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
 								format, GL_UNSIGNED_BYTE, 0);
-
-
 		}
+#endif
+
 
 		// Alpha mask: 1/16 size of 1920x1080
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
@@ -1841,11 +1852,11 @@ void Render::InitPanel(bool reset)
 	{
 		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
 		{
-			continue;
+	//		continue;
 		}
 		if(x>=(poly_count*7/40) && (x<poly_count*33/40))  //poly_count/512==40
 			{
-					//continue;
+	//				continue;
 			}
 
 		panel_fillDataList(&list, x);
@@ -1870,37 +1881,64 @@ void Render::InitPanel(bool reset)
 		{
 			App = false;
 			pBatch = Panel_Petal_OverLap[direction%CAM_COUNT];
-
 			count = getOverlapIndex(direction);
 			generateAlphaList(Alpha, 1.0/BLEND_OFFSET,1.0*x/PER_CIRCLE, count);
 			getOverLapPointsValue(direction, x, Point1, Point2);
 			{
 				for(int k=0;k<3;k++)
 				{
-					/*
-					if(direction==testPanoNumber)
+#if !WHOLE_PIC
+					Point[k].x = Point[k].x*FPGA_SCARE_X;
+					Point[k].y = Point[k].y/NUM_OF_H;
+					int dir=direction%CAM_COUNT;
+			switch(dir)
+			{
+			case 0:
+				dir=4;
+				break;
+			case 1:
+				dir=0;
+						break;
+			case 2:
+				dir=1;
+						break;
+			case 3:
+				dir=9;
+						break;
+			case 4:
+				dir=5;
+						break;
+			case 5:
+				dir=6;
+						break;
+			case 6:
+				dir=2;
+						break;
+			case 7:
+				dir=3;
+						break;
+			case 8:
+				dir=7;
+						break;
+			case 9:
+				dir=8;
+						break;
+			default :
+				break;
+			}
+#if 0
+					if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
 					{
-						Point1[k].x=Point1[k].x+move_hor[(direction)%CAM_COUNT];
+				//		dir-=3;
 					}
-					else if(direction==((testPanoNumber-1+CAM_COUNT)%CAM_COUNT))
+					else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
 					{
-						Point2[k].x=Point2[k].x+move_hor[(testPanoNumber)%CAM_COUNT];
+				//		dir+=2;
 					}
-					*/
-
-					Point1[k].x=Point1[k].x+move_hor[direction];
-					Point2[k].x=Point2[k].x+move_hor[(direction+1)%CAM_COUNT];
-
-					Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
-					Point2[k].y=(Point2[k].y-base_y_scale)*(channel_right_scale[(direction+1)%CAM_COUNT])+base_y_scale+PanoFloatData[(direction+1)%CAM_COUNT];
-#if WHOLE_PIC
-
-			//			Point1[k].x = Point1[k].x / NUM_OF_W   +   ( (direction%PARTITIONS1) %NUM_OF_W  * (  MAX_SCREEN_WIDTH /NUM_OF_W) );
-			//			Point2[k].x = Point2[k].x / NUM_OF_W   +    ( ((direction+1)%PARTITIONS1) %NUM_OF_W  * ( MAX_SCREEN_WIDTH /NUM_OF_W) );
-			//			Point1[k].y = Point1[k].y /NUM_OF_H   +   ( (int)((direction%PARTITIONS1) /NUM_OF_W) * ( MAX_SCREEN_HEIGHT /NUM_OF_H) ) ;
-			//			Point2[k].y = Point2[k].y / NUM_OF_H   +  ( (int)(((direction+1)%PARTITIONS1) /NUM_OF_W) * ( MAX_SCREEN_HEIGHT /NUM_OF_H) ) ;
-
-			#endif
+#endif
+					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W));
+					Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
+					#endif
 				}
 			}
 		}else if(!pixleList[direction].empty())
@@ -1914,24 +1952,58 @@ void Render::InitPanel(bool reset)
 					Point[k].x=Point[k].x+move_hor[direction];
 					Point[k].y=(Point[k].y-base_y_scale)*(channel_right_scale[direction]+(channel_left_scale[direction]-channel_right_scale[direction])*scale_count/thechannel_max_count)+base_y_scale+PanoFloatData[direction];
 
-							#if WHOLE_PIC
-
-					if(direction%CAM_COUNT<PARTITIONS1)
+					#if WHOLE_PIC
+					Point[k].x = Point[k].x*FPGA_SCARE_X;
+					Point[k].y = Point[k].y/NUM_OF_H;
+					int dir=direction%CAM_COUNT;
+			switch(dir)
+			{
+			case 0:
+				dir=4;
+				break;
+			case 1:
+				dir=0;
+						break;
+			case 2:
+				dir=1;
+						break;
+			case 3:
+				dir=9;
+						break;
+			case 4:
+				dir=5;
+						break;
+			case 5:
+				dir=6;
+						break;
+			case 6:
+				dir=2;
+						break;
+			case 7:
+				dir=3;
+						break;
+			case 8:
+				dir=7;
+						break;
+			case 9:
+				dir=8;
+						break;
+			default :
+				break;
+			}
+#if 0
+					if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
 					{
-						Point[k].x = Point[k].x / NUM_OF_W;
-						Point[k].y = Point[k].y / NUM_OF_H;
-						Point[k].x = Point[k].x +  ( (direction%PARTITIONS1) %NUM_OF_W  * ( FLEXIBLE_DEFAULT_IMAGE_WIDTH /NUM_OF_W));
-						Point[k].y = Point[k].y + ( (int)((direction%PARTITIONS1) /NUM_OF_W) * (FLEXIBLE_DEFAULT_IMAGE_HEIGHT /NUM_OF_H) ) ;
+				//		dir-=3;
 					}
-					else
+					else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
 					{
-						Point[k].x = Point[k].x / NUM2_OF_W;
-						Point[k].y = Point[k].y / NUM2_OF_H;
-						Point[k].x = Point[k].x +  ( ((direction-PARTITIONS1)%PARTITIONS2) %NUM2_OF_W  * ( 1280 /NUM2_OF_W));
-						Point[k].y = Point[k].y + ( (int)(((direction-PARTITIONS1)%PARTITIONS2) /NUM2_OF_W) * (1080 /NUM2_OF_H) ) ;
+				//		dir+=2;
 					}
+#endif
+					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W));
+					Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
 					#endif
-
 				}
 			}
 		}else
@@ -1953,6 +2025,8 @@ DRAW:
 			}else if(App)
 			{
 					pBatch->MultiTexCoord2f(0, Point[index].x/DEFAULT_IMAGE_WIDTH,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
+				//	pBatch->MultiTexCoord2f(0, Point[index].x/1920,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
+
 			}
 			pBatch->Vertex3f(list[index+1].x, list[index+1].y, list[index+1].z);
 		}
@@ -2157,7 +2231,7 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
 #define SEND_TEXTURE_TO_PETAL(i) 		{\
 											if(needSendData)\
-											PBOMgr.sendData(textures[i], (PFN_PBOFILLBUFFER)captureCam,i);\
+											PBOMgr.sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\
 											else{\
 												glBindTexture(GL_TEXTURE_2D, textures[0]);\
 											}\
@@ -2266,9 +2340,8 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 		if(p_petalNum==NULL)
 		{
 #if WHOLE_PIC
-
+			glActiveTexture(GL_TextureIDs[0]);
 			for(int i = 0; i < 2; i++){
-				glActiveTexture(GL_TextureIDs[i]);
 				    SEND_TEXTURE_TO_PETAL(i);
 		}
 #else
@@ -2281,13 +2354,13 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 		for(int i = 0; i < CAM_COUNT; i++){
 #if USE_GAIN
 #if WHOLE_PIC
-			if(i<PARTITIONS1)
+		//	if(i<PARTITIONS1)
 			{
 				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
 			}
-			else
+	//		else
 			{
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
+		//		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
 			}
 			#else
                        shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
@@ -2296,13 +2369,13 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 #endif
 			Panel_Petal[i].Draw();
-			if(i<PARTITIONS1)
+	//		if(i<PARTITIONS1)
 			{
 			USE_TEXTURE_ON_PETAL_OVERLAP(i);
 			}
-			else
+//			else
 			{
-				USE_TEXTURE_ON_PETAL_OVERLAP2(i);
+//				USE_TEXTURE_ON_PETAL_OVERLAP2(i);
 			}
 			Panel_Petal_OverLap[i]->Draw();
 		}
@@ -11719,7 +11792,7 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 {
 	int y=0;
 	int set_corner_angle[CAM_COUNT*2];//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
-
+//TODO 单相机融合区对应位置
 	int temp_count=0;
 	temp_count=count%512;
 	for(y=0;y<CAM_COUNT;y++)

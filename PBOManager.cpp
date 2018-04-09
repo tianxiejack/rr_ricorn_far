@@ -121,7 +121,6 @@ void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 		index = pIndex[idx] = (pIndex[idx]+PBOChannelCount) % PBOBufferCount;
 		nextIndex = (index + PBOChannelCount) % PBOBufferCount;
 	}
-
 	// bind the texture and PBO
 	glBindTexture(GL_TEXTURE_2D, textureId);
 	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[index]);
@@ -131,7 +130,8 @@ void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 			}
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
-#if !WHOLE_PIC
+
+#if WHOLE_PIC
 if(idx==0)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*3/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else if(idx==1)
@@ -181,7 +181,10 @@ else if(idx==1)
 			}
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+if(idx==0)
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*3/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else if(idx==1)
+	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 	
     // it is good idea to release PBOs with ID 0 after use.
     // Once bound with 0, all pixel operations behave normal ways.
