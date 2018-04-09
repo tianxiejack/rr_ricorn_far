@@ -121,7 +121,6 @@ private:
 		CHECK_MYSELF,
 		PREVIEW_MODE,
 		ALL_VIEW_MODE,
-		ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE,//全景
 		VGA_WHITE_VIEW_MODE,
 		VGA_HOT_BIG_VIEW_MODE,
 		VGA_HOT_SMALL_VIEW_MODE,
@@ -130,7 +129,7 @@ private:
 		VGA_FUSE_SNOW_FIELD_VIEW_MODE,
 		VGA_FUSE_DESERT_VIEW_MODE,
 		VGA_FUSE_CITY_VIEW_MODE,
-
+		ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE,//全景
 			TELESCOPE_FRONT_MODE,
 			TELESCOPE_RIGHT_MODE,
 			TELESCOPE_BACK_MODE,
@@ -409,7 +408,7 @@ private:
 	void RenderRearTopView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderPresetViewByRotating(GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderRotatingView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderSingleView(GLint x, GLint y, GLint w, GLint h);
+	void RenderSingleView(GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2=false);
 	void RenderCenterView(GLint x, GLint y, GLint w, GLint h);
 	void RenderRegionPanelView(GLint x, GLint y, GLint w, GLint h);
 	void RenderCompassView(GLint x, GLint y, GLint w, GLint h);
@@ -503,7 +502,7 @@ private:
 
 	void GenerateTriangleView();
 	void DrawBowl(bool needSendData);
-	void DrawPanel(bool needSendData,int *p_petalNum);
+	void DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2=false);
 
 	void initAlphaMask();
 	void DrawVehicle();

@@ -3,14 +3,19 @@
 
 MvDetect::MvDetect()
 {
-	for(int i=0;i<CAM_COUNT;i++)
-	{
-		inNum[CAM_COUNT]=i;
-	}
+		for(int i=0;i<CAM_COUNT;i++)
+		{
+			inNum[CAM_COUNT]=i;
+			grayFrame[i]=(unsigned char *)malloc(MAX_SCREEN_WIDTH*MAX_SCREEN_HEIGHT*1);
+		}
 }
 MvDetect::~MvDetect()
 {
 			exitDetect();
+			for(int i=0;i<CAM_COUNT;i++)
+			{
+				free(grayFrame[i]);
+			}
 }
 
 void MvDetect::init(int w,int h)
@@ -21,8 +26,17 @@ void MvDetect::init(int w,int h)
 	}
 
 }
+void MvDetect::yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
+{
+	for(int j = 0;j<height*width;j++)
+	{
+			dst[j] = src[2*j +1];
+	}
+	return ;
+}
 void MvDetect::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 {
-	mvDetect((unsigned char) idx, inframe, w, h,&OutRect[idx]);
+	yuyv2gray(inframe,grayFrame[idx]);
+	mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
 }
 #endif

@@ -44,7 +44,7 @@ PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, uns
 	chncnt=cc;
 	pboMode=2;
 	pixel_format=format;
-	bUsePBO=true;
+	bUsePBO=false;
 	PBOChannelCount=PBOchcnt;
 
 	dataSize=w*h*cc;

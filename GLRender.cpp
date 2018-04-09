@@ -56,6 +56,8 @@
 #endif
 #include "gst_capture.h"
 bool isTracking=false;
+
+int mswap=-2;
 PanoCamOnForeSight  panocamonforesight;
 TelCamOnForeSight	     telcamonforesight;
 
@@ -2320,7 +2322,7 @@ void Render::DrawBowl(bool needSendData)
 	}
 }
 
-void Render::DrawPanel(bool needSendData,int *p_petalNum)
+void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
 {
 #ifdef GET_ALARM_AERA
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pVehicle->msFBO);
@@ -2356,6 +2358,11 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 #if WHOLE_PIC
 		//	if(i<PARTITIONS1)
 			{
+				if(use_shadermgr2)
+				{
+					shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+				}
+				else
 				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
 			}
 	//		else
@@ -2371,6 +2378,14 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum)
 			Panel_Petal[i].Draw();
 	//		if(i<PARTITIONS1)
 			{
+				if(use_shadermgr2)
+				{
+					   shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
+					                                                   transformPipeline.GetModelViewProjectionMatrix(),0,\
+					                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+
+				}
+				else
 			USE_TEXTURE_ON_PETAL_OVERLAP(i);
 			}
 //			else
@@ -3644,13 +3659,13 @@ void Render::RenderRotatingView(GLint x, GLint y, GLint w, GLint h,bool needSend
 
 	modelViewMatrix.PopMatrix();
 }
-void Render::RenderSingleView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderSingleView(GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2)
 {
 	glViewport(x,y,w,h);
 	viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
 	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
 
-	pVehicle->PrepareBlendMode();
+//	pVehicle->PrepareBlendMode();
 	modelViewMatrix.PushMatrix();
 	//	glDisable(GL_CULL_FACE);
 	if(bControlViewCamera){
@@ -3673,7 +3688,7 @@ void Render::RenderSingleView(GLint x, GLint y, GLint w, GLint h)
 
 
 
-	DrawPanel(true,NULL);
+	DrawPanel(true,NULL,use_shadermgr2);
 		modelViewMatrix.PushMatrix();
 		if(RulerAngle<180.0)
 		{
@@ -3695,14 +3710,14 @@ void Render::RenderSingleView(GLint x, GLint y, GLint w, GLint h)
 	DrawBowl(false);
 	modelViewMatrix.PopMatrix();
 */
-	DrawVehiclesEtc();
-	UpdateWheelAngle();
-	drawDynamicTracks();
+//	DrawVehiclesEtc();
+//	UpdateWheelAngle();
+//	drawDynamicTracks();
 	if(bControlViewCamera){
 		modelViewMatrix.PopMatrix();//pop camera matrix
 	}
-	p_ForeSightFacade_Track->SetAlign(1,TRACK_VGA);
-	p_ForeSightFacade_Track->Draw(0);
+//	p_ForeSightFacade_Track->SetAlign(1,TRACK_VGA);
+//	p_ForeSightFacade_Track->Draw(0);
 
 	modelViewMatrix.PopMatrix();
 }
@@ -5152,14 +5167,14 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 else if(displayMode==ALL_VIEW_MODE)
 {
 		petal2[0]=0;
-		DrawPanel(false,petal2);
+		DrawPanel(false,NULL);
 		for(int i=0;i<5;i++)
 		{
 			petal2[i]=i;
 		}
 		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-		DrawPanel(false,petal2);
+		modelViewMatrix.Translate(PanoLen,0.0,0.0);
+		DrawPanel(false,NULL);
 		modelViewMatrix.PopMatrix();
 }
 else
@@ -5418,8 +5433,8 @@ else if(displayMode==ALL_VIEW_MODE)
 			petal2[i]=i;
 		}
 		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-		DrawPanel(true,petal2);
+		modelViewMatrix.Translate(PanoLen,0.0,0.0);
+		DrawPanel(true,NULL);
 		modelViewMatrix.PopMatrix();
 }
 else
@@ -5430,7 +5445,7 @@ else
 			}
 			modelViewMatrix.PushMatrix();
 			modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-			DrawPanel(true,petal2);
+			DrawPanel(true,NULL);
 			modelViewMatrix.PopMatrix();
 }
 /*
@@ -6010,6 +6025,17 @@ void Render::SetdisplayMode( )
 
 void Render::RenderScene(void)
 {
+	printf("1\n");
+//	printf("mswap=%d\n",mswap);
+	if(mswap!=1)
+	{
+		mswap=1;
+	}
+	else
+	{
+///		printf("%d  error\n",mswap);
+//		exit(-1);
+	}
 	bool bShowDirection = false, isBillBoardExtOn = false;
 	bool needSendData = true;
 	int billBoardx = 0, billBoardy = g_windowHeight*15/16;//7/8;
@@ -6214,8 +6240,9 @@ void Render::RenderScene(void)
 		break;
 	case	ALL_VIEW_MODE:
 	{
-		RenderRightPanoView(0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-		RenderLeftPanoView(0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		RenderRightPanoView(0,g_windowHeight*200.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		RenderLeftPanoView(0,g_windowHeight*660.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		break;
 	}
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
 	{
@@ -6323,7 +6350,7 @@ void Render::RenderScene(void)
 				break;
 		case		VGA_FUSE_WOOD_LAND_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_WOOD_LAND_VIEW_MODE);
-			RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
 				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
 				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
