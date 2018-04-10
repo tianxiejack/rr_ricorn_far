@@ -11,7 +11,7 @@
 #include "GLTools.h"
 #include <cmath>
 extern void* getDefaultShaderMgr();
-extern void * getDefaultTransformPipeline();
+extern void * getDefaultTransformPipeline(GLEnv &m_env);
 using namespace std;
 
 #define RULER_FILE "./rulerangle.yml"
@@ -33,9 +33,9 @@ void Calibrate::Init()
     //GLuint &base = startList;
 
 }
-void Calibrate::DrawRuler(float * pos)
+void Calibrate::DrawRuler(GLEnv &m_env,float * pos)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 	const float* Colors[6];
 	Colors[0]=vGreen;
 	Colors[1]=vGreen;
@@ -228,9 +228,9 @@ float Calibrate::GetAngle()
 	return angle_data;
 }
 
-void Calibrate::DrawReferenceLine(float * pos)
+void Calibrate::DrawReferenceLine(GLEnv &m_env,float * pos)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 	const float* Colors[6];
 	Colors[0]=vBRed;
 	Colors[1]=vYellow;

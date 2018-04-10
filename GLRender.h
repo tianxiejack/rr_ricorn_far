@@ -50,6 +50,7 @@
 #include"PBOManager.h"
 #include "PBO_FBO_Facade.h"
 #include "RenderDrawBehaviour.h"
+#include"GLEnv.h"
 using namespace std;
 
 class RenderMain;
@@ -84,7 +85,7 @@ public:
 	void mouseButtonPress(int button, int state, int x, int y);
 	void mouseMotionPress(int x, int y);
 	inline GLShaderManager* getShaderManager(){return &shaderManager;}
-	inline GLGeometryTransform* getTransformPipeline(){return &transformPipeline;}
+//	inline GLGeometryTransform* getTransformPipeline(){return &transformPipeline;}
 	void keyPressed(unsigned char key, int x, int y);
 	void specialkeyPressed (int key, int x, int y);
 	void BowlParseSTLAscii(const char* filename);
@@ -332,10 +333,10 @@ private:
 			void SetHeadLocation(float location[3]);
 			void SetSize(float size[2]);
 			static void setBlendMode(int mode){blendmode = mode;};
-			static void DrawGroup(M3DMatrix44f camera, FixedBillBoard *bbd[], unsigned int count);
-			void DrawSingle(M3DMatrix44f camera, FixedBillBoard *bbd);
+			static void DrawGroup(GLEnv &m_env,M3DMatrix44f camera, FixedBillBoard *bbd[], unsigned int count);
+			void DrawSingle(GLEnv &m_env,M3DMatrix44f camera, FixedBillBoard *bbd);
 		private:
-			void Draw(M3DMatrix44f camera, LOCATION_BBD loc=LOCATION_BBD_BACK);
+			void Draw(GLEnv &m_env,M3DMatrix44f camera, LOCATION_BBD loc=LOCATION_BBD_BACK);
 			GLuint LoadDDS(const char* fileName);
 			GLShaderManager * 	m_pShaderManager;
 			GLMatrixStack &		modelViewMatrix;
@@ -360,108 +361,108 @@ private:
 			GLfloat fisheye_position[3];
 
 	}*p_FixedBBD_1M, *p_FixedBBD_2M, 	*p_FixedBBD_5M, *p_FixedBBD_8M;
-	void DrawTrackFixBBDs(M3DMatrix44f camera);
-	void DrawCords(int w, int h, const char* s);
-	void DrawAngleCords(int w, int h, const char* s,float toScale);
+	void DrawTrackFixBBDs(GLEnv &m_env,M3DMatrix44f camera);
+	void DrawCords(GLEnv &m_env,int w, int h, const char* s);
+	void DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale);
 	void RememberTime();
-	void DrawFrontBackTracks();
-	void Draw4CrossLines();
-	void DrawTrackHead();
-	void DrawTrackRear();
-	void DrawShadow();
-	void DrawIndividualVideo(bool needSendData);
-	void DrawExtensionVideo(bool needSendData);
-	void DrawCompassVideo(bool needSendData);
-	void DrawRulerVideo(bool needSendData,int type);
+	void DrawFrontBackTracks(GLEnv &m_env);
+	void Draw4CrossLines(GLEnv &m_env);
+	void DrawTrackHead(GLEnv &m_env);
+	void DrawTrackRear(GLEnv &m_env);
+	void DrawShadow(GLEnv &m_env);
+	void DrawIndividualVideo(GLEnv &m_env,bool needSendData);
+	void DrawExtensionVideo(GLEnv &m_env,bool needSendData);
+	void DrawCompassVideo(GLEnv &m_env,bool needSendData);
+	void DrawRulerVideo(GLEnv &m_env,bool needSendData,int type);
 	int  GetCurrentExtesionVideoId(){return m_ExtVideoId;};
 
 	void InitShadow();
 	void InitRuler();
 	void InitWheelTracks();
 	void SetCurrentExtesionVideoId(int curChid){m_ExtVideoId=curChid;};
-	void DrawVGAVideo(bool needSendData);
-	void DrawSDIVideo(bool needSendData);
+	void DrawVGAVideo(GLEnv &m_env,bool needSendData);
+	void DrawSDIVideo(GLEnv &m_env,bool needSendData);
 	int GetCurrentVGAVideoId(){return m_VGAVideoId;};
 	int GetCurrentSDIVideoId(){return m_SDIVideoId;};
-	void InitForesightGroupTrack();
+	void InitForesightGroupTrack(GLEnv &m_env);
 
 	void InitFrontTracks();
 	void InitCrossLines();
 	void InitWealTrack();
-	void InitDynamicTrack();
-	void InitCornerMarkerGroup();
-	void InitBillBoard();
-	void DrawCordsView(Rect* rec, char* text);
-	void DrawAngleCordsView(Rect* rec, char* text,float toScale);
-	void DrawInitView(Rect* rec, bool needSendData);
-	void DrawSigleScale(Rect* rec, GLint idx, bool needSendData);
-	void DrawSigleVideo(GLint idx, bool needSendData);
+	void InitDynamicTrack(GLEnv &m_env);
+	void InitCornerMarkerGroup(GLEnv &m_env);
+	void InitBillBoard(GLEnv &m_env);
+	void DrawCordsView(GLEnv &m_env,Rect* rec, char* text);
+	void DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale);
+	void DrawInitView(GLEnv &m_env,Rect* rec, bool needSendData);
+	void DrawSigleScale(GLEnv &m_env,Rect* rec, GLint idx, bool needSendData);
+	void DrawSigleVideo(GLEnv &m_env,GLint idx, bool needSendData);
 
-	void DrawVehiclesEtc(M3DMatrix44f camera=NULL);
-	void DrawVehiclesEtcWithFixedBBD(M3DMatrix44f camera);
-	void DrawStrings(int w, int h, const char * s=NULL);
-	void DrawStringsWithHighLight(int w, int h, const char* s=NULL, int idx_HLt = -1);
-	void RenderTimeView(GLint x, GLint y,GLint w, GLint h);
-	void RenderBirdView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderAnimationToBirdView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderPreSetView(GLint x, GLint y, GLint w, GLint h,bool needSendData, bool isRearTop = false);
-	void RenderRearTopView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderPresetViewByRotating(GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderRotatingView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderSingleView(GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2=false);
-	void RenderCenterView(GLint x, GLint y, GLint w, GLint h);
-	void RenderRegionPanelView(GLint x, GLint y, GLint w, GLint h);
-	void RenderCompassView(GLint x, GLint y, GLint w, GLint h);
-	void RenderRulerView(GLint x, GLint y, GLint w, GLint h,int type);
-	void RenderPanoView(GLint x, GLint y, GLint w, GLint h);
-
-
+	void DrawVehiclesEtc(GLEnv &m_env,M3DMatrix44f camera=NULL);
+	void DrawVehiclesEtcWithFixedBBD(GLEnv &m_env,M3DMatrix44f camera);
+	void DrawStrings(GLEnv &m_env,int w, int h, const char * s=NULL);
+	void DrawStringsWithHighLight(GLEnv &m_env,int w, int h, const char* s=NULL, int idx_HLt = -1);
+	void RenderTimeView(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderBirdView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderAnimationToBirdView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderPreSetView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData, bool isRearTop = false);
+	void RenderRearTopView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
+	void RenderPresetViewByRotating(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
+	void RenderRotatingView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
+	void RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2=false);
+	void RenderCenterView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderCompassView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int type);
+	void RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
 
-	void RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
-	void RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
-	void RenderMyLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
 
-	void RenderIndividualView(GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderBillBoardAt(GLint x, GLint y,GLint w, GLint h);
-	void RenderCompassBillBoardAt(GLint x, GLint y,GLint w, GLint h);
+
+	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
+	void RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
+	void RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
+
+	void RenderIndividualView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
+	void RenderBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderCompassBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
 
 	void InitDataofAlarmarea();
-	void PrepareAlarmAera(int x,int y,int w,int h);
+	void PrepareAlarmAera(GLEnv &m_env,int x,int y,int w,int h);
 	void InitAlarmArea(int positionofalarm[8],int type);
 	 void InitAlarmAreaType(int type);
 	 void CancelAlarmArea();
-	void DrawAlarmArea(float get_pos[8],int x,int y,int w,int h,int color_type);
-	void DrawAlarmAreaonScreen();
-	void DrawAlarmLine(float pos[4]);
+	void DrawAlarmArea(GLEnv &m_env,float get_pos[8],int x,int y,int w,int h,int color_type);
+	void DrawAlarmAreaonScreen(GLEnv &m_env);
+	void DrawAlarmLine(GLEnv &m_env,float pos[4]);
 
 	void SendtoTrack();
-	void RenderTriangleView(GLint x, GLint y, GLint w, GLint h);
-	void RenderChineseCharacterBillBoardAt(GLint x, GLint y,GLint w, GLint h);
-	void RenderPanoTelView(GLint x, GLint y, GLint w, GLint h);
-	void RenderTrackForeSightView(GLint x, GLint y, GLint w, GLint h);
+	void RenderTriangleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderChineseCharacterBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
 	void Show_first_mode(int read_mode);
 	int readFirstMode();
 	void writeFirstMode(int Modenum);
 
-	void RenderFreeView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderOriginCords(GLint x, GLint y,GLint w, GLint h);
-	void RenderUpCords(GLint x, GLint y,GLint w, GLint h);
-	void RenderFwdCords(GLint x, GLint y,GLint w, GLint h);
-	void RenderCordsView(GLint x, GLint y,GLint w, GLint h);
-	void RenderExtensionView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderExtensionBillBoardAt(GLint x, GLint y,GLint w, GLint h);
+	void RenderFreeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderOriginCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderUpCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderFwdCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderCordsView(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
+	void RenderExtensionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderExtensionBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
 
-	void RenderVGAView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderSDIView(GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderOnetimeView(GLint x, GLint y, GLint w, GLint h);
-	void RenderTwotimesView(GLint x, GLint y, GLint w, GLint h);
-	void RenderOnetimeView2(GLint x, GLint y, GLint w, GLint h);
-	void RenderTwotimesView2(GLint x, GLint y, GLint w, GLint h);
-	void RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h);
-	void RenderPositionView(GLint x, GLint y, GLint w, GLint h);
-	void RenderCheckMyselfView(GLint x, GLint y, GLint w, GLint h);
+	void RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderTwotimesView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
 	void GenerateCheckView();
 	void GenerateOnetimeView();
@@ -501,24 +502,24 @@ private:
 	void InitPanel(bool reset=false);
 
 	void GenerateTriangleView();
-	void DrawBowl(bool needSendData);
-	void DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2=false);
+	void DrawBowl(GLEnv &m_env,bool needSendData);
+	void DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_shadermgr2=false);
 
 	void initAlphaMask();
 	void DrawVehicle();
-	void DrawSlideonPanel();
-	void DrawCrossonPanel();
-	void DrawRuleronPanel();
-	void DrawNeedleonCompass();
+	void DrawSlideonPanel(GLEnv &m_env);
+	void DrawCrossonPanel(GLEnv &m_env);
+	void DrawRuleronPanel(GLEnv &m_env);
+	void DrawNeedleonCompass(GLEnv &m_env);
 
-	void DrawTriangle();
+	void DrawTriangle(GLEnv &m_env);
 	 void set_SightWide(int recvWide);
 
 	void RenderScene(void);
 	void RenderSceneDS(void);
-	void DrawOitVehicle();
-	void InitOitVehicle();
-	void InitAlarmAeraonPano();
+	void DrawOitVehicle(GLEnv &m_env);
+	void InitOitVehicle(GLEnv &m_env);
+	void InitAlarmAeraonPano(GLEnv &m_env);
 	void GenerateGLTextureIds();
 	void generateAlphaList(Point2f AlphaList[], float alpha_index_x, float alpha_index_y, int i);
 	bool IsOverlay(bool AppDirection[6], int *direction);
@@ -533,8 +534,8 @@ private:
 	inline bool isDirectionMode();
 	void UpdateWheelAngle();
 	 void prepareTexture(int texture_id);
-	 void drawDynamicTracks();
-	 void InitLineofRuler();
+	 void drawDynamicTracks(GLEnv &m_env);
+	 void InitLineofRuler(GLEnv &m_env);
 	 void InitPanoScaleArrayData();
 	 void ReadPanoScaleArrayData(char * filename);
 	 void WritePanoScaleArrayData(char * filename,float * arraydata_left,float * arraydata_right,float * arraydata_level);
@@ -656,13 +657,13 @@ private:
 	float SightWide;
 
 	GLShaderManager shaderManager;
-	GLMatrixStack	modelViewMatrix;
-	GLMatrixStack	projectionMatrix;
+
+//	GLMatrixStack	modelViewMatrix;
+//	GLMatrixStack	projectionMatrix;
+//	GLGeometryTransform transformPipeline;
+//	GLFrustum viewFrustum;
 
 	OitVehicle *pVehicle;
-	GLGeometryTransform transformPipeline;
-	GLFrustum viewFrustum;
-
 	GLFrame	birdViewCameraFrame;
 	GLFrame frontCameraFrame;
 	GLFrame rearTopCameraFrame;      //a dedicated camera to view from rear top looking down
@@ -813,7 +814,7 @@ private:
 };
 
 void* getDefaultShaderMgr();
-void * getDefaultTransformPipeline();
+void * getDefaultTransformPipeline(GLEnv &m_env);
 
 void SendBackXY(int *Pos);
 

@@ -13,6 +13,7 @@
 #include "GLShaderManager.h"
 #include "GLMatrixStack.h"
 #include "GLTriangleBatch.h"
+#include "GLEnv.h"
 class DynamicTrack{
 public:
 	DynamicTrack(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr=NULL);
@@ -23,7 +24,7 @@ public:
 	void SetAcrCenter(float center[3]){m_center[0]=center[0];m_center[1]=center[1];m_center[2]=center[2];};
 	void SetArcWidth(float arcWidth){m_arcWidth = arcWidth;};
 	void UpdateArcs(float arcWidth, float deltaAngle);
-	void DrawTracks();
+	void DrawTracks(GLEnv &m_env);
 	float* GetArcCenter(){return m_center;};
 	float& GetArcWidth(){return m_arcWidth;};
 	float& GetWheelDistance(){return m_WheelDist;};

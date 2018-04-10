@@ -55,9 +55,9 @@
 #include"GetScreenBuffer.h"
 #endif
 #include "gst_capture.h"
+#include"GLEnv.h"
 bool isTracking=false;
-
-int mswap=-2;
+GLEnv env1,env2;
 PanoCamOnForeSight  panocamonforesight;
 TelCamOnForeSight	     telcamonforesight;
 
@@ -857,6 +857,7 @@ void Render::GetFPS()
 // This is the first opportunity to do any OpenGL related tasks.
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
+	GLEnv & env=env1;
 	GLubyte *pBytes;
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
@@ -897,8 +898,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		overLapRegion::GetoverLapRegion()->SetSingleHightLightState(false);
 			ReadPanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME);
 
-		transformPipeline.SetMatrixStacks(modelViewMatrix, projectionMatrix);
-		InitLineofRuler();
+		env.GettransformPipeline()->SetMatrixStacks(*(env.GetmodelViewMatrix()), *(env.GetprojectionMatrix()));
+		InitLineofRuler(env);
 
 
 		GenerateCenterView();
@@ -955,18 +956,18 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		InitFollowCross();
 		InitRuler();
 		InitCalibrate();
-		InitOitVehicle();
+		InitOitVehicle(env);
 		//    glmDelete(VehicleLoader);
 	//	pVehicle->initFBOs(windowWidth, windowHeight);
 
 		InitShadow();
-		InitBillBoard();
+		InitBillBoard(env);
 //		InitFrontTracks();
 		InitWheelTracks();
 		InitCrossLines();
 		InitWealTrack();
-		InitDynamicTrack();
-		InitCornerMarkerGroup();
+		InitDynamicTrack(env);
+		InitCornerMarkerGroup(env);
 		initAlphaMask();
 		InitDataofAlarmarea();
 
@@ -979,9 +980,9 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 					fclose(fp);
 					printf("forward:%f\n",forward_data);
 				}
-		InitForesightGroupTrack();
-		DrawNeedleonCompass();
-		DrawTriangle();
+		InitForesightGroupTrack(env);
+		DrawNeedleonCompass(env);
+		DrawTriangle(env);
 
 		pthread_t th_rec;
 	   	int arg_rec = 10;
@@ -1226,7 +1227,7 @@ void Render::GenerateGLTextureIds()
 #endif
 }
 
-void Render::DrawStringsWithHighLight(int w, int h, const char* s, int idx_HLt)
+void Render::DrawStringsWithHighLight(GLEnv &m_env,int w, int h, const char* s, int idx_HLt)
 {
 	static int flicker = 0;
     char quote[1][80];
@@ -1242,19 +1243,19 @@ void Render::DrawStringsWithHighLight(int w, int h, const char* s, int idx_HLt)
 
     if(flicker++ > 10)
     	flicker = 0;
-    modelViewMatrix.LoadIdentity();
-    modelViewMatrix.Translate(0.0, 0.0, UpwardsScrollVelocity);
-    //modelViewMatrix.Rotate(-20, 1.0, 0.0, 0.0);
-    modelViewMatrix.Scale(0.08, 0.08, 0.08);
+    m_env.GetmodelViewMatrix()->LoadIdentity();
+    m_env.GetmodelViewMatrix()->Translate(0.0, 0.0, UpwardsScrollVelocity);
+    //m_env.GetmodelViewMatrix()->Rotate(-20, 1.0, 0.0, 0.0);
+    m_env.GetmodelViewMatrix()->Scale(0.08, 0.08, 0.08);
     glLineWidth(2);
     for(l=0;l<numberOfQuotes;l++)
     {
         lenghOfQuote = (int)strlen(quote[l]);
-        modelViewMatrix.PushMatrix();
-        modelViewMatrix.Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0);
+        m_env.GetmodelViewMatrix()->PushMatrix();
+        m_env.GetmodelViewMatrix()->Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0);
         for (i = 0; i < lenghOfQuote; i++)
         {
-        	modelViewMatrix.Translate((90.0f), 0.0, 0.0);
+        	m_env.GetmodelViewMatrix()->Translate((90.0f), 0.0, 0.0);
 			if(i == idx_HLt && flicker<5){
 				if(PDefaultColor == vGrey)
 					pColor = vWhite;
@@ -1264,16 +1265,16 @@ void Render::DrawStringsWithHighLight(int w, int h, const char* s, int idx_HLt)
 			else{
 				pColor = PDefaultColor;
 			}
-            shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), pColor);
+            shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), pColor);
             glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[l][i]);
         }
-        modelViewMatrix.PopMatrix();
+        m_env.GetmodelViewMatrix()->PopMatrix();
     }
 }
 
-void Render::DrawStrings(int w, int h, const char* s)
+void Render::DrawStrings(GLEnv &m_env,int w, int h, const char* s)
 {
-	DrawStringsWithHighLight(w,h,s);
+	DrawStringsWithHighLight(m_env,w,h,s);
 }
 
 bool Render::IsOverlay(bool AppDirection[CAM_COUNT], int *direction)
@@ -2043,106 +2044,106 @@ DRAW:
 }
 
 
-void Render::DrawFrontBackTracks()
+void Render::DrawFrontBackTracks(GLEnv &m_env)
 {
 	const GLfloat* pVehicleDimension = pVehicle->GetDimensions();
 	const GLfloat* pVehicleYMaxMin = pVehicle->GetYMaxMins();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	glDisable(GL_BLEND);
-	modelViewMatrix.Translate(0.0f, pVehicle->GetScale() *(pVehicleYMaxMin[0]),0.0f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);	   
+	m_env.GetmodelViewMatrix()->Translate(0.0f, pVehicle->GetScale() *(pVehicleYMaxMin[0]),0.0f);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	glLineWidth(0.2f);
 	WheelTrackBatch.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	glLineWidth(1.0f);
 	WheelTrackBatch2.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtGreen);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtGreen);
 	WheelTrackBatch5.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vRed);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vRed);
 	WheelTrackBatch1.Draw();
 
 	//draw front tracks in symmetric ways
-	modelViewMatrix.Translate( 0.0f,-( pVehicle->GetScale() *(pVehicleDimension[1])-1*(DEFAULT_VEHICLE_TRANSLATION_1)),	0.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f,0.0f,1.0f);
+	m_env.GetmodelViewMatrix()->Translate( 0.0f,-( pVehicle->GetScale() *(pVehicleDimension[1])-1*(DEFAULT_VEHICLE_TRANSLATION_1)),	0.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f,0.0f,1.0f);
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vGreen);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vGreen);
 	glLineWidth(1.5f);
 	FrontTrackBatch.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vGreen);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vGreen);
 	glLineWidth(2.0f);
 	FrontTrackBatch2.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtGreen);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtGreen);
 	FrontTrackBatch5.Draw();
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vRed);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vRed);
 	FrontTrackBatch1.Draw();
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::Draw4CrossLines()
+void Render::Draw4CrossLines(GLEnv &m_env)
 {
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	glDisable(GL_BLEND);
 
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vBlack);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vBlack);
 	glLineWidth(0.5);
 	CrossLinesBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::DrawTrackHead()
+void Render::DrawTrackHead(GLEnv &m_env)
 {
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	glDisable(GL_BLEND);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vRed);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vRed);
 	glLineWidth(1);
 	WheelTrackBatchHead.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::DrawTrackRear()
+void Render::DrawTrackRear(GLEnv &m_env)
 {
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	glDisable(GL_BLEND);
 	glLineWidth(5);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vRed);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vRed);
 	WheelTrackBatchRear1.Draw();	
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	WheelTrackBatchRear2.Draw();
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtGreen);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtGreen);
 	WheelTrackBatchRear5.Draw();
 	glEnable(GL_BLEND);
 	glLineWidth(10);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	WheelTrackBatchRear.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::DrawShadow()
+void Render::DrawShadow(GLEnv &m_env)
 { 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	glDisable(GL_BLEND);
 	const GLfloat* pVehicleDimension = pVehicle->GetDimensions();
-	modelViewMatrix.Scale(DEFAULT_SHADOW_TO_VEHICLE_RATE_WIDTH*pVehicleDimension[2]/2, DEFAULT_SHADOW_TO_VEHICLE_RATE_LENGTH*pVehicleDimension[1]/2, 1.0f);	//since the plate is [-1,1], divide the factors by 2. And make it a rect
-	modelViewMatrix.Translate(0.0f, DEFAULT_SHADOW_TRANSLATE_LENGTH_METER, 0.01f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vBlack);
+	m_env.GetmodelViewMatrix()->Scale(DEFAULT_SHADOW_TO_VEHICLE_RATE_WIDTH*pVehicleDimension[2]/2, DEFAULT_SHADOW_TO_VEHICLE_RATE_LENGTH*pVehicleDimension[1]/2, 1.0f);	//since the plate is [-1,1], divide the factors by 2. And make it a rect
+	m_env.GetmodelViewMatrix()->Translate(0.0f, DEFAULT_SHADOW_TRANSLATE_LENGTH_METER, 0.01f);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vBlack);
 	shadowBatch.Draw();
 	glEnable(GL_BLEND);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 // draw the individual video on shadow rect
-void Render::DrawIndividualVideo(bool needSendData)
+void Render::DrawIndividualVideo(GLEnv &m_env,bool needSendData)
 {
 	int idx = p_BillBoard->m_Direction;
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	glActiveTexture(GL_TextureIDs[idx]);
 	
 	if(needSendData){
@@ -2152,26 +2153,26 @@ void Render::DrawIndividualVideo(bool needSendData)
 		glBindTexture(GL_TEXTURE_2D, textures[idx]);
 	}
 
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx);
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx);
 	shadowBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 	if((SPLIT_VIEW_MODE == displayMode))
 	{
 		if(CAM_0 == idx)
-			DrawTrackHead();
+			DrawTrackHead(m_env);
 		else if(CAM_3 == idx)
-			DrawTrackRear();
+			DrawTrackRear(m_env);
 	}
 }
 
-void Render::DrawVGAVideo(bool needSendData)
+void Render::DrawVGAVideo(GLEnv &m_env,bool needSendData)
 {
 	if(1)//vga_data!=NULL)
 	{
 		int idx = GetCurrentVGAVideoId();
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-		modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 		glActiveTexture(GL_VGATextureIDs[idx]);
 		if(needSendData){
 			PBOVGAMgr.sendData(VGATextures[idx], (PFN_PBOFILLBUFFER)captureVGACam,idx);
@@ -2179,21 +2180,21 @@ void Render::DrawVGAVideo(bool needSendData)
 		else{
 			glBindTexture(GL_TEXTURE_2D, VGATextures[idx]);
 		}
-		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
+		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 		shadowBatch.Draw();
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 }
 
 
-void Render::DrawSDIVideo(bool needSendData)
+void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 {
 	if(1)//(sdi_data!=NULL)
 	{
 		int idx = GetCurrentSDIVideoId();
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-		modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 		glActiveTexture(GL_SDITextureIDs[idx]);
 			if(needSendData){
 				PBOSDIMgr.sendData(SDITextures[idx], (PFN_PBOFILLBUFFER)captureSDICam,idx);
@@ -2201,19 +2202,19 @@ void Render::DrawSDIVideo(bool needSendData)
 			else{
 				glBindTexture(GL_TEXTURE_2D, SDITextures[idx]);
 			}
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+23);// VGA texture start from 15
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+23);// VGA texture start from 15
 			shadowBatch.Draw();
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 }
 
 // Draw the extension video on shadow rect
-void Render::DrawExtensionVideo(bool needSendData)
+void Render::DrawExtensionVideo(GLEnv &m_env,bool needSendData)
 {
 	int idx = GetCurrentExtesionVideoId();
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	glActiveTexture(GL_ExtensionTextureIDs[idx]);
 
 	if(needSendData){
@@ -2222,9 +2223,9 @@ void Render::DrawExtensionVideo(bool needSendData)
 	else{
 		glBindTexture(GL_TEXTURE_2D, extensionTextures[idx]);
 	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+25);// extension texture start from 15
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+25);// extension texture start from 15
 	shadowBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
 int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
@@ -2244,26 +2245,26 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 #if WHOLE_PIC
 #define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-                                                   transformPipeline.GetModelViewProjectionMatrix(),0,\
+                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
 
 #define USE_TEXTURE_ON_PETAL_OVERLAP2(i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-                                                   transformPipeline.GetModelViewProjectionMatrix(),1,\
+                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),1,\
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
 #else
 #define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-                                                   transformPipeline.GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
+                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
                                                    (i+1)%CAM_COUNT,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
 #endif
 #else
 #define USE_TEXTURE_ON_PETAL_OVERLAP(i)	{\
 						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-						    transformPipeline.GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
+						    m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
 						    (i+1)%CAM_COUNT,ALPHA_TEXTURE_IDX0+alpha[i]);\
 							}
 #endif
@@ -2277,17 +2278,17 @@ void Render::prepareTexture(int t_id){
 	glActiveTexture(GL_TextureIDs[t_id]);
 	glBindTexture(GL_TEXTURE_2D, textures[t_id]);
 }
-void Render::drawDynamicTracks()
+void Render::drawDynamicTracks(GLEnv &m_env)
 {
 	prepareTexture(ALPHA_TEXTURE_IDX);
 	prepareTexture(ALPHA_TEXTURE_IDX0);
-	p_DynamicTrack->DrawTracks();
+	p_DynamicTrack->DrawTracks(m_env);
 }
-void Render::DrawBowl(bool needSendData)
+void Render::DrawBowl(GLEnv &m_env,bool needSendData)
 {
 	glDisable(GL_BLEND);
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	//#pragma omp parallel sections
 	{
 		//bind alpha mask to texture6, render the imagei, imagei+1 and alphaMask on petal_overlap[i]
@@ -2306,10 +2307,10 @@ void Render::DrawBowl(bool needSendData)
 		
 		for(int i = 0; i < CAM_COUNT; i++){
 #if USE_GAIN
-                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
+                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
 #else
 
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 #endif
 
 			Petal[i].Draw();
@@ -2318,17 +2319,17 @@ void Render::DrawBowl(bool needSendData)
 			Petal_OverLap[i]->Draw();
 		}
 
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 }
 
-void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
+void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_shadermgr2)
 {
 #ifdef GET_ALARM_AERA
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pVehicle->msFBO);
 #endif
 	glDisable(GL_BLEND);
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	//#pragma omp parallel sections
 	{
 		//bind alpha mask to texture6, render the imagei, imagei+1 and alphaMask on petal_overlap[i]
@@ -2360,20 +2361,20 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
 			{
 				if(use_shadermgr2)
 				{
-					shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+					shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				}
 				else
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 			}
 	//		else
 			{
-		//		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
+		//		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 1,i);
 			}
 			#else
-                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
+                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
 #endif
  #else
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 #endif
 			Panel_Petal[i].Draw();
 	//		if(i<PARTITIONS1)
@@ -2381,7 +2382,7 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
 				if(use_shadermgr2)
 				{
 					   shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-					                                                   transformPipeline.GetModelViewProjectionMatrix(),0,\
+					                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
 					                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
 
 				}
@@ -2425,17 +2426,17 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
 #if WHOLE_PIC
 						if(count<6)
 						{
-							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 0,i);
+							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
 						else
 						{
-							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), 1,i);
+							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 1,i);
 						}
 #else
-	                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
+	                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
 #endif
 	#else
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, transformPipeline.GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				Panel_Petal[p_petalNum[i]].Draw();
 #if WHOLE_PIC
@@ -2457,7 +2458,7 @@ void Render::DrawPanel(bool needSendData,int *p_petalNum,bool use_shadermgr2)
 				}
 #endif
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 		}
 
 
@@ -2533,7 +2534,7 @@ void Render::initAlphaMask()
 	}
 }
 
-void Render::InitForesightGroupTrack()
+void Render::InitForesightGroupTrack(GLEnv &m_env)
 {
 	float pano_length=PanoLen;//(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float pano_height=PanoHeight;//(render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z());
@@ -2845,25 +2846,25 @@ void Render::InitForesightGroupTrack()
 	 }
 
 	 	  p_ForeSightFacade =new ForeSightFacade(
-	 			  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager, auto_ptr<BaseForeSight>(
-	 					  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager,auto_ptr<BaseForeSight>(
-	 							  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager,auto_ptr<BaseForeSight>(
+	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
+	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
+	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 	 									  new PseudoForeSight_core()),pcindex,pano_cross,pano_length*100.0,pano_height/5.7)),pirindex,pano_inner_rect,pano_length*102.0,pano_height/11.5)),
 	 					  	  	  	  porindex,pano_outer_rect,pano_length*100.0,pano_height*0)
 	 	  	  	  	  	  	  	  	  	  ,foresightPos,&panocamonforesight);
 		  assert(p_ForeSightFacade);
 
 		  p_ForeSightFacade2 =new ForeSightFacade(
-		 	 			  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager, auto_ptr<BaseForeSight>(
-		 	 					  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager,auto_ptr<BaseForeSight>(
-		 	 							  new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager,auto_ptr<BaseForeSight>(
+		 	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
+		 	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
+		 	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 	 									  new PseudoForeSight_core()),tcindex,tel_cross,pano_length/TELXLIMIT,pano_height/5.7)) ,tirindex,tel_inner_rect,pano_length/TELXLIMIT-((1.0/14.0-1.0/15.75)*pano_length),pano_height/8.0)),
 		 	 					  	  	  	  	  torindex,tel_outer_rect,(pano_length/TELXLIMIT-(1/14.0-1/25.0)*pano_length),pano_height/12.0)
 		  	  	  	  	  	  	  	  	  	  	  	  ,  foresightPos  ,&telcamonforesight);   //14.0  15.75   25
 		 		  assert(p_ForeSightFacade2);
 
 		 			  p_ForeSightFacade_Track=new ForeSightFacade(
-		 					 		 														new ForeSight_decorator(modelViewMatrix,projectionMatrix, &shaderManager,auto_ptr<BaseForeSight>(
+		 					 		 														new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_core()),trackindex,track_cross,g_windowWidth*1434.0/1920.0/2.0*100.0,g_windowHeight/2.0*100.0),
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	foresightPos,
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_cam());
@@ -3275,15 +3276,15 @@ void Render::InitWealTrack()
 	WheelTrackBatchHead.End();
 }
 
-void Render::InitDynamicTrack()
+void Render::InitDynamicTrack(GLEnv &m_env)
 {
-	p_DynamicTrack = new DynamicTrack(modelViewMatrix, projectionMatrix, &shaderManager);
+	p_DynamicTrack = new DynamicTrack(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	assert(p_DynamicTrack);
 }
 
-void Render::InitLineofRuler()
+void Render::InitLineofRuler(GLEnv &m_env)
 {
-	p_LineofRuler=new Calibrate(modelViewMatrix, projectionMatrix, &shaderManager);
+	p_LineofRuler=new Calibrate(	*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	assert(p_LineofRuler);
 	float the_angle=0.0;
 	the_angle=p_LineofRuler->Load();
@@ -3291,14 +3292,14 @@ void Render::InitLineofRuler()
 	setrulerreferenceangle(the_angle);
 }
 
-void Render::InitCornerMarkerGroup()
+void Render::InitCornerMarkerGroup(GLEnv &m_env)
 {
-	p_CornerMarkerGroup = new CornerMarkerGroup(modelViewMatrix, projectionMatrix, &shaderManager);
+	p_CornerMarkerGroup = new CornerMarkerGroup(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	assert(p_DynamicTrack);
 }
-void Render::InitOitVehicle()
+void Render::InitOitVehicle(GLEnv &m_env)
 {
-	pVehicle = new OitVehicle(modelViewMatrix, projectionMatrix, &shaderManager);
+	pVehicle = new OitVehicle(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	if(pVehicle)
 	{
 		pVehicle->SetLoader(VehicleLoader);
@@ -3311,9 +3312,9 @@ void Render::InitOitVehicle()
 	}
 }
 
-void Render::InitAlarmAeraonPano()
+void Render::InitAlarmAeraonPano(GLEnv &m_env)
 {
-	pPano = new OitVehicle(modelViewMatrix, projectionMatrix, &shaderManager);
+	pPano = new OitVehicle(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	if(pPano)
 	{
 		pPano->SetLoader(VehicleLoader);
@@ -3326,14 +3327,9 @@ void Render::InitAlarmAeraonPano()
 	}
 }
 
-void  Render::InitBillBoard()
+void  Render::InitBillBoard(GLEnv &m_env)
 {
-
-
-
-
-
-    p_BillBoard = new BillBoard(modelViewMatrix, projectionMatrix, &shaderManager);
+    p_BillBoard = new BillBoard(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
     if(p_BillBoard)
     {
     	p_BillBoard->Init();
@@ -3343,7 +3339,7 @@ void  Render::InitBillBoard()
 	cerr<<"BillBoard failed"<<endl;
     }
 
-	p_ChineseCBillBoard=new ChineseCharacterBillBoard(modelViewMatrix, projectionMatrix, &shaderManager);
+	p_ChineseCBillBoard=new ChineseCharacterBillBoard(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	   if(p_ChineseCBillBoard)
 	    {
 		   p_ChineseCBillBoard->Init();
@@ -3353,7 +3349,7 @@ void  Render::InitBillBoard()
 		cerr<<"p_ChineseCBillBoard failed"<<endl;
 	    }
 
-    p_CompassBillBoard = new CompassBillBoard(modelViewMatrix, projectionMatrix, &shaderManager);
+    p_CompassBillBoard = new CompassBillBoard(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()),  &shaderManager);
     if(p_CompassBillBoard)
     {
     	p_CompassBillBoard->Init();
@@ -3363,7 +3359,7 @@ void  Render::InitBillBoard()
 	cerr<<"CompassBillBoard failed"<<endl;
     }
 
-    p_BillBoardExt = new ExtBillBoard(modelViewMatrix, projectionMatrix, &shaderManager);
+    p_BillBoardExt = new ExtBillBoard(*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()),  &shaderManager);
     if(p_BillBoardExt)
     {
     	p_BillBoardExt->Init();
@@ -3372,88 +3368,88 @@ void  Render::InitBillBoard()
     {
     	cerr<<"BillBoard Ext failed"<<endl;
     }
-    p_FixedBBD_2M = new FixedBillBoard(DDS_FILE_2M,modelViewMatrix, projectionMatrix, &shaderManager);
+    p_FixedBBD_2M = new FixedBillBoard(DDS_FILE_2M,*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()),  &shaderManager);
 
      if(NULL == p_FixedBBD_2M){
 	   	cerr<<"Failed to load" <<DDS_FILE_2M<<endl;
     }	
-    p_FixedBBD_5M = new FixedBillBoard(DDS_FILE_5M,modelViewMatrix, projectionMatrix, &shaderManager);
+    p_FixedBBD_5M = new FixedBillBoard(DDS_FILE_5M,*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()),  &shaderManager);
 
 	if(NULL == p_FixedBBD_5M){
 		cerr<<"Failed to load" <<DDS_FILE_5M<<endl;
 	}
-    p_FixedBBD_8M = new FixedBillBoard(DDS_FILE_8M,modelViewMatrix, projectionMatrix, &shaderManager);
+    p_FixedBBD_8M = new FixedBillBoard(DDS_FILE_8M,*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	if(NULL == p_FixedBBD_8M){
 		cerr<<"Failed to load" <<DDS_FILE_8M<<endl;
 	}
-	p_FixedBBD_1M = new FixedBillBoard(DDS_FILE_1M,modelViewMatrix, projectionMatrix, &shaderManager);
+	p_FixedBBD_1M = new FixedBillBoard(DDS_FILE_1M,*(m_env.GetmodelViewMatrix()), *(m_env.GetprojectionMatrix()), &shaderManager);
 	if(NULL == p_FixedBBD_1M){
 		cerr<<"Failed to load" <<DDS_FILE_1M<<endl;
 	}
 }
-void Render::DrawOitVehicle()
+void Render::DrawOitVehicle(GLEnv &m_env)
 {
-	pVehicle->DrawVehicle();
+	pVehicle->DrawVehicle(m_env);
 	//pVehicle->DrawVehicle_second();
 	//pVehicle->DrawVehicle_third();
 }
 
-void Render::DrawVehiclesEtcWithFixedBBD(M3DMatrix44f camera )
+void Render::DrawVehiclesEtcWithFixedBBD(GLEnv &m_env,M3DMatrix44f camera )
 {
-	DrawVehiclesEtc(camera);
+	DrawVehiclesEtc(m_env,camera);
 	
 }
-void Render::DrawVehiclesEtc(M3DMatrix44f camera)
+void Render::DrawVehiclesEtc(GLEnv &m_env,M3DMatrix44f camera)
 {
-	modelViewMatrix.PushMatrix();
-//	modelViewMatrix.Rotate(-180.0f, 0.0f, 0.0f, 1.0f);
-	DrawShadow();
-	DrawOitVehicle();
-	DrawFrontBackTracks();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+//	m_env.GetmodelViewMatrix()->Rotate(-180.0f, 0.0f, 0.0f, 1.0f);
+	DrawShadow(m_env);
+	DrawOitVehicle(m_env);
+	DrawFrontBackTracks(m_env);
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 	if(camera)
-		DrawTrackFixBBDs(camera);
+		DrawTrackFixBBDs(m_env,camera);
 	glFlush();
 }
 
-void Render::DrawTrackFixBBDs(M3DMatrix44f camera)
+void Render::DrawTrackFixBBDs(GLEnv &m_env,M3DMatrix44f camera)
 {
 	static FixedBillBoard *pBBD[3] = {p_FixedBBD_2M,p_FixedBBD_5M,p_FixedBBD_1M };
-	FixedBillBoard::DrawGroup(camera, pBBD, 3);
+	FixedBillBoard::DrawGroup(m_env,camera, pBBD, 3);
 }
-void Render::RenderBirdView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderBirdView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(35.0f, /*1.0/10*/float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(35.0f, /*1.0/10*/float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	M3DMatrix44f mCamera;
 	birdViewCameraFrame.GetCameraMatrix(mCamera);
-	modelViewMatrix.PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
-	modelViewMatrix.PushMatrix(mCamera);
-	modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
-	DrawBowl(needSendData);
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
-	DrawBowl(false);
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+	DrawBowl(m_env,needSendData);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
+	DrawBowl(m_env,false);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 	if(BLEND_OFFSET == 0)
-		Draw4CrossLines();
-	DrawVehiclesEtcWithFixedBBD(mCamera);
+		Draw4CrossLines(m_env);
+	DrawVehiclesEtcWithFixedBBD(m_env,mCamera);
 	UpdateWheelAngle();
-	drawDynamicTracks();
-	modelViewMatrix.PopMatrix();//pop camera matrix
+	drawDynamicTracks(m_env);
+	m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderAnimationToBirdView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderAnimationToBirdView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
  	static enum {
 		ANIM_ROTATE,
@@ -3462,10 +3458,10 @@ void Render::RenderAnimationToBirdView(GLint x, GLint y, GLint w, GLint h, bool 
  	} animation_state = ANIM_ROTATE;
 
  	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(45.0f, float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(45.0f, float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	M3DMatrix44f mCamera;
 	frontCameraFrame.GetCameraMatrix(mCamera);	
 
@@ -3477,18 +3473,18 @@ void Render::RenderAnimationToBirdView(GLint x, GLint y, GLint w, GLint h, bool 
 			static const unsigned rotation_seconds = 7;
 			static const float	rotation_angle = 360.0f;
 			float zRot = rotTimer.GetElapsedSeconds()*(rotation_angle/rotation_seconds );
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 			if(zRot >= rotation_angle){
 				zRot = rotation_angle;
 				animation_state = ANIM_RISE;
 			}
-			modelViewMatrix.Rotate(zRot, 0.0f, 0.0f, 1.0f);
+			m_env.GetmodelViewMatrix()->Rotate(zRot, 0.0f, 0.0f, 1.0f);
 		}
 		break;
 	case ANIM_RISE:	// camera animation front to birdview
 		{
-			viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-			projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+			m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+			m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 			static const unsigned int DEFAULT_RISE_COUNT=14;
 			static unsigned int riseCount = DEFAULT_RISE_COUNT;
 			M3DMatrix44f nextCam;
@@ -3502,73 +3498,73 @@ void Render::RenderAnimationToBirdView(GLint x, GLint y, GLint w, GLint h, bool 
 				birdViewCameraFrame.GetCameraMatrix(mCamera);
 				animation_state = ANIM_END;
 			}
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 		break;
 	case ANIM_END:
 	default:
 		{
-			viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-			projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+			m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+			m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 			birdViewCameraFrame.GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 		break;
 
 	}
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
-	DrawBowl(needSendData);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+	DrawBowl(m_env,needSendData);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 	if(BLEND_OFFSET == 0)
-		Draw4CrossLines();
-	DrawVehiclesEtcWithFixedBBD(mCamera);
+		Draw4CrossLines(m_env);
+	DrawVehiclesEtcWithFixedBBD(m_env,mCamera);
 	UpdateWheelAngle();
-	drawDynamicTracks();
-	modelViewMatrix.PopMatrix(); //pop front camera
+	drawDynamicTracks(m_env);
+	m_env.GetmodelViewMatrix()->PopMatrix(); //pop front camera
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderFreeView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderFreeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	M3DMatrix44f mCamera;
 	m_freeCamera.GetCameraMatrix(mCamera);
-	modelViewMatrix.PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
-	modelViewMatrix.PushMatrix(mCamera);
-	modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
-	DrawBowl(needSendData);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+	DrawBowl(m_env,needSendData);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
-	DrawVehiclesEtcWithFixedBBD(mCamera);
+	DrawVehiclesEtcWithFixedBBD(m_env,mCamera);
 	UpdateWheelAngle();
-	drawDynamicTracks();
-	modelViewMatrix.PopMatrix();//pop camera matrix
+	drawDynamicTracks(m_env);
+	m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderRearTopView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderRearTopView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
-	RenderPreSetView(x,y, w,h,needSendData, true);
+	RenderPreSetView(m_env,x,y, w,h,needSendData, true);
 }
-void Render::RenderPreSetView(GLint x, GLint y, GLint w, GLint h,bool needSendData, bool isRearTop)
+void Render::RenderPreSetView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData, bool isRearTop)
 {
 	M3DMatrix44f mCamera;
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	if(isRearTop){
 		rearTopCameraFrame.GetCameraMatrix(mCamera);
 	}
@@ -3576,26 +3572,26 @@ void Render::RenderPreSetView(GLint x, GLint y, GLint w, GLint h,bool needSendDa
 	    GLFrame currentCamera=mPresetCamGroup.GetCameraFrame(p_BillBoard->m_Direction);
 	    currentCamera.GetCameraMatrix(mCamera);
 	}
-	modelViewMatrix.PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
-	DrawBowl(needSendData);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+	DrawBowl(m_env,needSendData);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
-	DrawVehiclesEtcWithFixedBBD(mCamera);
+	DrawVehiclesEtcWithFixedBBD(m_env,mCamera);
 	UpdateWheelAngle();
-	drawDynamicTracks();
-	modelViewMatrix.PopMatrix();//pop camera matrix
-	modelViewMatrix.PopMatrix();
+	drawDynamicTracks(m_env);
+	m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderPresetViewByRotating(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderPresetViewByRotating(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
 			glViewport(x,y,w,h);
-			viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-			projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+			m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+			m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-			modelViewMatrix.PushMatrix();
+			m_env.GetmodelViewMatrix()->PushMatrix();
 			M3DMatrix44f prevCam, nextCam;
 			GLFrame nextCamera;
 			GLFrame prevCamera;
@@ -3613,30 +3609,30 @@ void Render::RenderPresetViewByRotating(GLint x, GLint y, GLint w, GLint h,bool 
 			else{
 				m_presetCameraRotateCounter = 0;
 			}
-			modelViewMatrix.PushMatrix(nextCam);
+			m_env.GetmodelViewMatrix()->PushMatrix(nextCam);
 
-			modelViewMatrix.PushMatrix();
-			modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
-			DrawBowl(needSendData);
-			modelViewMatrix.PopMatrix();
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+			DrawBowl(m_env,needSendData);
+			m_env.GetmodelViewMatrix()->PopMatrix();
 
-			DrawVehiclesEtcWithFixedBBD(nextCam);
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			DrawVehiclesEtcWithFixedBBD(m_env,nextCam);
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 
-			modelViewMatrix.PopMatrix();
+			m_env.GetmodelViewMatrix()->PopMatrix();
 
 }
 // camera look down from vehicle front
-void Render::RenderRotatingView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderRotatingView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	M3DMatrix44f mCamera;
 	frontCameraFrame.GetCameraMatrix(mCamera);
-	modelViewMatrix.PushMatrix(mCamera);
+	m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
 	
 	static float zRotFirst = 0.0f;
@@ -3652,84 +3648,84 @@ void Render::RenderRotatingView(GLint x, GLint y, GLint w, GLint h,bool needSend
 
 	zRot -= zRotFirst;
 
-	modelViewMatrix.Rotate(zRot, 0.0f, 0.0f, 1.0f);
-	DrawBowl(needSendData);
-	DrawVehiclesEtcWithFixedBBD(mCamera);
-	modelViewMatrix.PopMatrix(); //pop front camera
+	m_env.GetmodelViewMatrix()->Rotate(zRot, 0.0f, 0.0f, 1.0f);
+	DrawBowl(m_env,needSendData);
+	DrawVehiclesEtcWithFixedBBD(m_env,mCamera);
+	m_env.GetmodelViewMatrix()->PopMatrix(); //pop front camera
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderSingleView(GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2)
+void Render::RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 //	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	//	glDisable(GL_CULL_FACE);
 	if(bControlViewCamera){
 		M3DMatrix44f mCamera;
 		birdViewCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 	else{
-		modelViewMatrix.LoadIdentity();
-		modelViewMatrix.Translate(PANx, PANy, BowlLoader.GetZ_Depth()+scale);
-		modelViewMatrix.Rotate(ROTx, 0.0f, 0.0f, 1.0f);
-		modelViewMatrix.Rotate(ROTy, 1.0f, 0.0f, 0.0f);
-		modelViewMatrix.Rotate(ROTz, 0.0f, 0.1f, 1.0f);
+		m_env.GetmodelViewMatrix()->LoadIdentity();
+		m_env.GetmodelViewMatrix()->Translate(PANx, PANy, BowlLoader.GetZ_Depth()+scale);
+		m_env.GetmodelViewMatrix()->Rotate(ROTx, 0.0f, 0.0f, 1.0f);
+		m_env.GetmodelViewMatrix()->Rotate(ROTy, 1.0f, 0.0f, 0.0f);
+		m_env.GetmodelViewMatrix()->Rotate(ROTz, 0.0f, 0.1f, 1.0f);
 	}
 
-	//modelViewMatrix.PushMatrix();
-													//	modelViewMatrix.Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
+	//m_env.GetmodelViewMatrix()->PushMatrix();
+													//	m_env.GetmodelViewMatrix()->Rotate(p_LineofRuler->GetAngle(),0.0,0.0,1.0);
 //	DrawBowl(true);
-	//modelViewMatrix.PopMatrix();
+	//m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 
-	DrawPanel(true,NULL,use_shadermgr2);
-		modelViewMatrix.PushMatrix();
+	DrawPanel(m_env,true,NULL,use_shadermgr2);
+		m_env.GetmodelViewMatrix()->PushMatrix();
 		if(RulerAngle<180.0)
 		{
-			modelViewMatrix.Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+			m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 		}
 		else
 		{
-			modelViewMatrix.Translate(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+			m_env.GetmodelViewMatrix()->Translate(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 		}
 	//	DrawPanel(false,NULL);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 
 
 /*
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(BowlLoader.Getextent_pos_x()-BowlLoader.Getextent_neg_x(),0.0,0.0);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Translate(BowlLoader.Getextent_pos_x()-BowlLoader.Getextent_neg_x(),0.0,0.0);
 	DrawBowl(false);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 */
 //	DrawVehiclesEtc();
 //	UpdateWheelAngle();
 //	drawDynamicTracks();
 	if(bControlViewCamera){
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
 //	p_ForeSightFacade_Track->SetAlign(1,TRACK_VGA);
 //	p_ForeSightFacade_Track->Draw(0);
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderCenterView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderCenterView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(27.0f, float(w) / float(h), 1.0f, 1000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(27.0f, float(w) / float(h), 1.0f, 1000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	//rotate camera view
 	float rotate_speed=rotateangle_per_second;
 	static float last_rotate_angle=0.0f;
@@ -3756,35 +3752,35 @@ void Render::RenderCenterView(GLint x, GLint y, GLint w, GLint h)
 {
 		M3DMatrix44f mCamera;
 		CenterViewCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
-	modelViewMatrix.Rotate(rotate_angle, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(rotate_angle, 0.0f, 0.0f, 1.0f);
 
-	DrawBowl(true);
+	DrawBowl(m_env,true);
 
 //	DrawVehiclesEtc();
 //	UpdateWheelAngle();
 //	drawDynamicTracks();
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 }
 
-void Render::RenderRegionPanelView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	static float last_scan_distance=0;
 	glViewport(x,y,w,h);
-//	viewFrustum.SetPerspective(27.0f, float(w) / float(h), 1.0f, 100.0f);
-	viewFrustum.SetPerspective(27.0f,  float(w) / float(h), 1.0f, 500.0f);
+//	m_env.GetviewFrustum()->SetPerspective(27.0f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetviewFrustum()->SetPerspective(27.0f,  float(w) / float(h), 1.0f, 500.0f);
 
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	//get center camera matrix apply to the modelviewmatrix
 {
@@ -3824,35 +3820,35 @@ void Render::RenderRegionPanelView(GLint x, GLint y, GLint w, GLint h)
 			ScanPanelViewCameraFrame.MoveForward(now_region_forward_distance);
 
 			ScanPanelViewCameraFrame.GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
 	}
 float math_data=0.0;
 math_data=1.0-0.17*(180.0-getScanRegionAngle())/45.0;
 
-modelViewMatrix.Scale(1.0,1.0,1.0);//*SCAN_REGION_ANGLE/60.0f);
-modelViewMatrix.Translate(0.0,0.0,0.0);
+m_env.GetmodelViewMatrix()->Scale(1.0,1.0,1.0);//*SCAN_REGION_ANGLE/60.0f);
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
 
 
-	DrawPanel(false,NULL);
+	DrawPanel(m_env,false,NULL);
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
-	DrawPanel(false,NULL);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
+	DrawPanel(m_env,false,NULL);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
 
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
-	modelViewMatrix.Rotate(90.0,0.0,1.0,0.0);
+	m_env.GetmodelViewMatrix()->Rotate(90.0,0.0,1.0,0.0);
 //	p_CompassBillBoard->DrawBillBoard(200,200);
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 //	RenderCompassView(x,y,w,h);
 }
 /*
@@ -3860,13 +3856,13 @@ void Render::RenderCompassView(GLint x, GLint y, GLint w, GLint h)
 {
 	static float last_scan_distance=0;
 	glViewport(x,y,w,h);
-//	viewFrustum.SetPerspective(27.0f, float(w) / float(h), 1.0f, 100.0f);
-	viewFrustum.SetPerspective(27.0f,  float(w) / float(h), 1.0f, 500.0f);
+//	m_env.GetviewFrustum()->SetPerspective(27.0f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetviewFrustum()->SetPerspective(27.0f,  float(w) / float(h), 1.0f, 500.0f);
 
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	//get center camera matrix apply to the modelviewmatrix
 {
@@ -3878,45 +3874,45 @@ void Render::RenderCompassView(GLint x, GLint y, GLint w, GLint h)
 
 			CompassCameraFrame.GetCameraMatrix(mCamera);
 
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
 	}
 
 
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 }
 */
 
-void Render::RenderTrackForeSightView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(20.6f, float(w) / float(h), 1.0f, 100.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(20.6f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 {
 		M3DMatrix44f mCamera;
 		TrackCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 }
-	//modelViewMatrix.Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
+	//m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 		p_ForeSightFacade_Track->SetAlign(1,7);
-	 	p_ForeSightFacade_Track->Draw(0);
+	 	p_ForeSightFacade_Track->Draw(m_env,0);
 {
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 }
 
-void Render::RenderPanoTelView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -3924,38 +3920,38 @@ void Render::RenderPanoTelView(GLint x, GLint y, GLint w, GLint h)
 	memset(petal2,-1,sizeof(petal2));
 	int petaltest[12]={0,1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(20.6f, float(w) / float(h), 1.0f, 100.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(20.6f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	float delta_dis=0.0;
 	int i=0;
 {
 		M3DMatrix44f mCamera;
 		repositioncamera();
 			PanoTelViewCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 }
 if(displayMode==TELESCOPE_LEFT_MODE)
 {
-	modelViewMatrix.Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	modelViewMatrix.Translate(37.68+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
+	m_env.GetmodelViewMatrix()->Translate(37.68+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
 else if(displayMode==TELESCOPE_BACK_MODE)
 {
-	modelViewMatrix.Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	modelViewMatrix.Translate(47.1+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
+	m_env.GetmodelViewMatrix()->Translate(47.1+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
 else if(displayMode==TELESCOPE_FRONT_MODE)
 {
-	modelViewMatrix.Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
+	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 	static bool once=true;
-	modelViewMatrix.Translate(28.26+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Translate(28.26+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
 else if(displayMode==TELESCOPE_RIGHT_MODE)
 {
-	modelViewMatrix.Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	modelViewMatrix.Translate(18.838+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
+	m_env.GetmodelViewMatrix()->Translate(18.838+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
 			float Angle=RulerAngle;
 			if(displayMode==TELESCOPE_FRONT_MODE)
@@ -4060,79 +4056,79 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 #if 1
 				if(RulerAngle<=270 ||RulerAngle>300)
 				{
-					DrawPanel(true,petal2);
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(PanoLen,0.0,0.0);
-					DrawPanel(false,petal1);
-					modelViewMatrix.PopMatrix();
+					DrawPanel(m_env,true,petal2);
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+					DrawPanel(m_env,false,petal1);
+					m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 				else if(RulerAngle<=300 && RulerAngle>270)
 				{
-					DrawPanel(true,petal1);
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-					DrawPanel(false,petal1);
-					modelViewMatrix.PopMatrix();
+					DrawPanel(m_env,true,petal1);
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+					DrawPanel(m_env,false,petal1);
+					m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 
 #else
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(true,NULL);
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(PanoLen,0.0,0.0);//2
-				DrawPanel(false,NULL);
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(0.0,0.0,0.0);//3
-				DrawPanel(false,NULL);
-				modelViewMatrix.PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+				DrawPanel(m_env,true,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
+				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
+				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
 
 	if(displayMode==TELESCOPE_FRONT_MODE)
 	{
 		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_FRONT);
-		p_ForeSightFacade2->Draw(render.getRulerAngle()->Load());
+		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
 	}
 	else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
 		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_RIGHT);
-		p_ForeSightFacade2->Draw(render.getRulerAngle()->Load());
+		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
 		}
 
 	else if(displayMode==TELESCOPE_BACK_MODE)
 		{
 		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_BACK);
-		p_ForeSightFacade2->Draw(render.getRulerAngle()->Load());
+		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
 		}
 
 	else if(displayMode==TELESCOPE_LEFT_MODE)
 	{
 		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_LEFT);
-		p_ForeSightFacade2->Draw(render.getRulerAngle()->Load());
+		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
 	}
 
 	{
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 	return;
 }
 
 
-void Render::RenderPanoView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
-	//viewFrustum.SetPerspective(27.0f,330.0/100.0, 20.0f, 2000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
+	//m_env.GetviewFrustum()->SetPerspective(27.0f,330.0/100.0, 20.0f, 2000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	float delta_dis=0.0;
 
@@ -4143,44 +4139,44 @@ void Render::RenderPanoView(GLint x, GLint y, GLint w, GLint h)
 		M3DMatrix44f mCamera;
 		repositioncamera();
 		PanoViewCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
-modelViewMatrix.Scale(4.0,1.0,4.5);
-modelViewMatrix.Translate(0.0,0.0,-3.0);
+m_env.GetmodelViewMatrix()->Scale(4.0,1.0,4.5);
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 
-	DrawPanel(true,NULL);//
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
-	DrawPanel(false,NULL);
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.PushMatrix();
+	DrawPanel(m_env,true,NULL);//
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
+	DrawPanel(m_env,false,NULL);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	if(RulerAngle<180.0)
 	{
-		modelViewMatrix.Translate(2.0*(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(2.0*(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 	}
 	else
 	{
-		modelViewMatrix.Translate(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 	}
 
-	DrawPanel(false,NULL);
-	modelViewMatrix.PopMatrix();
-	DrawSlideonPanel();
+	DrawPanel(m_env,false,NULL);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	DrawSlideonPanel(m_env);
 	if(getFollowValue())
 	{
-		DrawCrossonPanel();
+		DrawCrossonPanel(m_env);
 	}
 
 	if(getenableshowruler())
 	{
-		DrawRuleronPanel();
+		DrawRuleronPanel(m_env);
 	}
 
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 	Rect *rect1;
 	char text[16];
 	int j=0;
@@ -4189,17 +4185,17 @@ modelViewMatrix.Translate(0.0,0.0,-3.0);
 		strcpy(text,"");
 		sprintf(text,"%3d",i*90);
 		rect1=new Rect(i*g_windowWidth/4.0-g_windowWidth/20.0, g_windowHeight*0.7/4.0,g_windowWidth/8,g_windowHeight/12);
-		DrawAngleCordsView(rect1,text,1);
+		DrawAngleCordsView(m_env,rect1,text,1);
 		delete(rect1);
 	}
 	strcpy(text,"");
 	sprintf(text,"%3d",i*90);
 	rect1=new Rect(i*g_windowWidth/4.0-g_windowWidth/15.0, g_windowHeight*0.7/4.0,g_windowWidth/8,g_windowHeight/12);
-	DrawAngleCordsView(rect1,text,1);
+	DrawAngleCordsView(m_env,rect1,text,1);
 	delete(rect1);
 }
 
-void Render::RenderOnetimeView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 			int petal1[CAM_COUNT];
 			memset(petal1,-1,sizeof(petal1));
@@ -4207,9 +4203,9 @@ void Render::RenderOnetimeView(GLint x, GLint y, GLint w, GLint h)
 			memset(petal2,-1,sizeof(petal2));
 			int petaltest[12]={0,1,2,3,4,-1,-1,-1,-1,-1,-1,-1};
 		glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-		modelViewMatrix.PushMatrix();
+		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+		m_env.GetmodelViewMatrix()->PushMatrix();
 		static bool once = true;
 	{
 			M3DMatrix44f mCamera;
@@ -4222,7 +4218,7 @@ void Render::RenderOnetimeView(GLint x, GLint y, GLint w, GLint h)
 				panocamonforesight.getOneTimeCam().GetCameraMatrix(mCamera);
 			else
 					panocamonforesight.getOneTimeCam2().GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 
 	float FXangle=foresightPos.GetAngle()[0];
@@ -4276,85 +4272,85 @@ void Render::RenderOnetimeView(GLint x, GLint y, GLint w, GLint h)
 	if(RulerAngle<160.0 ||RulerAngle>=270.0)
 		{
 			DrawPanel(false,petal2);
-			modelViewMatrix.PushMatrix();
-			modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 			DrawPanel(false,petal1);
-			modelViewMatrix.PopMatrix();
+			m_env.GetmodelViewMatrix()->PopMatrix();
 		}
 		else if(RulerAngle>=160.0 && RulerAngle<=200.0)
 		{
 			DrawPanel(false,petal2);
 			if(FXangle>=270)
 			{
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 					DrawPanel(false,petal1);
-					modelViewMatrix.PopMatrix();
+					m_env.GetmodelViewMatrix()->PopMatrix();
 			}
 			else{
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(PanoLen,0.0,0.0);
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 					DrawPanel(false,petal1);
-					modelViewMatrix.PopMatrix();
+					m_env.GetmodelViewMatrix()->PopMatrix();
 			}
 
 		}
 		else// if(p_LineofRuler->Load()<270.0)
 		{
 			DrawPanel(false,petal1);
-			modelViewMatrix.PushMatrix();
-			modelViewMatrix.Translate(PanoLen,0.0,0.0);
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 			DrawPanel(false,petal1);
-			modelViewMatrix.PopMatrix();
+			m_env.GetmodelViewMatrix()->PopMatrix();
 		}
 
 #else
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(false,NULL);
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(PanoLen,0.0,0.0);//2
-				DrawPanel(false,NULL);
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(0.0,0.0,0.0);//3
-				DrawPanel(false,NULL);
-				modelViewMatrix.PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
+				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
+				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	Rect *rect1;
 	Rect *rect2;
 	glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
-		//viewFrustum.SetPerspective(27.0f,330.0/100.0, 20.0f, 2000.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		m_env.GetviewFrustum()->SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
+		//m_env.GetviewFrustum()->SetPerspective(27.0f,330.0/100.0, 20.0f, 2000.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 		pVehicle->PrepareBlendMode();
-		modelViewMatrix.PushMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
 		float delta_dis=0.0;
 		int i=0;
 		{
 			M3DMatrix44f mCamera;
 			repositioncamera();
 			PanoViewCameraFrame.GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 
-	modelViewMatrix.Scale(1.0,1.0,4.5);
-	modelViewMatrix.Translate(0.0,0.0,-3.0);
+	m_env.GetmodelViewMatrix()->Scale(1.0,1.0,4.5);
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 //	}
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 		    char text[8];
 			char text2[8];
 			char text3[8];
@@ -4442,16 +4438,16 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 					)
 			{
 					Rect2i rect1(g_windowWidth*89.5/100,g_windowHeight/4, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(&rect1,text,0.65);
+					DrawAngleCordsView(m_env,&rect1,text,0.65);
 					Rect2i rect2(g_windowWidth*89.5/100,g_windowHeight*400.0/1920.0, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(&rect2,text2,0.65);
+					DrawAngleCordsView(m_env,&rect2,text2,0.65);
 								static int textnum2=0;
 									for(int i=0;i<12;i++)
 									{
 										for(int j=0;j<3;j++)
 										{
 											Rect2i temprect(g_windowWidth*(90+3.5*j)/100,g_windowHeight/pos1[i], g_windowWidth/20, g_windowHeight*1/20);
-											DrawAngleCordsView(&temprect,text4[textnum2],0.65);
+											DrawAngleCordsView(m_env,&temprect,text4[textnum2],0.65);
 											textnum2++;
 										}
 									}
@@ -4462,7 +4458,7 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 											for(int j=0;j<3;j++)
 											{
 												Rect2i temprect(g_windowWidth*(90+3.5*j-3.5*3)/100,g_windowHeight/pos1[i+1], g_windowWidth/20, g_windowHeight*1/20);
-												DrawAngleCordsView(&temprect,text4[textnum2],0.65);
+												DrawAngleCordsView(m_env,&temprect,text4[textnum2],0.65);
 												textnum2++;
 											}
 										}
@@ -4477,7 +4473,7 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 												textnum2=100;
 											}
 											Rect2i temprect(g_windowWidth*(90+3.5*j-3.5*3*2)/100,g_windowHeight/pos1[i+1], g_windowWidth/20, g_windowHeight*1/20);
-											DrawAngleCordsView(&temprect,text4[textnum2],0.65);
+											DrawAngleCordsView(m_env,&temprect,text4[textnum2],0.65);
 											textnum2++;
 										}
 									}
@@ -4509,21 +4505,21 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 						)
 				{
 					Rect2i rect1(g_windowWidth*85/100,g_windowHeight/2.02, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(&rect1,text,0.65);
+					DrawAngleCordsView(m_env,&rect1,text,0.65);
 					Rect2i rect2(g_windowWidth*85/100,g_windowHeight/2.15, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(&rect2,text2,0.65);
+					DrawAngleCordsView(m_env,&rect2,text2,0.65);
 					Rect2i rect3(g_windowWidth*85/100,g_windowHeight/2.3, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(&rect3,text3,0.65);
+					DrawAngleCordsView(m_env,&rect3,text3,0.65);
 				}
 
 					else
 					{
 						Rect2i rect1(g_windowWidth*85/100,g_windowHeight/1.95, g_windowWidth/20, g_windowHeight*1/20);
-						DrawAngleCordsView(&rect1,text,0.65);
+						DrawAngleCordsView(m_env,&rect1,text,0.65);
 						Rect2i rect2(g_windowWidth*85/100,g_windowHeight/2.08, g_windowWidth/20, g_windowHeight*1/20);
-						DrawAngleCordsView(&rect2,text2,0.65);
+						DrawAngleCordsView(m_env,&rect2,text2,0.65);
 						Rect2i rect3(g_windowWidth*85/100,g_windowHeight/2.22, g_windowWidth/20, g_windowHeight*1/20);
-						DrawAngleCordsView(&rect3,text3,0.65);
+						DrawAngleCordsView(m_env,&rect3,text3,0.65);
 					}
 					static int textnum=0;
 					for(int i=0;i<12;i++)
@@ -4531,7 +4527,7 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 						for(int j=0;j<3;j++)
 						{
 							Rect2i temprect(g_windowWidth*(85+5*j)/100,g_windowHeight/pos2[i], g_windowWidth/20, g_windowHeight*1/20);
-							DrawAngleCordsView(&temprect,text4[textnum],0.65);
+							DrawAngleCordsView(m_env,&temprect,text4[textnum],0.65);
 							textnum++;
 						}
 					}
@@ -4542,7 +4538,7 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 							for(int j=0;j<3;j++)
 							{
 								Rect2i temprect(g_windowWidth*(85+5*j-15)/100,g_windowHeight/pos2[i+1], g_windowWidth/20, g_windowHeight*1/20);
-								DrawAngleCordsView(&temprect,text4[textnum],0.65);
+								DrawAngleCordsView(m_env,&temprect,text4[textnum],0.65);
 								textnum++;
 							}
 						}
@@ -4557,38 +4553,38 @@ void Render::RenderPositionView(GLint x, GLint y, GLint w, GLint h)
 								textnum=100;
 							}
 							Rect2i temprect(g_windowWidth*(85+5*j-15*2)/100,g_windowHeight/pos2[i+1], g_windowWidth/20, g_windowHeight*1/20);
-							DrawAngleCordsView(&temprect,text4[textnum],0.65);
+							DrawAngleCordsView(m_env,&temprect,text4[textnum],0.65);
 							textnum++;
 						}
 					} //98
 					textnum=0;
 			}
 }
-void Render::RenderCheckMyselfView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		m_env.GetviewFrustum()->SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 		pVehicle->PrepareBlendMode();
-		modelViewMatrix.PushMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
 		float delta_dis=0.0;
 		int i=0;
 	{
 			M3DMatrix44f mCamera;
 			repositioncamera();
 			CheckViewCameraFrame.GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
-	modelViewMatrix.Scale(1.0,1.0,4.5);
-	modelViewMatrix.Translate(0.0,0.0,-3.0);
+	m_env.GetmodelViewMatrix()->Scale(1.0,1.0,4.5);
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderTwotimesView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 				int petal1[CAM_COUNT];
 				memset(petal1,-1,sizeof(petal1));
@@ -4596,9 +4592,9 @@ void Render::RenderTwotimesView(GLint x, GLint y, GLint w, GLint h)
 				memset(petal2,-1,sizeof(petal2));
 				int petaltest[12]={0,1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 		glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-		modelViewMatrix.PushMatrix();
+		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+		m_env.GetmodelViewMatrix()->PushMatrix();
 			static bool once = true;
 	{
 			M3DMatrix44f mCamera;
@@ -4624,7 +4620,7 @@ void Render::RenderTwotimesView(GLint x, GLint y, GLint w, GLint h)
 			else if(displayMode==TELESCOPE_LEFT_MODE)
 				telcamonforesight.getTwoTimesCamTelL().GetCameraMatrix(mCamera);
 
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
@@ -4759,61 +4755,61 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		float FXangle=foresightPos.GetAngle()[0];
 		if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 			{
-				DrawPanel(false,petal2);
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-				DrawPanel(false,petal1);
-				modelViewMatrix.PopMatrix();
+				DrawPanel(m_env,false,petal2);
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+				DrawPanel(m_env,false,petal1);
+				m_env.GetmodelViewMatrix()->PopMatrix();
 			}
 			else if(RulerAngle>135.0 && RulerAngle<175.0)
 			{
-				DrawPanel(false,petal2);
+				DrawPanel(m_env,false,petal2);
 				if(FXangle>=270)
 				{
-						modelViewMatrix.PushMatrix();
-						modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-						DrawPanel(false,petal1);
-						modelViewMatrix.PopMatrix();
+						m_env.GetmodelViewMatrix()->PushMatrix();
+						m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+						DrawPanel(m_env,false,petal1);
+						m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 				else{
-						modelViewMatrix.PushMatrix();
-						modelViewMatrix.Translate(PanoLen,0.0,0.0);
-						DrawPanel(false,petal1);
-						modelViewMatrix.PopMatrix();
+						m_env.GetmodelViewMatrix()->PushMatrix();
+						m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+						DrawPanel(m_env,false,petal1);
+						m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 
 			}
 			else// if(p_LineofRuler->Load()<270.0)
 			{
-				DrawPanel(false,petal1);
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(PanoLen,0.0,0.0);
-				DrawPanel(false,petal1);
-				modelViewMatrix.PopMatrix();
+				DrawPanel(m_env,false,petal1);
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+				DrawPanel(m_env,false,petal1);
+				m_env.GetmodelViewMatrix()->PopMatrix();
 			}
  }
 	else
 	{
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(-PanoLen,0.0,0.0); //1
-					DrawPanel(false,NULL);
-					modelViewMatrix.PopMatrix();
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(PanoLen,0.0,0.0);//2
-					DrawPanel(false,NULL);
-					modelViewMatrix.PopMatrix();
-					modelViewMatrix.PushMatrix();
-					modelViewMatrix.Translate(0.0,0.0,0.0);//3
-					DrawPanel(false,NULL);
-					modelViewMatrix.PopMatrix();
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+					DrawPanel(m_env,false,NULL);
+					m_env.GetmodelViewMatrix()->PopMatrix();
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
+					DrawPanel(m_env,false,NULL);
+					m_env.GetmodelViewMatrix()->PopMatrix();
+					m_env.GetmodelViewMatrix()->PushMatrix();
+					m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
+					DrawPanel(m_env,false,NULL);
+					m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 	//get_delta;
 	int petal1[CAM_COUNT];
@@ -4822,11 +4818,11 @@ void Render::RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h)
 					memset(petal2,-1,sizeof(petal2));
 
 		glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(20.0f, float(w) / float(h), 1.0f, 100.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		m_env.GetviewFrustum()->SetPerspective(20.0f, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 //		pVehicle->PrepareBlendMode();
-		modelViewMatrix.PushMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
 		//get center camera matrix apply to the modelviewmatrix
 		static bool once = true;
 	{
@@ -4845,7 +4841,7 @@ void Render::RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h)
 		else if(displayMode==TELESCOPE_LEFT_MODE)
 			telcamonforesight.getFourTimesCamTelL().GetCameraMatrix(mCamera);
 
-			modelViewMatrix.PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 	float FXangle=foresightPos.GetAngle()[0];
 	float Angle=RulerAngle+FXangle;
@@ -4918,72 +4914,72 @@ void Render::RenderFourtimesTelView(GLint x, GLint y, GLint w, GLint h)
 				}
 				if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 					{
-						DrawPanel(false,petal2);
-						modelViewMatrix.PushMatrix();
-						modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-						DrawPanel(false,petal1);
-						modelViewMatrix.PopMatrix();
+						DrawPanel(m_env,false,petal2);
+						m_env.GetmodelViewMatrix()->PushMatrix();
+						m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+						DrawPanel(m_env,false,petal1);
+						m_env.GetmodelViewMatrix()->PopMatrix();
 					}
 					else if(RulerAngle>135.0 && RulerAngle<175.0)
 					{
-						DrawPanel(false,petal2);
+						DrawPanel(m_env,false,petal2);
 						if(FXangle>=270)
 						{
-								modelViewMatrix.PushMatrix();
-								modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-								DrawPanel(false,petal1);
-								modelViewMatrix.PopMatrix();
+								m_env.GetmodelViewMatrix()->PushMatrix();
+								m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+								DrawPanel(m_env,false,petal1);
+								m_env.GetmodelViewMatrix()->PopMatrix();
 						}
 						else{
-								modelViewMatrix.PushMatrix();
-								modelViewMatrix.Translate(PanoLen,0.0,0.0);
-								DrawPanel(false,petal1);
-								modelViewMatrix.PopMatrix();
+								m_env.GetmodelViewMatrix()->PushMatrix();
+								m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+								DrawPanel(m_env,false,petal1);
+								m_env.GetmodelViewMatrix()->PopMatrix();
 						}
 
 					}
 					else// if(p_LineofRuler->Load()<270.0)
 					{
-						DrawPanel(false,petal1);
-						modelViewMatrix.PushMatrix();
-						modelViewMatrix.Translate(PanoLen,0.0,0.0);
-						DrawPanel(false,petal1);
-						modelViewMatrix.PopMatrix();
+						DrawPanel(m_env,false,petal1);
+						m_env.GetmodelViewMatrix()->PushMatrix();
+						m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+						DrawPanel(m_env,false,petal1);
+						m_env.GetmodelViewMatrix()->PopMatrix();
 					}
 		{
-			modelViewMatrix.PopMatrix();//pop camera matrix
+			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderMyLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
 		glViewport(x,y,w,h);
-		viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 		pVehicle->PrepareBlendMode();
-		modelViewMatrix.PushMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
 
 		//get center camera matrix apply to the modelviewmatrix
 
 			M3DMatrix44f mCamera;
 			repositioncamera();
 			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
-			modelViewMatrix.PushMatrix(mCamera);
-			modelViewMatrix.Scale(2.50,1.0,3.3);
-				modelViewMatrix.Translate(9.50,0.0,0.0);
-				modelViewMatrix.Translate(0.0,0.0,-2.0);
+			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+			m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+				m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
+				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 				if(RulerAngle<180.0)
 					{
-					modelViewMatrix.Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+					m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 					}
-				modelViewMatrix.PushMatrix();
-				modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-				DrawPanel(true,NULL);
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PopMatrix();
-				modelViewMatrix.PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+				DrawPanel(m_env,true,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -4991,11 +4987,11 @@ void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSend
 	memset(petal2,-1,sizeof(petal2));
 
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	//get center camera matrix apply to the modelviewmatrix
 {
@@ -5013,44 +5009,44 @@ void Render::RenderLeftPanoView(GLint x, GLint y, GLint w, GLint h,bool needSend
 		{
 			LeftPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 
 {
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(9.50,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
 }
 
 else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
-//	modelViewMatrix.Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(9.50,0.0,0.0);
+//	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
 }
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 {
-	modelViewMatrix.Scale(4.0,1.0,4.5);
+	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,4.5);
 }
 else if(displayMode==ALL_VIEW_MODE)
 {
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(9.50,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
 }
-modelViewMatrix.Translate(0.0,0.0,-2.0);
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
 
 
 if(RulerAngle<180.0)
 	{
-	modelViewMatrix.Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+	m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 	}
  if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
-	 modelViewMatrix.Translate(0.0,0.0,2.0);
-	 modelViewMatrix.Translate(0.0,0.0,-2.6);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
 }
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
@@ -5155,46 +5151,46 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 						}
 	if(RulerAngle<180.0)
 		{
-		DrawPanel(false,NULL);
+		DrawPanel(m_env,false,NULL);
 		//DrawPanel(false,petal1);
 		}
 	else
 	{
-		DrawPanel(false,NULL);
+		DrawPanel(m_env,false,NULL);
 	//	DrawPanel(false,petal2);
 	}
 }
 else if(displayMode==ALL_VIEW_MODE)
 {
 		petal2[0]=0;
-		DrawPanel(false,NULL);
+		DrawPanel(m_env,false,NULL);
 		for(int i=0;i<5;i++)
 		{
 			petal2[i]=i;
 		}
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(PanoLen,0.0,0.0);
-		DrawPanel(false,NULL);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+		DrawPanel(m_env,false,NULL);
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
 {
 	petal2[0]=0;
-	DrawPanel(false,petal2);
+	DrawPanel(m_env,false,petal2);
 	petal2[0]=0;
 	petal2[1]=1;
 	petal2[2]=2;
 	petal2[3]=3;
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-	DrawPanel(false,petal2);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+	DrawPanel(m_env,false,petal2);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 /*
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	if(RulerAngle<180.0)
 	{
-		modelViewMatrix.Translate(PanoLen,0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 		 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 			{
 			//	DrawPanel(false,petal2);
@@ -5205,7 +5201,7 @@ else
 	}
 	else	if(RulerAngle>=180.0)
 	{
-		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 		 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 		{
 		//	DrawPanel(false,petal1);
@@ -5214,7 +5210,7 @@ else
 		 else
 		 		DrawPanel(false,NULL);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 	if(EnablePanoFloat==true)
 	{
@@ -5240,12 +5236,12 @@ else
 	}
 */
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scissor_x, GLint scissor_y, GLint scissor_w, GLint scissor_h,bool needSendData)
+void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,GLint scissor_x, GLint scissor_y, GLint scissor_w, GLint scissor_h,bool needSendData)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -5260,16 +5256,16 @@ void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scisso
 			||fboMode==FBO_ALL_VIEW_MODE
 			)
 	{
-		viewFrustum.SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
 	}
 	else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 	{
-		viewFrustum.SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
+		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
 	}
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
 	pVehicle->PrepareBlendMode();
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 {
 
 		M3DMatrix44f mCamera;
@@ -5285,43 +5281,43 @@ void Render::RenderRightPanoView(GLint x, GLint y, GLint w, GLint h,GLint scisso
 		{
 			RightPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(-2.2,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
 }
 else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
-//	modelViewMatrix.Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(-2.2,0.0,0.0);
+//	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
 }
 else if(displayMode==ALL_VIEW_MODE)
 {
-	modelViewMatrix.Scale(2.50,1.0,3.3);
-	modelViewMatrix.Translate(-2.2,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
 }
 
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 {
-	modelViewMatrix.Scale(4.0,1.0,4.5);
+	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,4.5);
 }
 
-modelViewMatrix.Translate(0.0,0.0,-2.0);
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
-	 modelViewMatrix.Translate(0.0,0.0,2.0);
-	 modelViewMatrix.Translate(0.0,0.0,-2.6);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
 }
 else if(displayMode==ALL_VIEW_MODE)
 {
-	 modelViewMatrix.Translate(0.0,0.0,2.0);
-	 modelViewMatrix.Translate(0.0,0.0,-2.6);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
 }
 
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
@@ -5424,7 +5420,7 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 					}
 
 //DrawPanel(true,petal2);
-	DrawPanel(true,NULL);
+	DrawPanel(m_env,true,NULL);
 }
 else if(displayMode==ALL_VIEW_MODE)
 {
@@ -5432,10 +5428,10 @@ else if(displayMode==ALL_VIEW_MODE)
 		{
 			petal2[i]=i;
 		}
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(PanoLen,0.0,0.0);
-		DrawPanel(true,NULL);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+		DrawPanel(m_env,true,NULL);
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
 {
@@ -5443,20 +5439,20 @@ else
 			{
 				petal2[i]=i;
 			}
-			modelViewMatrix.PushMatrix();
-			modelViewMatrix.Translate(-PanoLen,0.0,0.0);
-			DrawPanel(true,NULL);
-			modelViewMatrix.PopMatrix();
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
+			DrawPanel(m_env,true,NULL);
+			m_env.GetmodelViewMatrix()->PopMatrix();
 }
 /*
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 	if(RulerAngle<180.0)
 	{
-		modelViewMatrix.Translate(PanoLen,0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 	}
 	else
 	{
-		modelViewMatrix.Translate(-PanoLen,0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 	}
 	if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	{
@@ -5464,7 +5460,7 @@ else
 	}
 	else
 	DrawPanel(false,NULL);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 	if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	{
 		p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
@@ -5472,23 +5468,23 @@ else
 	}
 	*/
 	{
-		modelViewMatrix.PopMatrix();//pop camera matrix
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderIndividualView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderIndividualView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);
-	modelViewMatrix.Scale(w, h, 1.0f);
-	DrawIndividualVideo(needSendData);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+	DrawIndividualVideo(m_env,needSendData);
 
 	if((CAM_3 == p_BillBoard->m_Direction)&&(SPLIT_VIEW_MODE == displayMode))
 	{
@@ -5500,164 +5496,164 @@ void Render::RenderIndividualView(GLint x, GLint y, GLint w, GLint h, bool needS
 			}
 		M3DMatrix44f camera ;
 		cameraFrame.GetCameraMatrix(camera);
-		p_FixedBBD_2M->DrawSingle(camera,p_FixedBBD_2M);
-		p_FixedBBD_5M->DrawSingle(camera,p_FixedBBD_5M);
-		p_FixedBBD_1M->DrawSingle(camera,p_FixedBBD_1M);
+		p_FixedBBD_2M->DrawSingle(m_env,camera,p_FixedBBD_2M);
+		p_FixedBBD_5M->DrawSingle(m_env,camera,p_FixedBBD_5M);
+		p_FixedBBD_1M->DrawSingle(m_env,camera,p_FixedBBD_1M);
 	}
 	if( (BillBoard::BBD_FRONT == p_BillBoard->m_Direction) && (SINGLE_PORT_MODE == displayMode)){
 			//Draw front left-right corner markers
-		p_CornerMarkerGroup->DrawCorner(CORNER_FRONT_LEFT, pConerMarkerColors[CORNER_FRONT_LEFT]);
-		p_CornerMarkerGroup->DrawCorner(CORNER_FRONT_RIGHT, pConerMarkerColors[CORNER_FRONT_RIGHT]);
+		p_CornerMarkerGroup->DrawCorner(m_env,CORNER_FRONT_LEFT, pConerMarkerColors[CORNER_FRONT_LEFT]);
+		p_CornerMarkerGroup->DrawCorner(m_env,CORNER_FRONT_RIGHT, pConerMarkerColors[CORNER_FRONT_RIGHT]);
 	}
 	else if( (BillBoard::BBD_REAR == p_BillBoard->m_Direction) && (SINGLE_PORT_MODE == displayMode)){
 		//Draw front left-right corner markers
-	p_CornerMarkerGroup->DrawCorner(CORNER_REAR_LEFT, pConerMarkerColors[CORNER_REAR_LEFT]);
-	p_CornerMarkerGroup->DrawCorner(CORNER_REAR_RIGHT, pConerMarkerColors[CORNER_REAR_RIGHT]);
+	p_CornerMarkerGroup->DrawCorner(m_env,CORNER_REAR_LEFT, pConerMarkerColors[CORNER_REAR_LEFT]);
+	p_CornerMarkerGroup->DrawCorner(m_env,CORNER_REAR_RIGHT, pConerMarkerColors[CORNER_REAR_RIGHT]);
 	}
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
 
 }
 // get current time, format it into "1997-01-01 13:01:01" and display it
-void Render::RenderTimeView(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderTimeView(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		const char* pBuf = m_Timebar.GetFTime();
-		DrawStringsWithHighLight(w,h, pBuf, m_Timebar.GetIndicator());
+		DrawStringsWithHighLight(m_env,w,h, pBuf, m_Timebar.GetIndicator());
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderBillBoardAt(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		p_BillBoard->DrawBillBoard(w,h);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderChineseCharacterBillBoardAt(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderChineseCharacterBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
 	if(p_ChineseCBillBoard->ChooseTga==LOCATION_T)
 	{
-//		modelViewMatrix.Translate(0.0f, 0.0f, -h);
+//		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
 	}
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 	//	p_ChineseCBillBoard->DoTextureBinding(choice);
 		p_ChineseCBillBoard->DrawBillBoard(w,h);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
 
-void Render::RenderCompassBillBoardAt(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderCompassBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
 
-	modelViewMatrix.Translate(0.0f, 0.0f, 0.0f);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 
 	{
 	//	p_CompassBillBoard->DrawBillBoard(w,h);
 	}
-	//modelViewMatrix.Rotate(10.0, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.PopMatrix();
+	//m_env.GetmodelViewMatrix()->Rotate(10.0, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderVGAView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
 
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.LoadIdentity();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->LoadIdentity();
 		// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
 		M3DMatrix44f camera ;
 
 		VGACameraFrame.GetCameraMatrix(camera);
-		modelViewMatrix.PushMatrix(VGACameraFrame);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix(VGACameraFrame);
+		m_env.GetmodelViewMatrix()->PopMatrix();
 
-		modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-		modelViewMatrix.Scale(w, h, 1.0f);
-		DrawVGAVideo(needSendData);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+		DrawVGAVideo(m_env,needSendData);
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderSDIView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.LoadIdentity();
+		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->LoadIdentity();
 			M3DMatrix44f camera ;
 		SDICameraFrame.GetCameraMatrix(camera);
-		modelViewMatrix.PushMatrix(SDICameraFrame);
-		modelViewMatrix.PopMatrix();
-		modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-		modelViewMatrix.Scale(w, h, 1.0f);
-		DrawSDIVideo(needSendData);
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix(SDICameraFrame);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+		DrawSDIVideo(m_env,needSendData);
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
 
-void Render::RenderExtensionView(GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderExtensionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
 	glViewport(x,y,w,h);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 		M3DMatrix44f camera ;
 	ExtCameraFrame.GetCameraMatrix(camera);
-	modelViewMatrix.PushMatrix(ExtCameraFrame);
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-	modelViewMatrix.Scale(w, h, 1.0f);
-	DrawExtensionVideo(needSendData);
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix(ExtCameraFrame);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+	DrawExtensionVideo(m_env,needSendData);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 void PrintGLText(GLint x, GLint y, const char *string)
 {
@@ -5690,7 +5686,7 @@ void glText(double x, double y, char *str)
 		str++;
 	}
 }
-void Render::DrawInitView(Rect* rec, bool needSendData)
+void Render::DrawInitView(GLEnv &m_env,Rect* rec, bool needSendData)
 {
 
 	int pic_count_hor=CAM_COUNT/2;
@@ -5700,13 +5696,13 @@ void Render::DrawInitView(Rect* rec, bool needSendData)
 	{
 		startx = rec->x + wid*(i%pic_count_hor);
 		starty = rec->y + hei*(1 - i/pic_count_hor);
-		DrawSigleScale(new Rect(startx,starty,wid,hei), i, needSendData);
+		DrawSigleScale(m_env,new Rect(startx,starty,wid,hei), i, needSendData);
 	}
 
 	if(common.Scaned())
 	{
 		char text[]="O K     ";
-		DrawCordsView(new Rect(rec->x+rec->width/2, rec->y+rec->height*2/5,
+		DrawCordsView(m_env,new Rect(rec->x+rec->width/2, rec->y+rec->height*2/5,
 								rec->width/16,rec->height/10),
 							text);
 	}
@@ -5718,7 +5714,7 @@ void Render::DrawInitView(Rect* rec, bool needSendData)
 			char text[]="Pass     ";
 			startx = wid*(i%4) + (wid/pic_count_hor);
 			starty = hei*(1 - i/pic_count_hor) ;
-			DrawCordsView(new Rect(startx, starty,rec->width/24,rec->height/10),text);
+			DrawCordsView(m_env,new Rect(startx, starty,rec->width/24,rec->height/10),text);
 		}
 
 		if(picSaveState[i]==true)
@@ -5733,7 +5729,7 @@ void Render::DrawInitView(Rect* rec, bool needSendData)
 			{
 				starty = hei*0.5 ;
 			}
-			DrawCordsView(new Rect(startx, starty,rec->width/24,rec->height/10),text_save);
+			DrawCordsView(m_env,new Rect(startx, starty,rec->width/24,rec->height/10),text_save);
 		}
 	}
 
@@ -5742,10 +5738,10 @@ void Render::DrawInitView(Rect* rec, bool needSendData)
 		char text_show[]="Enter    ";
 		startx = 0;//wid/24;
 		starty = hei*8/10 ;
-		DrawCordsView(new Rect(startx, starty,rec->width/12,rec->height/10),text_show);
+		DrawCordsView(m_env,new Rect(startx, starty,rec->width/12,rec->height/10),text_show);
 		char text_number[20];
 		sprintf(text_number,"n:%.2d  ",enterNumberofCam);
-		DrawCordsView(new Rect(startx, starty*0.8,rec->width/12,rec->height/10),text_number);
+		DrawCordsView(m_env,new Rect(startx, starty*0.8,rec->width/12,rec->height/10),text_number);
 
 
 		for(int j=0;j<CAM_COUNT/2;j++)
@@ -5754,45 +5750,45 @@ void Render::DrawInitView(Rect* rec, bool needSendData)
 			startx = wid*(j%(CAM_COUNT/2)) + (wid/pic_count_hor);
 			starty=hei*0.5;
 			sprintf(text_number,"%.2d      ",j+CAM_COUNT/2);
-			DrawCordsView(new Rect(startx, starty*0.3,rec->width/24,rec->height/10),text_number);
+			DrawCordsView(m_env,new Rect(startx, starty*0.3,rec->width/24,rec->height/10),text_number);
 			sprintf(text_number,"%.2d      ",j);
-			DrawCordsView(new Rect(startx, starty*2.3,rec->width/24,rec->height/10),text_number);
+			DrawCordsView(m_env,new Rect(startx, starty*2.3,rec->width/24,rec->height/10),text_number);
 		}
 	}
 }
-void Render::DrawCordsView(Rect* rec, char* text)
+void Render::DrawCordsView(GLEnv &m_env,Rect* rec, char* text)
 {
 	glViewport(rec->x, rec->y, rec->width, rec->height);
-	DrawCords(rec->width, rec->height, text);
+	DrawCords(m_env,rec->width, rec->height, text);
 }
 
-void Render::DrawAngleCordsView(Rect* rec, char* text,float toScale)
+void Render::DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale)
 {
 	glViewport(rec->x, rec->y, rec->width, rec->height);
-	DrawAngleCords(rec->width, rec->height, text,toScale);
+	DrawAngleCords(m_env,rec->width, rec->height, text,toScale);
 }
 
-void Render::DrawSigleScale(Rect* rec, GLint idx, bool needSendData)
+void Render::DrawSigleScale(GLEnv &m_env,Rect* rec, GLint idx, bool needSendData)
 {
 	glViewport(rec->x, rec->y, rec->width, rec->height);
-	viewFrustum.SetPerspective(90.0f, float(rec->width) / float(rec->height), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(rec->width) / float(rec->height), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -rec->height);
-	modelViewMatrix.Scale(rec->width, rec->height, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -rec->height);
+	m_env.GetmodelViewMatrix()->Scale(rec->width, rec->height, 1.0f);
 
-	DrawSigleVideo(idx, needSendData);
-	modelViewMatrix.PopMatrix();
+	DrawSigleVideo(m_env,idx, needSendData);
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::DrawSigleVideo(GLint idx, bool needSendData)
+void Render::DrawSigleVideo(GLEnv &m_env,GLint idx, bool needSendData)
 {
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	glActiveTexture(GL_TextureIDs[idx]);
 
 	if(needSendData){
@@ -5802,25 +5798,25 @@ void Render::DrawSigleVideo(GLint idx, bool needSendData)
 		glBindTexture(GL_TEXTURE_2D, textures[idx]);
 	}
 
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx);
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx);
 	shadowBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderExtensionBillBoardAt(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderExtensionBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
 	glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		p_BillBoardExt->DrawBillBoard(w,h);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 ///////////////////////////////////////////////////////////////////////////////
 // Called to draw scene
@@ -6025,17 +6021,7 @@ void Render::SetdisplayMode( )
 
 void Render::RenderScene(void)
 {
-	printf("1\n");
-//	printf("mswap=%d\n",mswap);
-	if(mswap!=1)
-	{
-		mswap=1;
-	}
-	else
-	{
-///		printf("%d  error\n",mswap);
-//		exit(-1);
-	}
+	GLEnv &env=env1;
 	bool bShowDirection = false, isBillBoardExtOn = false;
 	bool needSendData = true;
 	int billBoardx = 0, billBoardy = g_windowHeight*15/16;//7/8;
@@ -6098,14 +6084,14 @@ void Render::RenderScene(void)
 	{
 	case SPLIT_VIEW_MODE:
 	{
-		RenderBirdView(0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*BIRD_VIEW_HEIGHT_RATE, needSendData);
+		RenderBirdView(env,0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*BIRD_VIEW_HEIGHT_RATE, needSendData);
 #ifdef GL_TIME_STAMP
 		glEndQuery(GL_TIME_ELAPSED);
 
 		glBeginQuery(GL_TIME_ELAPSED, queries[1]);
 #endif
 
-		RenderIndividualView(g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*OTHRE_VIEW_HEIGHT_RATE, g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, false);
+		RenderIndividualView(env,g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*OTHRE_VIEW_HEIGHT_RATE, g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, false);
 #ifdef GL_TIME_STAMP
 		glEndQuery(GL_TIME_ELAPSED);
 
@@ -6123,7 +6109,7 @@ void Render::RenderScene(void)
 		glBeginQuery(GL_TIME_ELAPSED, queries[1]);
 #endif
 		bShowDirection = true;
-		RenderIndividualView(0,0,g_windowWidth, g_windowHeight, needSendData);
+		RenderIndividualView(env,0,0,g_windowWidth, g_windowHeight, needSendData);
 
 #ifdef GL_TIME_STAMP
 		glEndQuery(GL_TIME_ELAPSED);
@@ -6133,8 +6119,8 @@ void Render::RenderScene(void)
 	break;
 	case PREVIEW_MODE:
 	{
-	//	RenderDectorView(0,0,g_windowWidth,g_windowHeight);
-	    RenderSingleView(0,0,g_windowWidth, g_windowHeight);
+	//	RenderDectorView(env,0,0,g_windowWidth,g_windowHeight);
+	    RenderSingleView(env,0,0,g_windowWidth, g_windowHeight);
 	}
 	break;
 	case TRIPLE_VIEW_MODE:
@@ -6143,16 +6129,16 @@ void Render::RenderScene(void)
 		billBoardx = extBillBoardx = g_windowWidth*BIRD_VIEW_WIDTH_RATE*9/10;
 		extBillBoardy  = g_windowHeight*15/16;//7/8;
 		billBoardy = extBillBoardy - g_windowHeight/2;
-		RenderAnimationToBirdView(0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight, needSendData);
-		RenderPresetViewByRotating(g_windowWidth*BIRD_VIEW_WIDTH_RATE,0,g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, false);
+		RenderAnimationToBirdView(env,0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight, needSendData);
+		RenderPresetViewByRotating(env,g_windowWidth*BIRD_VIEW_WIDTH_RATE,0,g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, false);
 //		RenderExtensionView(g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight/2, g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, needSendData);
 	}
 	break;
 	case FREE_VIEW_MODE:
 	{
 		bShowDirection = true;
-		RenderFreeView(0,0,g_windowWidth, g_windowHeight, needSendData);
-		RenderCordsView(0,0, g_windowWidth, g_windowHeight*1/8);
+		RenderFreeView(env,0,0,g_windowWidth, g_windowHeight, needSendData);
+		RenderCordsView(env,0,0, g_windowWidth, g_windowHeight*1/8);
 
 	}
 	break;
@@ -6160,24 +6146,24 @@ void Render::RenderScene(void)
 	{
 		bShowDirection = true;
 		p_BillBoard->m_Direction = BillBoard::BBD_REAR;
-		RenderRearTopView(0, 0, g_windowWidth, g_windowHeight, needSendData);
+		RenderRearTopView(env,0, 0, g_windowWidth, g_windowHeight, needSendData);
 
 	}
 	break;
 	case EXTENSION_VIEW_MODE:
 	{
-//		RenderExtensionView(0, 0, g_windowWidth, g_windowHeight, needSendData);
+//		RenderExtensionView(env,0, 0, g_windowWidth, g_windowHeight, needSendData);
 		isBillBoardExtOn = true;
 	}
 	break;
 	case ALL_ADD_712_MODE:
-		RenderBirdView(0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*BIRD_VIEW_HEIGHT_RATE, needSendData);
-//		RenderExtensionView(g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*OTHRE_VIEW_HEIGHT_RATE, g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, needSendData);
+		RenderBirdView(env,0,0, g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*BIRD_VIEW_HEIGHT_RATE, needSendData);
+//		RenderExtensionView(env,g_windowWidth*BIRD_VIEW_WIDTH_RATE, g_windowHeight*OTHRE_VIEW_HEIGHT_RATE, g_windowWidth*OTHER_VIEW_WIDTH_RATE, g_windowHeight/2, needSendData);
 
 		break;
 	case CENTER_VIEW_MODE:
 	{
-		RenderCenterView(0,0,g_windowWidth, g_windowHeight);
+		RenderCenterView(env,0,0,g_windowWidth, g_windowHeight);
 
 	}
 		break;
@@ -6187,24 +6173,24 @@ void Render::RenderScene(void)
 			InitScanAngle();//each time enter pano_view_mode read the angle file again
 
 		}
-		RenderRegionPanelView(g_windowWidth/2-(g_windowWidth*getScanRegionAngle()/360.0f)*4.0/2,g_windowHeight*1.0/4.0,
+		RenderRegionPanelView(env,g_windowWidth/2-(g_windowWidth*getScanRegionAngle()/360.0f)*4.0/2,g_windowHeight*1.0/4.0,
 				g_windowWidth*getScanRegionAngle()*4.0/360.0f,g_windowHeight*3.0/4.0);
-		RenderRulerView(0,g_windowHeight*3.5/20.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_180);
-		RenderPanoView(0,g_windowHeight*0.0/4.0,g_windowWidth, g_windowHeight*1.0/4.0);
+		RenderRulerView(env,0,g_windowHeight*3.5/20.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_180);
+		RenderPanoView(env,0,g_windowHeight*0.0/4.0,g_windowWidth, g_windowHeight*1.0/4.0);
 
 
-		RenderCompassView(0,g_windowHeight/4.0,g_windowWidth/10.0,g_windowWidth/10.0);
-		//RenderCompassView(0,g_windowHeight/4.0,g_windowWidth,g_windowHeight/10.0);
+		RenderCompassView(env,0,g_windowHeight/4.0,g_windowWidth/10.0,g_windowWidth/10.0);
+		//RenderCompassView(env,0,g_windowHeight/4.0,g_windowWidth,g_windowHeight/10.0);
 		break;
 	case TWO_HALF_PANO_VIEW_MODE:
 		if(last_mode!=PANO_VIEW_MODE)
 		{
 			InitScanAngle();//each time enter pano_view_mode read the angle file again
 		}
-		RenderRightPanoView(0,0,g_windowWidth, g_windowHeight/2.0);
-		RenderLeftPanoView(0,g_windowHeight/2.0,g_windowWidth, g_windowHeight/2.0);
-		RenderRulerView(0,g_windowHeight-g_windowHeight*0.6/10.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_90);
-		RenderRulerView(0,g_windowHeight/2.0-g_windowHeight*0.6/10.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_90);
+		RenderRightPanoView(env,0,0,g_windowWidth, g_windowHeight/2.0);
+		RenderLeftPanoView(env,0,g_windowHeight/2.0,g_windowWidth, g_windowHeight/2.0);
+		RenderRulerView(env,0,g_windowHeight-g_windowHeight*0.6/10.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_90);
+		RenderRulerView(env,0,g_windowHeight/2.0-g_windowHeight*0.6/10.0,g_windowWidth,g_windowHeight*0.9/10.0,RULER_90);
 
 		break;
 	case FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE:
@@ -6213,15 +6199,15 @@ void Render::RenderScene(void)
 			InitScanAngle();//each time enter pano_view_mode read the angle file again
 		}
 
-		RenderRightPanoView(0,g_windowHeight*200.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*360.0/1080.0);
-		RenderLeftPanoView(0,g_windowHeight*(200.0+360.0)/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*360.0/1080.0);
+		RenderRightPanoView(env,0,g_windowHeight*200.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*360.0/1080.0);
+		RenderLeftPanoView(env,0,g_windowHeight*(200.0+360.0)/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*360.0/1080.0);
 		//glEnable(GL_SCISSOR_TEST);
-		//glScissor(g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*(360.0)/1080.0, g_windowWidth*704.0/1080.0, g_windowHeight*(576.0-360.0)/1080.0);
+		//glScissor(env,g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*(360.0)/1080.0, g_windowWidth*704.0/1080.0, g_windowHeight*(576.0-360.0)/1080.0);
 		//glClear(GL_DEPTH_BUFFER_BIT);
 		//glDisable(GL_SCISSOR_TEST);
-//		RenderExtensionView(g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0,  g_windowHeight*576.0/1080.0, needSendData);
-	//	RenderCompassView(0,0,500,500);
-		//		RenderCompassView(0,0,g_windowWidth/3.0,g_windowHeight/3.0);
+//		RenderExtensionView(env,g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0,  g_windowHeight*576.0/1080.0, needSendData);
+	//	RenderCompassView(env,0,0,500,500);
+		//		RenderCompassView(env,0,0,g_windowWidth/3.0,g_windowHeight/3.0);
 		break;
 	case FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE:
 		if(last_mode!=FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE)
@@ -6230,72 +6216,72 @@ void Render::RenderScene(void)
 		}
 
 
-		RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-		RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+		RenderRightPanoView(env,0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+		RenderLeftPanoView(env,0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 
-		//		RenderExtensionView(g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0, g_windowHeight*360.0/1080.0, needSendData);
+		//		RenderExtensionView(env,g_windowWidth*(1920.0-704.0)/1920.0, g_windowHeight*0.0/1080.0, g_windowWidth*704.0/1920.0, g_windowHeight*360.0/1080.0, needSendData);
 		break;
 	case INIT_VIEW_MODE:
-		DrawInitView(new Rect(0, 0, g_windowWidth, g_windowHeight), needSendData);
+		DrawInitView(env,new Rect(0, 0, g_windowWidth, g_windowHeight), needSendData);
 		break;
 	case	ALL_VIEW_MODE:
 	{
-		RenderRightPanoView(0,g_windowHeight*200.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-		RenderLeftPanoView(0,g_windowHeight*660.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		RenderRightPanoView(env,0,g_windowHeight*200.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+		RenderLeftPanoView(env,0,g_windowHeight*660.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
 		break;
 	}
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
 	{
-			RenderRightPanoView(0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-			RenderLeftPanoView(0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
-	//	RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-		//	RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
-			PrepareAlarmAera(0,0,g_windowWidth,g_windowHeight);
+			RenderRightPanoView(env,0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+			RenderLeftPanoView(env,0,g_windowHeight*760.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
+	//	RenderRightPanoView(env,0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+		//	RenderLeftPanoView(env,0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
+			PrepareAlarmAera(env,0,0,g_windowWidth,g_windowHeight);
 			p_ForeSightFacade->Reset(ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE);
-		    RenderRulerView(g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
-		    RenderRulerView(g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
-//		    RenderOnetimeView(g_windowWidth*60.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-	//		RenderTwotimesView(g_windowWidth*1120.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-//		RenderCompassView(g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-//			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
+		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
+//		    RenderOnetimeView(env,g_windowWidth*60.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+	//		RenderTwotimesView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+//			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 	}
 
 	case	TELESCOPE_FRONT_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_FRONT_MODE);
-		    RenderRulerView(-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-			RenderTwotimesView(g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-			RenderFourtimesTelView(g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-			RenderCompassView(g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+			RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+			RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+			RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		case	TELESCOPE_RIGHT_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_RIGHT_MODE);
-			   RenderRulerView(-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_BACK_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_BACK_MODE);
-			   RenderRulerView(-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			   RenderPanoTelView(0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_LEFT_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_LEFT_MODE);
-			  RenderRulerView(-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 
 
@@ -6325,69 +6311,69 @@ void Render::RenderScene(void)
 		break;*/
 	case	VGA_WHITE_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_WHITE_VIEW_MODE);
-			RenderTriangleView(g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
-			RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderTriangleView(env,g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
+			RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		case	VGA_HOT_BIG_VIEW_MODE:
 				p_ForeSightFacade_Track->Reset(VGA_HOT_BIG_VIEW_MODE);
-				RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+				RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case		VGA_HOT_SMALL_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_HOT_SMALL_VIEW_MODE);
-			RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case		VGA_FUSE_WOOD_LAND_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_WOOD_LAND_VIEW_MODE);
-				RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+				RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case		VGA_FUSE_GRASS_LAND_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_GRASS_LAND_VIEW_MODE);
-				RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+				RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case			VGA_FUSE_SNOW_FIELD_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_SNOW_FIELD_VIEW_MODE);
-				RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+				RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case		VGA_FUSE_DESERT_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_DESERT_VIEW_MODE);
-			RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case			VGA_FUSE_CITY_VIEW_MODE:
 		{
 			p_ForeSightFacade_Track->Reset(VGA_FUSE_CITY_VIEW_MODE);
-			RenderVGAView(0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, needSendData);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		}
 
@@ -6400,12 +6386,12 @@ void Render::RenderScene(void)
 			}
 	#endif
 			p_ForeSightFacade_Track->Reset(SDI1_WHITE_BIG_VIEW_MODE);
-			RenderSDIView(0,0,g_windowWidth*1434/1920, g_windowHeight, true);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderSDIView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderTriangleView(g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderTriangleView(env,g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case			SDI1_WHITE_SMALL_VIEW_MODE:
 		{
@@ -6417,12 +6403,12 @@ void Render::RenderScene(void)
 			}
 	#endif
 			p_ForeSightFacade_Track->Reset(SDI1_WHITE_SMALL_VIEW_MODE);
-			RenderSDIView(0,0,g_windowWidth*1434/1920, g_windowHeight, true);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderSDIView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderTriangleView(g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderTriangleView(env,g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		}
 		case		SDI2_HOT_BIG_VIEW_MODE:
@@ -6434,11 +6420,11 @@ void Render::RenderScene(void)
 			}
 	#endif
 			p_ForeSightFacade_Track->Reset(SDI2_HOT_BIG_VIEW_MODE);
-			RenderSDIView(0,0,g_windowWidth*1434/1920, g_windowHeight, true);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderSDIView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-					RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		case		SDI2_HOT_SMALL_VIEW_MODE:
 		{
@@ -6450,53 +6436,53 @@ void Render::RenderScene(void)
 			}
 	#endif
 			p_ForeSightFacade_Track->Reset(SDI2_HOT_SMALL_VIEW_MODE);
-			RenderSDIView(0,0,g_windowWidth*1434/1920, g_windowHeight, true);
-			RenderTrackForeSightView(0,0,g_windowWidth*1434/1920, g_windowHeight);
+			RenderSDIView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1434/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-					RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		}
 		case	PAL1_WHITE_BIG_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(PAL1_WHITE_BIG_VIEW_MODE);
 				SetCurrentExtesionVideoId(EXT_CAM_0);
-				RenderExtensionView(0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
-				RenderTrackForeSightView(0,0,g_windowWidth*1346/1920, g_windowHeight);
+				RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
+				RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 				render.SendtoTrack();
-				RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-				RenderTriangleView(g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
-					RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+				RenderTriangleView(env,g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
+					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	PAL1_WHITE_SMALL_VIEW_MODE:
 		{
 			p_ForeSightFacade_Track->Reset(SDI2_HOT_BIG_VIEW_MODE);
 			SetCurrentExtesionVideoId(EXT_CAM_0);
-			RenderExtensionView(0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
-			RenderTrackForeSightView(0,0,g_windowWidth*1346/1920, g_windowHeight);
+			RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderTriangleView(g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
-				RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderTriangleView(env,g_windowWidth*1100.0/1920.0,g_windowHeight*415.0/1080.0,g_windowWidth*800.0/1920.0,g_windowHeight*800.0/1920.0);
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		}
 		case		PAL2_HOT_BIG_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(PAL2_HOT_BIG_VIEW_MODE);
 					SetCurrentExtesionVideoId(EXT_CAM_1);
-					RenderExtensionView(0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
-					RenderTrackForeSightView(0,0,g_windowWidth*1346/1920, g_windowHeight);
+					RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
+					RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 					render.SendtoTrack();
-					RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-					RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+					RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 					break;
 		case		PAL2_HOT_SMALL_VIEW_MODE:
 		{
 			p_ForeSightFacade_Track->Reset(PAL2_HOT_SMALL_VIEW_MODE);
 			SetCurrentExtesionVideoId(EXT_CAM_1);
-			RenderExtensionView(0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
-			RenderTrackForeSightView(0,0,g_windowWidth*1346/1920, g_windowHeight);
+			RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
+			RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 			render.SendtoTrack();
-			RenderCompassView(g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
-			RenderPositionView(g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		}
 		default:
@@ -6504,14 +6490,14 @@ void Render::RenderScene(void)
 		}
 
 	if(isCalibTimeOn){
-		RenderTimeView(0,g_windowHeight*7/8,g_windowWidth, g_windowHeight/8);
+		RenderTimeView(env,0,g_windowHeight*7/8,g_windowWidth, g_windowHeight/8);
 	}
 	if((isDirectionOn&& bShowDirection)){
-		RenderBillBoardAt(billBoardx, billBoardy, g_windowHeight*1/8, g_windowHeight*1/8);
+		RenderBillBoardAt(env,billBoardx, billBoardy, g_windowHeight*1/8, g_windowHeight*1/8);
 	}
 	if(displayMode==PANO_VIEW_MODE)
 	{
-		RenderCompassBillBoardAt(0,g_windowHeight*1.0/4.0,g_windowHeight, g_windowHeight);
+		RenderCompassBillBoardAt(env,0,g_windowHeight*1.0/4.0,g_windowHeight, g_windowHeight);
 
 	}
 	float scaleofsmallpano=2.0/3.0;
@@ -6524,19 +6510,19 @@ void Render::RenderScene(void)
 		for(int i=0;i<2;i++)
 		{
 			p_BillBoard->m_Direction=(i+5)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
 					scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 			p_BillBoard->m_Direction=(4-i)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
 					scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		}
 		p_BillBoard->m_Direction=1;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
 				scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=2;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
 				scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=last_direction_second;
@@ -6554,16 +6540,16 @@ void Render::RenderScene(void)
 		for(int i=0;i<2;i++)
 		{
 			p_BillBoard->m_Direction=(i+5)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
 			p_BillBoard->m_Direction=(4-i)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/2-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/2-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
 
 		}
 		p_BillBoard->m_Direction=1;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=2;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/2-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/2-g_windowHeight*1/20, g_windowHeight*1/8, g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=last_direction;
 	}
@@ -6601,23 +6587,23 @@ void Render::RenderScene(void)
 		}
 #else
 		p_ChineseCBillBoard->ChooseTga=IDLE_T;
-		RenderChineseCharacterBillBoardAt(g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
 #endif
 	}
 
 	else if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	{
 		p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
-		RenderChineseCharacterBillBoardAt(-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-				RenderChineseCharacterBillBoardAt(g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-				RenderChineseCharacterBillBoardAt(g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
 			p_ChineseCBillBoard->ChooseTga=LOCATION_T;
 	//		RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*121.5/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-			RenderChineseCharacterBillBoardAt(g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 
 	}
 
@@ -6627,37 +6613,37 @@ void Render::RenderScene(void)
 			||displayMode==TELESCOPE_LEFT_MODE)
 	{
 	p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-	RenderChineseCharacterBillBoardAt(-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 		p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
-		RenderChineseCharacterBillBoardAt(g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 	p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-	RenderChineseCharacterBillBoardAt(g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+	RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
 		 if(displayMode==TELESCOPE_FRONT_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
 		//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-			RenderChineseCharacterBillBoardAt(g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
 				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
 			//		RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-				RenderChineseCharacterBillBoardAt(g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_BACK_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
 			//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-			RenderChineseCharacterBillBoardAt(g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_LEFT_MODE)
 		{
 		p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
 	//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-		RenderChineseCharacterBillBoardAt(g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 	}
 
@@ -6680,7 +6666,7 @@ void Render::RenderScene(void)
 			)
 	{
 		p_ChineseCBillBoard->ChooseTga=LOCATION_T;
-		RenderChineseCharacterBillBoardAt(g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 
 		switch(displayMode)
 		{
@@ -6688,52 +6674,52 @@ void Render::RenderScene(void)
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_WHITE_BIG_T;
 
-				RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+				RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 					break;
 				}
 				case VGA_HOT_BIG_VIEW_MODE :
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_HOT_BIG_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.40/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.40/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 
 					break;
 				}
 				case VGA_HOT_SMALL_VIEW_MODE :
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_HOT_SMALL_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 							break;
 				}
 
 				case VGA_FUSE_WOOD_LAND_VIEW_MODE :
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_FUSE_WOOD_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 				case VGA_FUSE_GRASS_LAND_VIEW_MODE :
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_FUSE_GRASS_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 
 				}
 				case VGA_FUSE_SNOW_FIELD_VIEW_MODE :
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_FUSE_SNOW_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 				case VGA_FUSE_DESERT_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_FUSE_DESERT_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 				case VGA_FUSE_CITY_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=VGA_FUSE_CITY_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 
@@ -6742,44 +6728,44 @@ void Render::RenderScene(void)
 				case SDI1_WHITE_BIG_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=SDI1_WHITE_BIG_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 							break;
 				}
 				case SDI1_WHITE_SMALL_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=SDI1_WHITE_SMALL_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 				case SDI2_HOT_BIG_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=SDI2_HOT_BIG_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 				}
 				case	SDI2_HOT_SMALL_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=SDI2_HOT_SMALL_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 							break;
 				}
 				case	PAL1_WHITE_BIG_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=PAL1_WHITE_BIG_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 						break;
 
 				}
 				case	PAL1_WHITE_SMALL_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=PAL1_WHITE_SMALL_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.46/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 							break;
 				}
 				case	PAL2_HOT_BIG_VIEW_MODE:
 				{
 					p_ChineseCBillBoard->ChooseTga=PAL2_HOT_BIG_T;
-					RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+					RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 
 					//RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/2.5, billBoardy-g_windowHeight*2/3, g_windowHeight*1/2, g_windowHeight*1/2);
 										break;
@@ -6787,7 +6773,7 @@ void Render::RenderScene(void)
 				case	PAL2_HOT_SMALL_VIEW_MODE:
 				{
 					 p_ChineseCBillBoard->ChooseTga=PAL2_HOT_SMALL_T;
-						RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
+						RenderChineseCharacterBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/1.2, billBoardy-g_windowHeight*1.4/3, g_windowWidth*1/1.2, g_windowHeight*1/1.2);
 
 					 //RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/2.5, billBoardy-g_windowHeight*2/3, g_windowHeight*1/2, g_windowHeight*1/2);
 					break;
@@ -6805,26 +6791,26 @@ void Render::RenderScene(void)
 		for(int i=0;i<2;i++)
 		{
 			p_BillBoard->m_Direction=(i+5)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
 					scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 			p_BillBoard->m_Direction=(4-i)%6;
-			RenderBillBoardAt(billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
+			RenderBillBoardAt(env,billBoardx+i*g_windowWidth/2-i*g_windowWidth/16, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
 					scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		}
 		p_BillBoard->m_Direction=1;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-scaleofsmallpano*g_windowHeight*1/20,
 				scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=2;
-		RenderBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
+		RenderBillBoardAt(env,billBoardx+g_windowWidth-g_windowWidth/10, billBoardy-g_windowHeight/3-scaleofsmallpano*g_windowHeight*1/20,
 				scaleofsmallpano*g_windowHeight*1/8, scaleofsmallpano*g_windowHeight*1/8);
 
 		p_BillBoard->m_Direction=last_direction_second;
 	}
 
 	if(isBillBoardExtOn){
-		RenderExtensionBillBoardAt(extBillBoardx, extBillBoardy, g_windowHeight*1/8, g_windowHeight*1/8 );
+		RenderExtensionBillBoardAt(env,extBillBoardx, extBillBoardy, g_windowHeight*1/8, g_windowHeight*1/8 );
 	}
 #ifdef GET_ALARM_AERA
 	pVehicle->updateFBOs();
@@ -8862,66 +8848,66 @@ void Render::RememberTime()
 	m_Timebar.ResetDeltas();
 	bRotTimerStart = false;
 }
-void Render::RenderOriginCords(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderOriginCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
     glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h/2);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h/2);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		const char* pCords = m_freeCamera.GetOriginCords();
-		DrawCords(w,h, pCords);
+		DrawCords(m_env,w,h, pCords);
 		
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderUpCords(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderUpCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
     glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h/2);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h/2);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		const char* pCords = m_freeCamera.GetUpCords();
-		DrawCords(w,h, pCords);		
+		DrawCords(m_env,w,h, pCords);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderFwdCords(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderFwdCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
     glViewport(x,y,w,h);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h/2);
-	modelViewMatrix.Scale(w, h, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h/2);
+	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 	{
 		const char* pCords = m_freeCamera.GetFwdCords();
-		DrawCords(w,h, pCords);		
+		DrawCords(m_env,w,h, pCords);
 	}
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderCordsView(GLint x, GLint y,GLint w, GLint h)
+void Render::RenderCordsView(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h)
 {
-	RenderOriginCords(x, y, w, h);
-    RenderUpCords(x, y+h/3, w, h);
-	RenderFwdCords(x,y+h*2/3,w, h);
+	RenderOriginCords(m_env,x, y, w, h);
+    RenderUpCords(m_env,x, y+h/3, w, h);
+	RenderFwdCords(m_env,x,y+h*2/3,w, h);
 }
 
-void Render::DrawCords(int w, int h, const char* s)
+void Render::DrawCords(GLEnv &m_env,int w, int h, const char* s)
 {
     char quote[1][160];
     bzero(quote[0],160);
@@ -8936,28 +8922,28 @@ void Render::DrawCords(int w, int h, const char* s)
 
     GLfloat UpwardsScrollVelocity = -10.0;
 
-    modelViewMatrix.LoadIdentity();
-    modelViewMatrix.Translate(0.0, 0.0, UpwardsScrollVelocity);
-    modelViewMatrix.Scale(0.03, 0.03, 0.03);
+    m_env.GetmodelViewMatrix()->LoadIdentity();
+    m_env.GetmodelViewMatrix()->Translate(0.0, 0.0, UpwardsScrollVelocity);
+    m_env.GetmodelViewMatrix()->Scale(0.03, 0.03, 0.03);
     glLineWidth(2);
     for(  l=0;l<numberOfQuotes;l++)
     {
         lenghOfQuote = (int)strlen(quote[l]);
-        modelViewMatrix.PushMatrix();
-        modelViewMatrix.Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0);
+        m_env.GetmodelViewMatrix()->PushMatrix();
+        m_env.GetmodelViewMatrix()->Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0);
         for (i = 0; i < lenghOfQuote; i++)
         {
-        	modelViewMatrix.Translate((90.0f), 0.0, 0.0);
+        	m_env.GetmodelViewMatrix()->Translate((90.0f), 0.0, 0.0);
         	pColor = PDefaultColor;
-            shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), pColor);
+            shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), pColor);
             glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[l][i]);
         }
-        modelViewMatrix.PopMatrix();
+        m_env.GetmodelViewMatrix()->PopMatrix();
     }
 }
 
 
-void Render::DrawAngleCords(int w, int h, const char* s,float toScale)
+void Render::DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale)
 {
     char quote[1][160];
     bzero(quote[0],160);
@@ -8972,23 +8958,23 @@ void Render::DrawAngleCords(int w, int h, const char* s,float toScale)
 
     GLfloat UpwardsScrollVelocity = -10.0;
 
-    modelViewMatrix.LoadIdentity();
-    modelViewMatrix.Translate(0.0, 0.0, UpwardsScrollVelocity);
-    modelViewMatrix.Scale(0.03*toScale, 0.03*toScale, 0.03*toScale);
+    m_env.GetmodelViewMatrix()->LoadIdentity();
+    m_env.GetmodelViewMatrix()->Translate(0.0, 0.0, UpwardsScrollVelocity);
+    m_env.GetmodelViewMatrix()->Scale(0.03*toScale, 0.03*toScale, 0.03*toScale);
     glLineWidth(2);
     for(  l=0;l<numberOfQuotes;l++)
     {
         lenghOfQuote = (int)strlen(quote[l]);
-        modelViewMatrix.PushMatrix();
-        modelViewMatrix.Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0f);
+        m_env.GetmodelViewMatrix()->PushMatrix();
+        m_env.GetmodelViewMatrix()->Translate(-(lenghOfQuote-5)*90.0f, -(l*200.0f), 0.0f);
         for (i = 0; i < lenghOfQuote; i++)
         {
-        	modelViewMatrix.Translate((90.0f), 0.0, 0.0);
+        	m_env.GetmodelViewMatrix()->Translate((90.0f), 0.0, 0.0);
         	pColor = PDefaultColor;
-            shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), pColor);
+            shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), pColor);
             glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[l][i]);
         }
-        modelViewMatrix.PopMatrix();
+        m_env.GetmodelViewMatrix()->PopMatrix();
     }
 
 
@@ -9705,9 +9691,9 @@ void Render::FixedBillBoard::SetSize(float size[2])
 	bbdsize[1] = size[1];
 }
 
-void Render::FixedBillBoard::Draw(M3DMatrix44f ViewMatrix, LOCATION_BBD loc)
+void Render::FixedBillBoard::Draw(GLEnv &m_env,M3DMatrix44f ViewMatrix, LOCATION_BBD loc)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 
 	// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE21);
@@ -9757,7 +9743,7 @@ void Render::FixedBillBoard::Draw(M3DMatrix44f ViewMatrix, LOCATION_BBD loc)
 
 	glDisableVertexAttribArray(squareVerticesID);
 }
-void Render::FixedBillBoard::DrawGroup(M3DMatrix44f camera, FixedBillBoard *bbd[], unsigned int count)
+void Render::FixedBillBoard::DrawGroup(GLEnv &m_env,M3DMatrix44f camera, FixedBillBoard *bbd[], unsigned int count)
 {
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
@@ -9766,20 +9752,20 @@ void Render::FixedBillBoard::DrawGroup(M3DMatrix44f camera, FixedBillBoard *bbd[
 	glUseProgram(programID);
 
 	for(int i = 0; i < count; i ++){
-		bbd[i]->Draw(camera,FixedBillBoard::LOCATION_BBD_BACK);
-		bbd[i]->Draw(camera,FixedBillBoard::LOCATION_BBD_HEAD);
+		bbd[i]->Draw(m_env,camera,FixedBillBoard::LOCATION_BBD_BACK);
+		bbd[i]->Draw(m_env,camera,FixedBillBoard::LOCATION_BBD_HEAD);
 	}
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);	
 }
-void Render::FixedBillBoard::DrawSingle(M3DMatrix44f camera, FixedBillBoard *bbd)
+void Render::FixedBillBoard::DrawSingle(GLEnv &m_env,M3DMatrix44f camera, FixedBillBoard *bbd)
 {
 	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	Render::SwitchBlendMode(blendmode);
 	// Use our shader
 	glUseProgram(programID);
-	bbd->Draw(camera, FixedBillBoard::LOCATION_BBD_FISHEYE);
+	bbd->Draw(m_env,camera, FixedBillBoard::LOCATION_BBD_FISHEYE);
 
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
@@ -9893,7 +9879,7 @@ int Render::SetWheelArcWidth(float arcWidth)
 		return 0;
 }
 
-void Render::DrawSlideonPanel()
+void Render::DrawSlideonPanel(GLEnv &m_env)
 {
 	// Load as a bunch of line segments
 	GLfloat vTracks[30][3];
@@ -10017,18 +10003,18 @@ void Render::DrawSlideonPanel()
 	SlideFrameBatch.CopyVertexData3f(vTracks);
 	SlideFrameBatch.End();
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 //	glDisable(GL_BLEND);
-//	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);
+//	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	glLineWidth(2.0f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vRed);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vRed);
 	SlideFrameBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 }
 
-void Render::DrawCrossonPanel()
+void Render::DrawCrossonPanel(GLEnv &m_env)
 {
 	// Load as a bunch of line segments
 	GLfloat vTracks[50][3];
@@ -10192,18 +10178,18 @@ void Render::DrawCrossonPanel()
 	CrossFrameBatch.CopyVertexData3f(vTracks);
 	CrossFrameBatch.End();
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 //	glDisable(GL_BLEND);
-//	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vLtYellow);
+//	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vLtYellow);
 	glLineWidth(2.0f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vYellow);
 	CrossFrameBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 }
 
-void Render::DrawRuleronPanel()
+void Render::DrawRuleronPanel(GLEnv &m_env)
 {
 	// Load as a bunch of line segments
 	float get_lineofruler=0.0;
@@ -10297,7 +10283,7 @@ void Render::DrawRuleronPanel()
 		math_ruler_pos[6*i+4]=temp_y;
 		math_ruler_pos[6*i+5]=the_high_pos;
 	}
-	p_LineofRuler->DrawRuler(math_ruler_pos);
+	p_LineofRuler->DrawRuler(m_env,math_ruler_pos);
 //reference line
 	float reference_pos[24];
 	float reference_angle=getrulerreferenceangle();
@@ -10390,7 +10376,7 @@ void Render::DrawRuleronPanel()
 	reference_pos[i++]=-0.01f;
 	reference_pos[i++]=the_high_pos;
 
-	p_LineofRuler->DrawReferenceLine(reference_pos);
+	p_LineofRuler->DrawReferenceLine(m_env,reference_pos);
 }
 
 void Render::InitFollowCross()
@@ -10570,7 +10556,7 @@ void Render::writeALPHA_ZOOM_SCALE(char * filename, float ALPHA_ZOOM_SCALE_4) {
 
 
 
-void Render::PrepareAlarmAera(int x,int y,int w,int h)
+void Render::PrepareAlarmAera(GLEnv &m_env,int x,int y,int w,int h)
 {
 	//readcanshu();
 	static int Once=true;
@@ -10704,7 +10690,7 @@ static float  sum_wait=0,sum_read=0,sum_write=0,sum_send=0;
 								draw_pos[5]=temp_rect.y+alarm_offset[1]-PIXELS_ADD_ON_ALARM+temp_rect.height;
 								draw_pos[6]=temp_rect.x+alarm_offset[0]-PIXELS_ADD_ON_ALARM;
 								draw_pos[7]=temp_rect.y+alarm_offset[1]-PIXELS_ADD_ON_ALARM+temp_rect.height;
-								DrawAlarmArea(draw_pos,0,0,w,h,mainAlarmTarget.GetTargetType(i));//target
+								DrawAlarmArea(m_env,draw_pos,0,0,w,h,mainAlarmTarget.GetTargetType(i));//target
 							}
 							gettimeofday(&draw_target_time,0);
 
@@ -10744,7 +10730,7 @@ void Render::InitDataofAlarmarea()
 	p_dataofalarmline=new BaseAlarmObject(TYPE_ALARM_LINE);
 }
 
-void Render::DrawAlarmArea(float get_pos[8],int x,int y,int w,int h,int color_type)
+void Render::DrawAlarmArea(GLEnv &m_env,float get_pos[8],int x,int y,int w,int h,int color_type)
 {
 	// Load as a bunch of line segments
 	GLfloat vTracks[50][3];
@@ -10807,9 +10793,9 @@ void Render::DrawAlarmArea(float get_pos[8],int x,int y,int w,int h,int color_ty
 	AlarmAreaBatch.End();
 
 	glViewport(0,0,g_windowWidth,g_windowHeight);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-	modelViewMatrix.PushMatrix();
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	glLineWidth(2.0f);
 	float draw_color[4];
@@ -10837,13 +10823,13 @@ void Render::DrawAlarmArea(float get_pos[8],int x,int y,int w,int h,int color_ty
 		memcpy(draw_color,vGreen,sizeof(draw_color));
 		break;
 	}
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), draw_color);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), draw_color);
 	AlarmAreaBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 }
 
-void Render::DrawAlarmAreaonScreen()
+void Render::DrawAlarmAreaonScreen(GLEnv &m_env)
 {
 	// Load as a bunch of line segments
 	GLfloat vTracks[50][3];
@@ -10886,15 +10872,15 @@ void Render::DrawAlarmAreaonScreen()
 	AlarmAreaBatch.End();
 
 	glViewport(0,0,g_windowWidth,g_windowHeight);
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	glLineWidth(2.0f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vYellow);
 	AlarmAreaBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::DrawAlarmLine(float pos[4])
+void Render::DrawAlarmLine(GLEnv &m_env,float pos[4])
 {
 	// Load as a bunch of line segments
 	GLfloat vTracks[50][3];
@@ -10958,12 +10944,12 @@ void Render::DrawAlarmLine(float pos[4])
 	AlarmAreaBatch.CopyVertexData3f(vTracks);
 	AlarmAreaBatch.End();
 
-	modelViewMatrix.PushMatrix();
+	m_env.GetmodelViewMatrix()->PushMatrix();
 
 	glLineWidth(2.0f);
-	shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vYellow);
+	shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vYellow);
 	AlarmAreaBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
 void  Render::InitAlarmArea(int positionofalarm[8],int type)
@@ -11024,21 +11010,21 @@ void Render::CancelAlarmArea(){
 }
 
 
-void Render::RenderTriangleView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderTriangleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-		projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.LoadIdentity();
+		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->LoadIdentity();
 		M3DMatrix44f mCamera;
 		CompassCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
-		modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-		modelViewMatrix.Scale(w*1.0, h*1.0, 1.0f);
-		modelViewMatrix.PopMatrix();
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+		m_env.GetmodelViewMatrix()->Scale(w*1.0, h*1.0, 1.0f);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 		float recv_focal_length=0;
 #if USE_UART
 		if(ReadMessage(IPC_MSG_TYPE_40MS_HEARTBEAT).payload.ipc_settings.focal_length>=0
@@ -11051,24 +11037,24 @@ void Render::RenderTriangleView(GLint x, GLint y, GLint w, GLint h)
 #else
 	  recv_focal_length=g_windowWidth*646.0/1920.0;
 	#endif
-		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(recv_focal_length,0,0);
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(recv_focal_length,0,0);
 		glLineWidth(2.0f);
-		shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vYellow);
+		shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vYellow);
 		triangleBatch.Draw();
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderCompassView(GLint x, GLint y, GLint w, GLint h)
+void Render::RenderCompassView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 {
 //RenderRotatingView(x,y,w,h, needSendData);
 	glViewport(x,y,w,h);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 
 	M3DMatrix44f mCamera;
 
@@ -11081,14 +11067,14 @@ if(once)
 
 
 		CompassCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-	modelViewMatrix.Scale(w*1.0, h*1.0, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+	m_env.GetmodelViewMatrix()->Scale(w*1.0, h*1.0, 1.0f);
 //	if(displayMode!=ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE	)
 	//	DrawCompassVideo(true);
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 #if USE_UART
 	float recv_angle=0;
@@ -11103,28 +11089,28 @@ if(once)
 	needle_angle+=1;
 #endif
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(-needle_angle,0,0,1);
-//	modelViewMatrix.Translate(0.0f, 0.0f, -h+50.0);//-h
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(-needle_angle,0,0,1);
+//	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h+50.0);//-h
 
-	modelViewMatrix.Translate(0.0f, 0.0f, -h+180.0);//-h
-	//modelViewMatrix.Translate(0.0f,0.0f,100.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h+180.0);//-h
+	//m_env.GetmodelViewMatrix()->Translate(0.0f,0.0f,100.0f);
 
 		glLineWidth(2.0f);
-		shaderManager.UseStockShader(GLT_SHADER_FLAT, transformPipeline.GetModelViewProjectionMatrix(), vYellow);
+		shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vYellow);
 		NeedleFrameBatch.Draw();
-		modelViewMatrix.PopMatrix();
+		m_env.GetmodelViewMatrix()->PopMatrix();
 
 //	DrawNeedleonCompass();
 }
 
-void Render::DrawCompassVideo(bool needSendData)
+void Render::DrawCompassVideo(GLEnv &m_env,bool needSendData)
 {
 	int idx =0;// GetCurrentExtesionVideoId();
 #if USE_COMPASS_ICON
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	glActiveTexture(GL_IconTextureIDs[idx]);
 
 	if(needSendData){
@@ -11133,9 +11119,9 @@ void Render::DrawCompassVideo(bool needSendData)
 	else{
 		glBindTexture(GL_TEXTURE_2D, iconTextures[idx]);
 	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+16);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+16);//ICON texture start from 16
 	shadowBatch.Draw();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 #endif
 }
@@ -11182,7 +11168,7 @@ void Render::set_SightWide(int recvWide)
 
 
 
-void Render::DrawTriangle()
+void Render::DrawTriangle(GLEnv &m_env)
 {
 	GLfloat vTracks[50][3];
 	GLfloat fixBBDPos[3];
@@ -11222,7 +11208,7 @@ void Render::DrawTriangle()
 	triangleBatch.End();
 }
 
-void Render::DrawNeedleonCompass()
+void Render::DrawNeedleonCompass(GLEnv &m_env)
 {
 	GLfloat vTracks[50][3];
 	GLfloat fixBBDPos[3];
@@ -11365,15 +11351,15 @@ void Render::InitRuler()
 	degreescale180Batch.End();
 }
 
-void Render::RenderRulerView(GLint x, GLint y, GLint w, GLint h,int type)
+void Render::RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int type)
 {
 	glViewport(x,y,w,h);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	viewFrustum.SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	projectionMatrix.LoadMatrix(viewFrustum.GetProjectionMatrix());
+	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
 
-	modelViewMatrix.PushMatrix();
-	modelViewMatrix.LoadIdentity();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	m_env.GetmodelViewMatrix()->LoadIdentity();
 
 	M3DMatrix44f mCamera;
 
@@ -11384,13 +11370,13 @@ void Render::RenderRulerView(GLint x, GLint y, GLint w, GLint h,int type)
 			once[i]=true;
 		}
 		CompassCameraFrame.GetCameraMatrix(mCamera);
-		modelViewMatrix.PushMatrix(mCamera);
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 
 	// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
-	modelViewMatrix.Translate(0.0f, 0.0f, -h);//-h
-	modelViewMatrix.Scale(w*1.39/(13.0*2.0), h/6.0, 1.0f);
+	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+	m_env.GetmodelViewMatrix()->Scale(w*1.39/(13.0*2.0), h/6.0, 1.0f);
 
-	DrawRulerVideo(once[type],type);
+	DrawRulerVideo(m_env,once[type],type);
 	if(once[type])
 	{
 		once[type]=false;
@@ -11398,27 +11384,27 @@ void Render::RenderRulerView(GLint x, GLint y, GLint w, GLint h,int type)
 	}
 
 
-	modelViewMatrix.PopMatrix();
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 	//DrawNeedleonCompass();
 }
 
-void Render::DrawRulerVideo(bool needSendData,int type)
+void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 {
 /*	int idx =0;// GetCurrentExtesionVideoId();
 #if USE_ICON
-	modelViewMatrix.PushMatrix();
-	//modelViewMatrix.Rotate(90.0f, 1.0f, 0.0f, 0.0f);
-	//modelViewMatrix.Scale(2.0,1.0,1.0);
-	//modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	//modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	//m_env.GetmodelViewMatrix()->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
+	//m_env.GetmodelViewMatrix()->Scale(2.0,1.0,1.0);
+	//m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	//m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	glActiveTexture(GL_IconRuler45TextureIDs[idx]);
 	//glBindTexture(GL_TEXTURE_2D,  iconRuler45Textures[idx]);
 	//PBOExtMgr.sendData(iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,idx);
 	{
 		//glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[idx]);
 	}
-//	shaderManager.UseStockShader(GLT_SHADER_FLAT,transformPipeline.GetModelViewProjectionMatrix(), vWhite);//ICON texture start from 16
+//	shaderManager.UseStockShader(GLT_SHADER_FLAT,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vWhite);//ICON texture start from 16
 
 	if(needSendData){
 		PBOExtMgr.sendData(iconTextures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,idx);
@@ -11426,7 +11412,7 @@ void Render::DrawRulerVideo(bool needSendData,int type)
 	else{
 		glBindTexture(GL_TEXTURE_2D, iconTextures[idx]);
 	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+16);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+16);//ICON texture start from 16
 
 	switch(type)
 	{
@@ -11442,16 +11428,16 @@ void Render::DrawRulerVideo(bool needSendData,int type)
 	}
 
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 #endif*/
 	int idx =0;// GetCurrentExtesionVideoId();
 #if USE_ICON
-	modelViewMatrix.PushMatrix();
-//	modelViewMatrix.Rotate(180.0, 1.0f, 0.0f, 0.0f);
-//	modelViewMatrix.Translate(0.0,0.0,-6.0);
-	modelViewMatrix.Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	modelViewMatrix.Rotate(180.0f,0.0f, 1.0f, 0.0f);
+	m_env.GetmodelViewMatrix()->PushMatrix();
+//	m_env.GetmodelViewMatrix()->Rotate(180.0, 1.0f, 0.0f, 0.0f);
+//	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-6.0);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 	switch(type)
 	{
 	case RULER_45:
@@ -11486,7 +11472,7 @@ void Render::DrawRulerVideo(bool needSendData,int type)
 		break;
 	}
 
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,transformPipeline.GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 
 	//shadowBatch.Draw();
 
@@ -11503,7 +11489,7 @@ void Render::DrawRulerVideo(bool needSendData,int type)
 		break;
 	}
 
-	modelViewMatrix.PopMatrix();
+	m_env.GetmodelViewMatrix()->PopMatrix();
 
 #endif
 }
@@ -11588,9 +11574,11 @@ void* getDefaultShaderMgr()
 	return render.getShaderManager();
 }
 
-void * getDefaultTransformPipeline()
+void * getDefaultTransformPipeline(GLEnv &m_env)
 {
-	return render.getTransformPipeline();
+	//GLEnv &m_env =env1;
+	return m_env.GettransformPipeline();
+//	return render.getTransformPipeline();
 }
 
 void setOverlapArea(int count,int & direction,bool &AppOverlap)

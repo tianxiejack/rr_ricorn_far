@@ -8,24 +8,25 @@
 #ifndef OITVEHICLE_H_
 #define OITVEHICLE_H_
 #include "GLMatrixStack.h"
+#include"GLEnv.h"
 class GLMmodel;
 class GLShaderManager;
 class OitVehicle{
 public:
 	OitVehicle(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr=NULL);
 	~OitVehicle(){};
-	void DrawVehicle();
-	void DrawVehicle_second();
-	void DrawVehicle_third();
+	void DrawVehicle(GLEnv &m_env);
+	void DrawVehicle_second(GLEnv &m_env);
+	void DrawVehicle_third(GLEnv &m_env);
 	inline void SetLoader(GLMmodel* pLoader){pVehicleLoader=pLoader;};
 	void InitVehicle();
 	void InitShaders();
 	void initFBOs(int w, int h);
-	void updateFBOs();
+	void updateFBOs(GLEnv &m_env);
 	void PrepareBlendMode();
 	void SetBlendMode(int md, int blendmd){mode = md; blendmode = blendmd;};
-	void SetupOITResolveProg();
-	void SetupResolveProg();
+	void SetupOITResolveProg(GLEnv &m_env);
+	void SetupResolveProg(GLEnv &m_env);
 	void GenerateOrtho2DMat(GLuint imageWidth, GLuint imageHeight);
 	void ChangeSize(int nWidth, int nHeight);
 	const GLfloat* GetDimensions() const{return m_dimensions;};

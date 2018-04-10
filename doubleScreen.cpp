@@ -1,11 +1,11 @@
 #include"RenderMain.h"
 #include "GLRender.h"
 #include "common.h"
+#include "GLEnv.h"
 extern Render render;
 Common comSecondSC;
-extern int mswap;
 extern float forward_data;
-
+extern GLEnv env2,env1;
 void InitBowlDS()
 {
 
@@ -14,21 +14,10 @@ void InitBowlDS()
 
 void Render::RenderSceneDS()
 {
-	printf("2\n");
-//	printf("mswap=%d\n",mswap);
-	if(mswap!=0)
-	{
-		mswap=0;
-	}
-	else
-	{
-	//	printf("%d  error\n",mswap);
-	//	exit(-1);
-	}
-//	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
-//	 RenderSingleView(1921,0,g_windowWidth, g_windowHeight,true);
-//RenderScene();
+	GLEnv &env=env2;
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
+	//RenderScene();
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
 {
@@ -60,7 +49,8 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	    }
 
 #else
-#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
+//#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
+	GLEnv &env=env2;
 	GLubyte *pBytes;
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
@@ -97,14 +87,15 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	SetView(windowWidth, windowHeight);
+
+
+	env.GettransformPipeline()->SetMatrixStacks(*(env.GetmodelViewMatrix()), *(env.GetprojectionMatrix()));
 	{//setting up models and their textures
 	//	overLapRegion::GetoverLapRegion()->SetSingleHightLightState(false);
 //			ReadPanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME);
 
 //		transformPipeline.SetMatrixStacks(modelViewMatrix, projectionMatrix);
 //		InitLineofRuler();
-
-
 		//GenerateCenterView();
 	//	GenerateCompassView();
 //		GenerateScanPanelView();
@@ -138,7 +129,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	//	GenerateExtentView();
 
 //		GenerateSDIView();
-//		GenerateVGAView();
+		GenerateVGAView();
 	//	PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
 	//	PanoHeight=(PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z());
 //		foresightPos.SetPanoLen_Height(PanoLen,PanoHeight);
@@ -155,7 +146,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	//	InitBowl();
 //		InitScanAngle();
 //		InitPanoScaleArrayData();
-	//	InitPanel();
+		InitPanel();
 //		InitFollowCross();
 //		InitRuler();
 	//	InitCalibrate();
@@ -193,7 +184,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 //	   	mPresetCamGroup.LoadCameras();
 		// Load up CAM_COUNT textures
 //		glGenTextures(PETAL_TEXTURE_COUNT, textures);
-
+#if 0
 		for(int i = 0; i < CAM_COUNT; i++){
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -271,7 +262,9 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 					glTexImage2D(GL_TEXTURE_2D,0,nComponents,SDI_WIDTH, SDI_HEIGHT, 0,
 							format, GL_UNSIGNED_BYTE, 0);
 				}
+#endif
 	}
+
 	glMatrixMode(GL_MODELVIEW);
 #endif
 }
@@ -295,7 +288,7 @@ void Render::GetFPSDS()
 }
 void Render::DrawGLSceneDS()
 {
-#if 0
+#if 1
 	{
 	    // Color values
 	    static GLfloat vFloorColor[] = { 1.0f, 1.0f, 1.0f, 1.0f};
@@ -396,13 +389,6 @@ void RenderMain::ReSizeGLSceneDS(int Width, int Height)
 }
 void RenderMain::DrawGLSceneDS()
 {
-
-    static bool ONCE_FULLSCREEN = true;
-
-	if(ONCE_FULLSCREEN){
-		ONCE_FULLSCREEN = false;
-		render.ProcessOitKeys('F', 0, 0);
-	}
 		render.DrawGLSceneDS();
 //	render.DrawGLScene();
 }

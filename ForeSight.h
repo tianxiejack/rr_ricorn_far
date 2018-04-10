@@ -6,7 +6,7 @@
 
 typedef class InterfaceForeSight{
 public:
-	virtual void DrawSeveralpairs(float posX,float posY,float readAngle)=0;
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle)=0;
 } *PInterfaceForeSight;
 
 class BaseForeSight:public InterfaceForeSight
@@ -20,7 +20,7 @@ public :
 class PseudoForeSight_core:public BaseForeSight
 {
 public:
-	virtual void DrawSeveralpairs(float posX,float posY,float readAngle){};
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle){};
 };
 
 //decorator
@@ -36,10 +36,10 @@ public:
 			float recvlimitX,
 			float  recvlimitY);
 	virtual ~ForeSight_decorator(){};
-	virtual void DrawSeveralpairs(float posX,float posY,float readAngle);
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle);
 private:
-	void Drawpairs();
-	void Draw();
+	void Drawpairs(GLEnv &m_env);
+	void Draw(GLEnv &m_env);
 	float limitX;
 	float limitY;
 	GLBatch myBatch;
@@ -256,7 +256,7 @@ public:
 
 
 
-	void Draw(float readAngle);//在渲染时间时调用
+	void Draw(GLEnv &m_env,float readAngle);//在渲染时间时调用
 	void SetAlign(int num,int index){foreSightPos.SetAlignNum(num),foreSightPos.SetAlignindex(index);};
 	float GetForeSightPosX( ){return foreSightPos.GetForeSightPosX();};
 	float GetForeSightPosY( ){return foreSightPos.GetForeSightPosY();};

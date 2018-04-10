@@ -12,7 +12,7 @@
 using namespace std;
 
 extern void* getDefaultShaderMgr();
-extern void* getDefaultTransformPipeline();
+extern void* getDefaultTransformPipeline(GLEnv &m_env);
 CornerMarker::CornerMarker(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr,
 		const float* Color)
 	: m_pShaderManager(mgr),modelViewMatrix(modelViewMat),projectionMatrix(projectionMat),p_Color(Color)
@@ -32,9 +32,9 @@ CornerMarker::~CornerMarker()
 
 }
 
-void CornerMarker::Draw( float rx, float ry, float rz,const float* color)
+void CornerMarker::Draw(GLEnv &m_env, float rx, float ry, float rz,const float* color)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 	if(!color){
 		color = p_Color;
 	}
@@ -118,7 +118,7 @@ void CornerMarkerGroup::SaveCorners(const char *fileName)
 		cout<<"Failed to Open "<<fileName<<" to save corner\n";
 	}
 }
-void CornerMarkerGroup::DrawCorner(CORNER_POSITION i, const float* color, float rotx, float roty,float rotz)
+void CornerMarkerGroup::DrawCorner(GLEnv &m_env,CORNER_POSITION i, const float* color, float rotx, float roty,float rotz)
 {
 	m_CornerMarker.SetPosition(
 			M.at<float>(i,0 ) ,
@@ -129,7 +129,7 @@ void CornerMarkerGroup::DrawCorner(CORNER_POSITION i, const float* color, float 
 		roty = 0.0f;
 		color = vWhite;
       	}
-	m_CornerMarker.Draw(rotx,roty,rotz, color );
+	m_CornerMarker.Draw(m_env,rotx,roty,rotz, color );
 }
 
 void CornerMarkerGroup::LoadCorners( const char *fileName)

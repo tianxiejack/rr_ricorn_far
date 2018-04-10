@@ -746,12 +746,12 @@ GLint GLShaderManager::UseStockShader(GLT_STOCK_SHADER nShaderID, ...)
 #if USE_GAIN
 			van_num = va_arg(uniformList, int);
 			locAmbient = glGetUniformLocation(uiStockShaders[nShaderID], "vanColor");
-					glUniform4fv(locAmbient, 1,vanColor[van_num]);
+			glUniform4fv(locAmbient, 1,vanColor[van_num]);
 #endif
 			break;
 
 		case GLT_SHADER_TEXTURE_REPLACE:	// Just the texture place
-			iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
+					iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
 				    mvpMatrix = va_arg(uniformList, M3DMatrix44f*);
 					glUniformMatrix4fv(iTransform, 1, GL_FALSE, *mvpMatrix);
 

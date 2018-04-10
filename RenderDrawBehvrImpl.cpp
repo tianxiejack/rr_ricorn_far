@@ -7,6 +7,7 @@
 void Render::FBOdraw()
 {
 #if 0
+	GLEnv &env=env1;
 	bool needSendData=true;
 	switch(fboMode)
 	{
@@ -15,8 +16,8 @@ void Render::FBOdraw()
 		{
 			needSendData=false;
 		}
-			RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
-			RenderLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+			RenderRightPanoView(env,0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+			RenderLeftPanoView(env,0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
 		break;
 	case FBO_VGA_VIEW_MODE:
 		if(displayMode==VGA_WHITE_VIEW_MODE)

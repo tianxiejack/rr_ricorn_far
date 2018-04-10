@@ -6,6 +6,7 @@
 #include "GLShaderManager.h"
 #include "GLMatrixStack.h"
 #include "GLTriangleBatch.h"
+#include"GLEnv.h"
 class Calibrate{
 public:
 	Calibrate(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr=NULL);
@@ -14,8 +15,8 @@ public:
 	float Load();
 	void Save(float value);
 	void SetAngle(float value);
-	void DrawRuler(float * pos);
-	void DrawReferenceLine(float * pos);
+	void DrawRuler(GLEnv &m_env,float * pos);
+	void DrawReferenceLine(GLEnv &m_env,float * pos);
 	float GetAngle();
 	void setRulerSpeed(float speed){rulerSpeed=speed;};
 	float getRulerSpeed(){return rulerSpeed;};

@@ -66,9 +66,9 @@ OitVehicle::OitVehicle(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,
 	SetTankDis(render.getTankDistance());
 }
 
-void OitVehicle::DrawVehicle()
+void OitVehicle::DrawVehicle(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
     if (mode == USER_BLEND)
         {
             // Setup blend state
@@ -125,9 +125,9 @@ void OitVehicle::DrawVehicle()
 
 }
 
-void OitVehicle::DrawVehicle_second()
+void OitVehicle::DrawVehicle_second(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
     if (mode == USER_BLEND)
         {
             // Setup blend state
@@ -185,9 +185,9 @@ void OitVehicle::DrawVehicle_second()
 
 }
 
-void OitVehicle::DrawVehicle_third()
+void OitVehicle::DrawVehicle_third(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
     if (mode == USER_BLEND)
         {
             // Setup blend state
@@ -438,9 +438,9 @@ void OitVehicle::GenerateOrtho2DMat(GLuint imageWidth, GLuint imageHeight)
 }
 
 
-void OitVehicle::SetupResolveProg()
+void OitVehicle::SetupResolveProg(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
     glUseProgram(msResolve);
 
     // Set projection matrix
@@ -463,9 +463,9 @@ void OitVehicle::SetupResolveProg()
 	gltCheckErrors(msResolve);
 }
 
-void OitVehicle::SetupOITResolveProg()
+void OitVehicle::SetupOITResolveProg(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
     glUseProgram(oitResolve);
 
     // Set projection matrix
@@ -506,9 +506,8 @@ void OitVehicle::ChangeSize(int screenWidth, int screenHeight)
     m_screenHeight = screenHeight;
 }
 
-void OitVehicle::updateFBOs()
+void OitVehicle::updateFBOs(GLEnv &m_env)
 {
-    
     // Clean up all state 
     glDepthFunc(GL_LEQUAL);
     glDisable(GL_BLEND);
@@ -526,9 +525,9 @@ void OitVehicle::updateFBOs()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         if (mode == USER_OIT)
-            SetupOITResolveProg();
+            SetupOITResolveProg(m_env);
         else if (mode == USER_BLEND)
-            SetupResolveProg();
+            SetupResolveProg(m_env);
 
 		// Draw a full-size quad to resolve the multisample surfaces
         screenQuad.Draw();

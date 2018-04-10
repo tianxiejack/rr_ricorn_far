@@ -10,8 +10,9 @@
 #include <iostream>
 #include "GLTools.h"
 #include <cmath>
+#include "GLEnv.h"
 extern void* getDefaultShaderMgr();
-extern void * getDefaultTransformPipeline();
+extern void * getDefaultTransformPipeline(GLEnv &m_env);
 using namespace std;
 
 #define AMP_BIG 1.25f
@@ -55,9 +56,9 @@ void DynamicTrack::Init()
 	}
 	SetAngle(m_angle);
 }
-void DynamicTrack::DrawTracks()
+void DynamicTrack::DrawTracks(GLEnv &m_env)
 {
-	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 	const float* Colors[6];
 	Colors[0]=vGreen;
 	Colors[1]=vGreen;
