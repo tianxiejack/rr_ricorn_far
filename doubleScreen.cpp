@@ -146,7 +146,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	//	InitBowl();
 //		InitScanAngle();
 //		InitPanoScaleArrayData();
-		InitPanel();
+	//	InitPanel(env);
 //		InitFollowCross();
 //		InitRuler();
 	//	InitCalibrate();

@@ -81,13 +81,13 @@ public:
 	void InitScanAngle(void);
 	void readScanAngle(const char * filename);
 	void writeScanAngle(const char *filename,float angle,float angleofruler);
-	void ProcessOitKeys(unsigned char key, int x, int y);
+	void ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y);
 	void mouseButtonPress(int button, int state, int x, int y);
 	void mouseMotionPress(int x, int y);
 	inline GLShaderManager* getShaderManager(){return &shaderManager;}
 //	inline GLGeometryTransform* getTransformPipeline(){return &transformPipeline;}
-	void keyPressed(unsigned char key, int x, int y);
-	void specialkeyPressed (int key, int x, int y);
+	void keyPressed(GLEnv &m_env,unsigned char key, int x, int y);
+	void specialkeyPressed (GLEnv &m_env,int key, int x, int y);
 	void BowlParseSTLAscii(const char* filename);
 	void PanelParseSTLAscii(const char* filename);
 	void VehicleParseObj(const char* filename);
@@ -499,7 +499,7 @@ private:
 	void InitBowlDS();
 	void InitFollowCross();
 	void InitCalibrate();
-	void InitPanel(bool reset=false);
+	void InitPanel(GLEnv &m_env,bool reset=false);
 
 	void GenerateTriangleView();
 	void DrawBowl(GLEnv &m_env,bool needSendData);
@@ -609,9 +609,9 @@ public:
 						PBOReceiver *GetPBORcr(){return &PBORcr;};
 private:
 	GLBatch Petal[CAM_COUNT];
-	GLBatch Panel_Petal[CAM_COUNT];
+
 	GLBatch *Petal_OverLap[CAM_COUNT]; // overlap area bwtween petal[i] and [(i+1)%CAM_COUNT]
-	GLBatch *Panel_Petal_OverLap[CAM_COUNT];
+
 	GLBatch *OverLap[CAM_COUNT];
 	GLBatch *Panel_OverLap[CAM_COUNT];
 	GLBatch shadowBatch; //the shadow rect under vehicle

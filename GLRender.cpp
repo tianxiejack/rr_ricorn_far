@@ -56,8 +56,9 @@
 #endif
 #include "gst_capture.h"
 #include"GLEnv.h"
-bool isTracking=false;
 GLEnv env1,env2;
+bool isTracking=false;
+
 PanoCamOnForeSight  panocamonforesight;
 TelCamOnForeSight	     telcamonforesight;
 
@@ -646,13 +647,6 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 	oScale = 1.0f;
 
 	GenerateGLTextureIds();
-	for(int i=0; i<CAM_COUNT; i++)
-	{
-		OverLap[i] = new GLBatch;
-		Petal_OverLap[i] = OverLap[i];
-		Panel_OverLap[i] = new GLBatch;
-		Panel_Petal_OverLap[i] = Panel_OverLap[i];
-	}
 	for(int i = 0 ; i < CORNER_COUNT; i++){
 		pConerMarkerColors[i] = NULL;
 	}
@@ -862,6 +856,15 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
 
+	for(int i=0; i<CAM_COUNT; i++)
+		{
+			OverLap[i] = new GLBatch;
+			Petal_OverLap[i] = OverLap[i];
+			Panel_OverLap[i] = new GLBatch;
+		//	Panel_Petal_OverLap[i] = Panel_OverLap[i];
+			env.Setp_Panel_Petal_OverLap(i,Panel_OverLap[i]);
+		}
+
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -952,7 +955,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	//	InitBowl();
 		InitScanAngle();
 		InitPanoScaleArrayData();
-		InitPanel();
+		InitPanel(env);
 		InitFollowCross();
 		InitRuler();
 		InitCalibrate();
@@ -1784,7 +1787,7 @@ DRAW:
 
 #endif
 
-void Render::InitPanel(bool reset)
+void Render::InitPanel(GLEnv &m_env,bool reset)
 {
 	if ((!common.isUpdate()) && (!common.isIdleDraw()))
 		return;
@@ -1797,8 +1800,7 @@ void Render::InitPanel(bool reset)
 	cv::Point2f Point[3], Point1[3], Point2[3];
 	cv::Point2f Alpha[3];
 	vector<cv::Point3f> list;
-	GLBatch *pBatch = &Panel_Petal[0];
-
+	GLBatch *pBatch = m_env.GetPanel_Petal(0);
 	int poly_count = PanelLoader.Getpoly_count();
 	bool AppOverlap = false, App = false;
 	int direction=0, count=0;
@@ -1807,9 +1809,10 @@ void Render::InitPanel(bool reset)
 	int extra_count=0;
 //每次初始化，对每个通道进行重置;只有第一次，使用Begin 初始化内存
 		for(int petal_idx = 0; petal_idx < CAM_COUNT; petal_idx++){
-			pBatch = &Panel_Petal[petal_idx];
+			//pBatch = &Panel_Petal[petal_idx];
+			pBatch=m_env.GetPanel_Petal(petal_idx);
 			pBatch->Reset();//reset before init
-			pBatch = Panel_Petal_OverLap[petal_idx];
+			pBatch = m_env.Getp_Panel_Petal_OverLap(petal_idx);
 			pBatch->Reset();//reset before init
 			if(petal_idx==CAM_0)
 			{
@@ -1821,8 +1824,9 @@ void Render::InitPanel(bool reset)
 			}
 			if(!reset)
 			{
-				Panel_Petal[petal_idx].Begin(GL_TRIANGLES/* */,(poly_count+extra_count)*2*3,1);// each petal has 1 texture unit
-				Panel_Petal_OverLap[petal_idx]->Begin(GL_TRIANGLES,1*(poly_count+extra_count)*2*3,3);// petal_overLap has 3 textures, left, right and alpha mask
+
+				(*m_env.GetPanel_Petal(petal_idx)).Begin(GL_TRIANGLES/* */,(poly_count+extra_count)*2*3,1);// each petal has 1 texture unit
+				m_env.Getp_Panel_Petal_OverLap(petal_idx)->Begin(GL_TRIANGLES,1*(poly_count+extra_count)*2*3,3);// petal_overLap has 3 textures, left, right and alpha mask
 			}
 	}
 
@@ -1883,7 +1887,8 @@ void Render::InitPanel(bool reset)
 		if(AppOverlap)
 		{
 			App = false;
-			pBatch = Panel_Petal_OverLap[direction%CAM_COUNT];
+
+			pBatch = m_env.Getp_Panel_Petal_OverLap(direction%CAM_COUNT);
 			count = getOverlapIndex(direction);
 			generateAlphaList(Alpha, 1.0/BLEND_OFFSET,1.0*x/PER_CIRCLE, count);
 			getOverLapPointsValue(direction, x, Point1, Point2);
@@ -1947,7 +1952,8 @@ void Render::InitPanel(bool reset)
 		}else if(!pixleList[direction].empty())
 		{
 			App = true;
-			pBatch = &Panel_Petal[direction%CAM_COUNT];
+
+			pBatch = 	m_env.GetPanel_Petal(direction%CAM_COUNT);
 			getPointsValue(direction,x,Point);
 			{
 				for(int k=0;k<3;k++)
@@ -2038,8 +2044,9 @@ DRAW:
 	}
 	// end petals
     for(int petal_idx = 0; petal_idx < CAM_COUNT; petal_idx ++){
-		Panel_Petal[petal_idx].End();
-		Panel_Petal_OverLap[petal_idx]->End();
+
+    	m_env.GetPanel_Petal(petal_idx)->End();
+		m_env.Getp_Panel_Petal_OverLap(petal_idx)->End();
     }
 }
 
@@ -2376,7 +2383,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
  #else
 			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 #endif
-			Panel_Petal[i].Draw();
+			(*m_env.GetPanel_Petal(i)).Draw();
 	//		if(i<PARTITIONS1)
 			{
 				if(use_shadermgr2)
@@ -2393,7 +2400,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 			{
 //				USE_TEXTURE_ON_PETAL_OVERLAP2(i);
 			}
-			Panel_Petal_OverLap[i]->Draw();
+			m_env.Getp_Panel_Petal_OverLap(i)->Draw();
 		}
 		}
 
@@ -7477,7 +7484,7 @@ void Render::SetShowDirection(int dir,bool show_mobile)
 
 }
 
-void Render::ProcessOitKeys(unsigned char key, int x, int y)
+void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	int Now_Window_Width,Now_Window_Height;
 	Now_Window_Width=glutGet(GLUT_WINDOW_WIDTH);
@@ -7836,7 +7843,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
     				if((FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE==displayMode)||(TWO_HALF_PANO_VIEW_MODE==displayMode))
     				{
  						move_hor[testPanoNumber]=move_hor[testPanoNumber]+DELTA_OF_PANO_HOR;
-						InitPanel(true);
+						InitPanel(m_env,true);
     				}
             	}
 
@@ -7861,7 +7868,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
     				if((FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE==displayMode)||(TWO_HALF_PANO_VIEW_MODE==displayMode))
     				{
  						move_hor[testPanoNumber]=move_hor[testPanoNumber]-DELTA_OF_PANO_HOR;
-						InitPanel(true);
+						InitPanel(m_env,true);
     				}
             	}
 
@@ -8011,7 +8018,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 							{
 								channel_right_scale[testPanoNumber]=channel_right_scale[testPanoNumber]-DELTA_OF_PANO_SCALE;
 							}
-							InitPanel(true);
+							InitPanel(m_env,true);
         				}
                 	}
                 	else
@@ -8050,7 +8057,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 							{
 								channel_right_scale[testPanoNumber]=channel_right_scale[testPanoNumber]+DELTA_OF_PANO_SCALE;
 							}
-							InitPanel(true);
+							InitPanel(m_env,true);
         				}
                 	}
                 	else
@@ -8510,7 +8517,7 @@ void Render::ProcessOitKeys(unsigned char key, int x, int y)
 }
 
 /* The function called whenever a key is pressed. */
-void Render::keyPressed(unsigned char key, int x, int y)
+void Render::keyPressed(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	/* Keyboard debounce */
 	/* I don't know which lib has this in win32 */
@@ -8525,12 +8532,12 @@ void Render::keyPressed(unsigned char key, int x, int y)
 		/* exit the program...normal termination. */
 		exit(0);
 	}
-	ProcessOitKeys(key, x, y);
+	ProcessOitKeys(m_env,key, x, y);
 }
 
 /* This function is for the special keys.  */
 /* The dynamic viewing keys need to be time based */
-void Render::specialkeyPressed (int key, int x, int y)
+void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 {
 	/* keep track of time between calls, if it exceeds a certian value, then */
 	/* assume the user has released the key and wants to start fresh */
@@ -8674,7 +8681,7 @@ void Render::specialkeyPressed (int key, int x, int y)
 		           			channel_right_scale[testPanoNumber]=1.0;
 		           			move_hor[testPanoNumber]=0.0;
 		           			PanoFloatData[testPanoNumber]=0.0;
-		           			InitPanel(true);
+		           			InitPanel(m_env,true);
 
 		           		
 		           	}
@@ -8705,7 +8712,7 @@ void Render::specialkeyPressed (int key, int x, int y)
 		           			PanoFloatData[set_i]=0.0;
 		           			
 					}
-					InitPanel(true);
+					InitPanel(m_env,true);
 		           	}
 				}
 		break;
@@ -8781,29 +8788,29 @@ void Render::specialkeyPressed (int key, int x, int y)
 				else if(SPECIAL_KEY_UP == key)
 				{
 					PanoFloatData[testPanoNumber]=PanoFloatData[testPanoNumber]+DELTA_OF_PANOFLOAT;
-					InitPanel(true);
+					InitPanel(m_env,true);
 				}
 				else if(SPECIAL_KEY_DOWN == key)
 				{
 					PanoFloatData[testPanoNumber]=PanoFloatData[testPanoNumber]-DELTA_OF_PANOFLOAT;
-					InitPanel(true);
+					InitPanel(m_env,true);
 				}
 			}
 			else if(isDirectionOn && isDirectionMode()&&(key==SPECIAL_KEY_RIGHT)){
 				int nextdir=(p_BillBoard->m_Direction+1)%BillBoard::BBD_COUNT;
-				ProcessOitKeys('U'+nextdir,x,y);
+				ProcessOitKeys(m_env,'U'+nextdir,x,y);
 				if(TRIPLE_VIEW_MODE == displayMode){
 					m_presetCameraRotateCounter = PRESET_CAMERA_ROTATE_MAX;
 				}
 			}
 			else if(SPECIAL_KEY_LEFT == key){
-				ProcessOitKeys('L', x,y);
+				ProcessOitKeys(m_env,'L', x,y);
 			}
 			else if(SPECIAL_KEY_UP == key){
-				ProcessOitKeys('P', x,y);
+				ProcessOitKeys(m_env,'P', x,y);
 			}
 			else if(SPECIAL_KEY_DOWN == key){
-				ProcessOitKeys('M', x,y);
+				ProcessOitKeys(m_env,'M', x,y);
 			}
 			else{
 				//do nothing

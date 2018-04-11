@@ -6,7 +6,8 @@
 #include "QRcode.h"
 #include "GLRender.h"
 #include "scanner.h"
-
+#include"GLEnv.h"
+extern GLEnv env1,env2;
 extern Render render;
 const char * stitchStart  = "GPU: start";
 const char * stitchRecover= "GPU: recover";
@@ -80,6 +81,7 @@ bool iniDestroy()
 
 bool codeParse(char* code)
 {
+	 GLEnv &env=env1;
 	if(code == NULL)
 		return false;
 
@@ -87,7 +89,7 @@ bool codeParse(char* code)
 	{
 		//start
 		common.setScanned(true);
-			render.ProcessOitKeys('i', 0, 0);
+			render.ProcessOitKeys(env,'i', 0, 0);
 		glutPostRedisplay();
 		bool ret = iniGenerate(true);
 		if(ret)	//no more scaner

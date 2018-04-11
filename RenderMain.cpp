@@ -5,7 +5,8 @@
 #include "common.h"
 #include "main.h"
 #include "timing.h"
-
+#include"GLEnv.h"
+extern GLEnv env1,env2;
 RenderMain::RenderMain()
 {
 }
@@ -14,12 +15,12 @@ RenderMain::~RenderMain()
 }
 void RenderMain::DrawGLScene()
 {
-
+	GLEnv &env=env1;
     static bool ONCE_FULLSCREEN = true;
 
 	if(ONCE_FULLSCREEN){
 		ONCE_FULLSCREEN = false;
-		render.ProcessOitKeys('F', 0, 0);
+		render.ProcessOitKeys(env,'F', 0, 0);
 	}
 		render.DrawGLScene();
 }
@@ -29,11 +30,13 @@ void RenderMain::ReSizeGLScene(int Width, int Height)
 }
 void RenderMain::keyPressed(unsigned char key, int x, int y)
 {
-	render.keyPressed(key,x,y);
+	GLEnv &env=env1;
+	render.keyPressed(env,key,x,y);
 }
 void RenderMain::specialkeyPressed(int key, int x, int y)
 {
-	render.specialkeyPressed(key,x,y);
+	GLEnv &env=env1;
+	render.specialkeyPressed(env,key,x,y);
 }
 void RenderMain::mouseButtonPress(int button, int state, int x, int y)
 {

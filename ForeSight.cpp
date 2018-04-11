@@ -7,7 +7,7 @@
 #include"StlGlDefines.h"
 
 using namespace cv;
-GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline();
+
 extern Render render;
 ForeSightPos foresightPos;
 
@@ -53,9 +53,9 @@ float tel_four_camPosY=0.0;
 		myBatch.End();
  }
 
- void ForeSight_decorator::DrawSeveralpairs(float posX,float posY,float readAngle)
+ void ForeSight_decorator::DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle)
  {
-	 m_core->DrawSeveralpairs(posX,posY,readAngle);
+	 m_core->DrawSeveralpairs(m_env,posX,posY,readAngle);
 //	 foresightPosxy.GetSpeedX()
 	 if(posY>=limitY)
 	 {
@@ -89,37 +89,38 @@ float tel_four_camPosY=0.0;
 				if(foresightPos.GetAlignIndex()>=TRACK_VGA)
 				{
 					modelViewMatrix.Translate(foresightPos.GetMatrixX()+posX, 0.0,posY);
-					Draw();
+					Draw(m_env);
 			//		printf("posY=%f\n",posY);
 				}
 				else
 				{
 					modelViewMatrix.Translate(foresightPos.GetMatrixX()+posX+foresightPos.GetxDelta(), 0.0,posY);
-					Drawpairs();
+					Drawpairs(m_env);
 				}
 					//+foresightPosxy.getxDelta()+foresightPosxy.GetForeSightPosX(),0.0f,foresightPosxy.GetForeSightPosY()
 				modelViewMatrix.PopMatrix();
 			}
  }
 
- void ForeSight_decorator::Drawpairs()
+ void ForeSight_decorator::Drawpairs(GLEnv &m_env)
  {
 	float flag=1.0;//to put  frames before  or behind the picture
 	for(int i=0;i<2;i++)
 	{
 		modelViewMatrix.PushMatrix();
 		modelViewMatrix.Translate(0.0f,(foresightPos.GetMatrixY())*flag,0.0f);
-		Draw();
+		Draw(m_env);
 		modelViewMatrix.PopMatrix();
 		flag*= -1.0;
 	}
  }
-void ForeSight_decorator::Draw( )
+void ForeSight_decorator::Draw( GLEnv &m_env)
 {
-			modelViewMatrix.PushMatrix();
-			m_pShaderManager->UseStockShader(GLT_SHADER_FLAT, pTransformPipeline->GetModelViewProjectionMatrix(), vBlue);
-			myBatch.Draw();
-			modelViewMatrix.PopMatrix();
+	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
+	modelViewMatrix.PushMatrix();
+	m_pShaderManager->UseStockShader(GLT_SHADER_FLAT,  pTransformPipeline->GetModelViewProjectionMatrix(), vBlue);
+	myBatch.Draw();
+	modelViewMatrix.PopMatrix();
  }
 
   ForeSightPos::ForeSightPos(): yOffset(-0.01),xDelta(0.0),foresightPosX(0.0),foresightPosY(0.0),
@@ -473,9 +474,9 @@ void ForeSight_decorator::Draw( )
 	//	camonForeSight.tel_CamMoveFourRight();
 		return istochangeTelMode;
 	}
-	void ForeSightFacade::Draw(float readAngle)//在渲染时间时调用
+	void ForeSightFacade::Draw(GLEnv &m_env,float readAngle)//在渲染时间时调用
 	{
-		pInterfaceForeSight->DrawSeveralpairs(foreSightPos.GetForeSightPosX(),foreSightPos.GetForeSightPosY(), readAngle);
+		pInterfaceForeSight->DrawSeveralpairs(m_env,foreSightPos.GetForeSightPosX(),foreSightPos.GetForeSightPosY(), readAngle);
 	}
 
 

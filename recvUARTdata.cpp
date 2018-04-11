@@ -3,7 +3,8 @@
 #include <pthread.h>
 #include <sys/msg.h>
 #include <netinet/in.h>
-
+#include"GLEnv.h"
+extern GLEnv env1,env2;
 extern Render render;
 
 int changeLowtoHigh(unsigned char data)
@@ -15,6 +16,7 @@ int changeLowtoHigh(unsigned char data)
 
 void *recv_UART_thread(void* )
 {
+	GLEnv &env=env1;
 	int ipc_port = 126;//125
  	key_t ipc_key = -1;
 	int ipc_qid = -1;
@@ -56,11 +58,11 @@ void *recv_UART_thread(void* )
 	 		 			//msgs.payload.req_m.set_alarm_mode;
 	 		 			if(msgs.payload.req_m.set_image_mode==0xf2)
 	 		 			{
-	 		 				render.ProcessOitKeys('9', 0, 0);
+	 		 				render.ProcessOitKeys(env,'9', 0, 0);
 	 		 			}
 	 		 			else
 	 		 			{
-	 		 				render.ProcessOitKeys('0', 0, 0);
+	 		 				render.ProcessOitKeys(env,'0', 0, 0);
 	 		 			}
 
 	 		 			if((msgs.payload.req_m.start_camera_track&0xff)==0xff)
@@ -71,11 +73,11 @@ void *recv_UART_thread(void* )
 	 		 				get_track_control_params[3]=60;
 
 		 		 			render.settrackcontrolparams(get_track_control_params);
-		 		 			render.ProcessOitKeys('{', 0, 0);
+		 		 			render.ProcessOitKeys(env,'{', 0, 0);
 	 		 			}
 	 		 			else
 	 		 			{
-	 		 				render.ProcessOitKeys('}', 0, 0);
+	 		 				render.ProcessOitKeys(env,'}', 0, 0);
 	 		 			}
 	 		 			//msgs.payload.req_m.target;
 
