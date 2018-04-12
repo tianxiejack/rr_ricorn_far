@@ -169,6 +169,8 @@ void RenderMain::parseArgs(int argc, char** argv)
 	{
 		render.PanelParseSTLAscii(argv[1]);
 	}
+
+
 }
 
 
@@ -176,13 +178,13 @@ void RenderMain::parseArgs(int argc, char** argv)
 int RenderMain::start(int argc, char** argv)
 {
 		parseArgs(argc, argv);
+
 		initGlut(argc, argv);
 		initGlew();
 		render.initPixle();
 		glutFullScreen();
 		render.SetupRC(1920, 1080);//1920,1080);//
 #if DOUBLE_SCREEN
-
 	doubleScreenInit(argc, argv);
 	initGlew();
 	glutFullScreen();

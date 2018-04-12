@@ -30,7 +30,9 @@ public :
 	inline float GetScan_pos(){return scan_pos;};
 	void SetScan_pos(float now_scan_distance){scan_pos=now_scan_distance;};
 //	inline float *Getpoly_list(){return poly_list;};
+	 void cpyl1l2();
 	inline vector<cv::Point3f> *Getpoly_vector(){return &list;};
+	inline vector<cv::Point3f> *Getpoly_vector2(){return &list2;};
 	void ResetPolyList();
 	void PrintExtents();
 private:
@@ -44,6 +46,7 @@ private:
 		extent_neg_x = extent_neg_y = extent_neg_z = 100000.0f;
 	};
 	vector<cv::Point3f> list;
+	vector<cv::Point3f> list2;
 	int poly_count;
 	float scan_pos;
 	float extent_pos_x, extent_pos_y , extent_pos_z ;

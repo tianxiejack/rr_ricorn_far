@@ -239,3 +239,24 @@ void STLASCIILoader::PrintExtents()
 	cout<<"STL pos_x, y, z = "<<extent_pos_x<<", "<<extent_pos_y<<", "<<extent_pos_z<<endl;
 }
 
+
+
+void STLASCIILoader::cpyl1l2(){
+//	vector<cv::Point3f>::iterator iter;
+	list2.clear();
+	list2.assign(list.begin(),list.end());
+//	int a=0,b=0;
+//	for(iter=list.begin();iter!=list.end();iter++)
+	{
+//		a++;
+		//cout<<*iter<<endl;
+	}
+//	for(iter=list2.begin();iter!=list2.end();iter++)
+	{
+	//	b++;
+	//	cout<<*iter<<endl;
+	}
+//	printf("numa=%d\n,b=%d\n",a,b);
+//	sleep(5);
+};
+

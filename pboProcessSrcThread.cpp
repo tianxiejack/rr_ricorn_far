@@ -14,14 +14,14 @@
 #include "gst_capture.h"
 using namespace cv;
 extern Render render;
-
+extern GLEnv env1,env2;
 #if GSTREAM_CAP
 extern RecordHandle * record_handle;
 #endif
 
 void *pbo_process_thread(void *arg)
 {
-
+	GLEnv &env=env1;
 	static bool once4=true;
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
 #if GSTREAM_CAP
@@ -29,8 +29,8 @@ void *pbo_process_thread(void *arg)
 #endif
 	while(1)
 	{
-		OSA_semWait(render.GetPBORcr()->getSemPBO(),100000);
-		int processId=render.GetPBORcr()->getCurrentPBOIdx();
+		OSA_semWait(render.GetPBORcr(env)->getSemPBO(),100000);
+		int processId=render.GetPBORcr(env)->getCurrentPBOIdx();
 #if GSTREAM_CAP
 		gstCapturePushData(record_handle, (char *)*render.GetPBORcr()->getPixelBuffer(processId) , CURRENT_SCREEN_WIDTH*CURRENT_SCREEN_HEIGHT*4);
 
@@ -39,7 +39,7 @@ void *pbo_process_thread(void *arg)
 		a++;
 					if(a==50)
 					{
-						memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
 						imwrite("./data/50TEST_PBO.bmp",testData);
 					}
 #if 0

@@ -15,66 +15,52 @@ void InitBowlDS()
 void Render::RenderSceneDS()
 {
 	GLEnv &env=env2;
+	switch(displayMode)
+	{
+	case ALL_VIEW_MODE:
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	RenderVGAView(env,0,0,g_windowWidth*1434/1920, g_windowHeight, true);
-	//RenderScene();
+//	RenderRightPanoView(env,0,g_windowHeight*653.0/1080.0,g_windowWidth, g_windowHeight*115.0/1080.0);
+//	RenderLeftPanoView(env,0,g_windowHeight*538.0/1080.0,g_windowWidth, g_windowHeight*115.0/1080.0);
+//	RenderSDIView(env,0,0,g_windowWidth*944/1024, g_windowHeight*538/768, true);
+	//		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*809.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
+	//		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
+	//		RenderSDIView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1920.0,g_windowWidth*944/1024, g_windowHeight*538/768, true);
+	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
+			RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
+			RenderSDIView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080, true);
+		break;
+
+	default :
+		break;
+	}
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
 {
-#if 0
-	{
-		// Initialze Shader Manager
-		shaderManager2.InitializeStockShaders();
-
-		glEnable(GL_DEPTH_TEST);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-		// This makes a torus
-		gltMakeTorus(torusBatch2, 0.4f, 0.15f, 30, 30);
-
-	    // This make a sphere
-	    gltMakeSphere(sphereBatch2, 0.1f, 26, 13);
-
-		floorBatch2.Begin(GL_LINES, 324);
-	    for(GLfloat x = -20.0; x <= 20.0f; x+= 0.5) {
-	        floorBatch2.Vertex3f(x, -0.55f, 20.0f);
-	        floorBatch2.Vertex3f(x, -0.55f, -20.0f);
-
-	        floorBatch2.Vertex3f(20.0f, -0.55f, x);
-	        floorBatch2.Vertex3f(-20.0f, -0.55f, x);
-	        }
-	    floorBatch2.End();
-	    }
-
-#else
 //#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
 	GLEnv &env=env2;
 	GLubyte *pBytes;
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
+	if(!shaderManager.InitializeStockShaders()){
+		cout<<"failed to intialize shaders"<<endl;
+		exit(1);
+	}
 
-//	if(!shaderManager.InitializeStockShaders()){
-	//	cout<<"failed to intialize shaders"<<endl;
-	//	exit(1);
-//	}
-
-//	if(!PBOMgr.Init(){
-//				|| !PBOExtMgr.Init()
-//				||!PBORcr.Init()
-//				|| !PBOVGAMgr.Init()
-//				|| !PBOSDIMgr.Init()){
-//		cout<<"Failed to init PBO manager"<<endl;
-//			exit(1);
-//		}
-//		if(!FBOmgr.Init())
-		{
-//			printf("FBO init failed\n");
-//			exit(-1);
+	if(!env.Getp_PBOMgr()->Init()
+				|| !env.Getp_PBOExtMgr()->Init()
+				||!env.Getp_PBORcr()->Init()
+				|| !env.Getp_PBOVGAMgr()->Init()
+				|| !env.Getp_PBOSDIMgr()->Init()){
+		cout<<"Failed to init PBO manager"<<endl;
+			exit(1);
 		}
-
-	// midNight blue background
+		if(!env.Getp_FBOmgr()->Init())
+		{
+			printf("FBO init failed\n");
+			exit(-1);
+		}
+#if 1
 	glClearColor(0.0f, 0/255.0f, 0.0f, 1.0f);//25/255.0f, 25/255.0f, 112/255.0f, 0.0f);
 	glLineWidth(1.5f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -87,104 +73,124 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	SetView(windowWidth, windowHeight);
-
-
-	env.GettransformPipeline()->SetMatrixStacks(*(env.GetmodelViewMatrix()), *(env.GetprojectionMatrix()));
+#endif
 	{//setting up models and their textures
-	//	overLapRegion::GetoverLapRegion()->SetSingleHightLightState(false);
-//			ReadPanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME);
+#if 0
+		overLapRegion::GetoverLapRegion()->SetSingleHightLightState(false);
+			ReadPanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME);
+#endif
+		env.GettransformPipeline()->SetMatrixStacks(*(env.GetmodelViewMatrix()), *(env.GetprojectionMatrix()));
+		InitLineofRuler(env);
 
-//		transformPipeline.SetMatrixStacks(modelViewMatrix, projectionMatrix);
-//		InitLineofRuler();
-		//GenerateCenterView();
-	//	GenerateCompassView();
-//		GenerateScanPanelView();
-	//	GeneratePanoView();
+#if 1
+		GenerateCenterView();
+		GenerateCompassView();
+		GenerateScanPanelView();
+		GeneratePanoView();
 
-	//	GenerateTriangleView();
-	//	GeneratePanoTelView();
-//		GenerateTrack();
+		GenerateTriangleView();
+		GeneratePanoTelView();
+		GenerateTrack();
 
-//		GenerateLeftPanoView();
-//		GenerateRightPanoView();
-//		GenerateLeftSmallPanoView();
-//		GenerateRightSmallPanoView();
-
+		GenerateLeftPanoView();
+		GenerateRightPanoView();
+#endif
+		GenerateLeftSmallPanoView();
+		GenerateRightSmallPanoView();
+#if 1
 		float x;
-//		x=(p_LineofRuler->Load())/360.0*(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
-	//	RulerAngle=p_LineofRuler->Load();
-	//	GenerateOnetimeView();
-//		GenerateOnetimeView2();
+		x=(p_LineofRuler->Load())/360.0*(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
+		RulerAngle=p_LineofRuler->Load();
+		GenerateOnetimeView();
+		GenerateOnetimeView2();
 
-	//	GenerateTwotimesView();
-	//	GenerateTwotimesView2();
+		GenerateTwotimesView();
+		GenerateTwotimesView2();
 
-	//	GenerateTwotimesTelView();
-	//	GenerateFourtimesTelView();
-	//	GenerateCheckView();
+		GenerateTwotimesTelView();
+		GenerateFourtimesTelView();
+		GenerateCheckView();
 
-//		GenerateBirdView();
-//		GenerateFrontView();
-//		GenerateRearTopView();
-	//	GenerateExtentView();
+		GenerateBirdView();
+		GenerateFrontView();
+		GenerateRearTopView();
+		GenerateExtentView();
 
-//		GenerateSDIView();
+		GenerateSDIView();
 		GenerateVGAView();
-	//	PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
-	//	PanoHeight=(PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z());
-//		foresightPos.SetPanoLen_Height(PanoLen,PanoHeight);
-	//	zodiac_msg.setPanoHeight_Length(PanoHeight,PanoLen);
+#endif
+
+		PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
+		PanoHeight=(PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z());
+	//	foresightPos.SetPanoLen_Height(PanoLen,PanoHeight);
+//		zodiac_msg.setPanoHeight_Length(PanoHeight,PanoLen);
 
 	//	camonforesight.setPanoheight(PanoHeight);
-	//	panocamonforesight.setPanoheight(PanoHeight);
+//		panocamonforesight.setPanoheight(PanoHeight);
 //		panocamonforesight.setPanolen(PanoLen);
 //		telcamonforesight.setPanoheight(PanoHeight);
 //		telcamonforesight.setPanolen(PanoLen);
 	//camonforesight.setPanolen(PanoLen);
 
-//		InitALPHA_ZOOM_SCALE();
+		InitALPHA_ZOOM_SCALE();
 	//	InitBowl();
-//		InitScanAngle();
-//		InitPanoScaleArrayData();
-	//	InitPanel(env);
-//		InitFollowCross();
-//		InitRuler();
-	//	InitCalibrate();
-	//	InitOitVehicle();
-		//    glmDelete(VehicleLoader);
-//		pVehicle->initFBOs(windowWidth, windowHeight);
+		InitScanAngle();
 
-//		InitShadow();
-//		InitBillBoard();
+		InitPanoScaleArrayData();
+		InitPanel(env);
+		InitFollowCross();
+		InitRuler();
+		InitCalibrate();
+	//	InitOitVehicle(env);
+	//	    glmDelete(VehicleLoader);
+	//	pVehicle->initFBOs(windowWidth, windowHeight);
+
+		InitShadow(env);
+		InitBillBoard(env);
 //		InitFrontTracks();
-//		InitWheelTracks();
-//		InitCrossLines();
-//		InitWealTrack();
-//		InitDynamicTrack();
-//		InitCornerMarkerGroup();
-//		initAlphaMask();
+	//	InitWheelTracks();
+	//	InitCrossLines();
+		InitWealTrack();
+		InitDynamicTrack(env);
+		InitCornerMarkerGroup(env);
+		initAlphaMask();
 //		InitDataofAlarmarea();
 
-	//			FILE *fp;
-		//		char read_data[20];
-	//			fp=fopen("forward.yml","r");
-	//			if(fp!=NULL)
+				FILE *fp;
+				char read_data[20];
+				fp=fopen("forward.yml","r");
+				if(fp!=NULL)
 				{
-//					fscanf(fp,"%f\n",&forward_data);
-//					fclose(fp);
-//					printf("forward:%f\n",forward_data);
+					fscanf(fp,"%f\n",&forward_data);
+					fclose(fp);
+					printf("forward:%f\n",forward_data);
 				}
-	//	InitForesightGroupTrack();
-	//	DrawNeedleonCompass();
-	//	DrawTriangle();
+		InitForesightGroupTrack(env);
+		DrawNeedleonCompass(env);
+		DrawTriangle(env);
 
-//		pthread_t th_rec;
-//	   	int arg_rec = 10;
-//		mp_FboPboFacade=new PBO_FBO_Facade(FBOmgr,PBORcr);
-//	   	mPresetCamGroup.LoadCameras();
+		pthread_t th_rec;
+	   	int arg_rec = 10;
+
+		//mp_FboPboFacade=new PBO_FBO_Facade(FBOmgr,PBORcr);
+	 	env.Set_FboPboFacade(*(env.Getp_FBOmgr()),*(env.Getp_PBORcr()));
+	   	mPresetCamGroup.LoadCameras();
 		// Load up CAM_COUNT textures
-//		glGenTextures(PETAL_TEXTURE_COUNT, textures);
-#if 0
+		glGenTextures(PETAL_TEXTURE_COUNT, textures);
+
+#if WHOLE_PIC
+		for(int i = 0; i < 1; i++){
+				glBindTexture(GL_TEXTURE_2D, textures[i]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+				glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
+											format, GL_UNSIGNED_BYTE, 0);
+			}
+#else
 		for(int i = 0; i < CAM_COUNT; i++){
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -193,9 +199,17 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			if(i==1)
+			{
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,1280, 1080, 0,
+										format, GL_UNSIGNED_BYTE, 0);
+			}
+			else
 			glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
-					format, GL_UNSIGNED_BYTE, 0);
+								format, GL_UNSIGNED_BYTE, 0);
 		}
+#endif
+
 
 		// Alpha mask: 1/16 size of 1920x1080
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
@@ -262,11 +276,63 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 					glTexImage2D(GL_TEXTURE_2D,0,nComponents,SDI_WIDTH, SDI_HEIGHT, 0,
 							format, GL_UNSIGNED_BYTE, 0);
 				}
+
+#if USE_COMPASS_ICON
+		glGenTextures(1, iconTextures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconTextures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
+#endif
+#if USE_ICON
+		glGenTextures(1, iconRuler45Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
+
+		glGenTextures(1, iconRuler90Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler90Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
+
+		glGenTextures(1, iconRuler180Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler180Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
 #endif
 	}
-
 	glMatrixMode(GL_MODELVIEW);
-#endif
 }
 
 
@@ -288,7 +354,7 @@ void Render::GetFPSDS()
 }
 void Render::DrawGLSceneDS()
 {
-#if 1
+#if 0
 	{
 	    // Color values
 	    static GLfloat vFloorColor[] = { 1.0f, 1.0f, 1.0f, 1.0f};
@@ -372,12 +438,7 @@ void Render::ReSizeGLSceneDS(int Width, int Height)
 {
 	if (Height==0)	/* Prevent A Divide By Zero If The Window Is Too Small*/
 		Height=1;
-		glViewport(0, 0, Width, Height);
-	    // Create the projection matrix, and load it on the projection matrix stack
-		viewFrustum2.SetPerspective(35.0f, float(Width)/float(Height), 1.0f, 100.0f);
-		projectionMatrix2.LoadMatrix(viewFrustum2.GetProjectionMatrix());
-	    // Set the transformation pipeline to use the two matrix stacks
-		transformPipeline2.SetMatrixStacks(modelViewMatrix2, projectionMatrix2);
+	ChangeSize(Width, Height);
 	comSecondSC.setUpdate(GL_YES);
 }
 
@@ -395,6 +456,7 @@ void RenderMain::DrawGLSceneDS()
 	void 	RenderMain::doubleScreenInit(int argc, char **argv)
 	{
 		char arg1[256], arg2[256];
+	//	glutInit (&argc, argv);
 		glutCreateSubWindow(2,0,0,500,200);
 		glutInitWindowPosition(1921,0);
 		glutInitWindowSize(1000, 700);

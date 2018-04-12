@@ -376,7 +376,7 @@ private:
 	void DrawRulerVideo(GLEnv &m_env,bool needSendData,int type);
 	int  GetCurrentExtesionVideoId(){return m_ExtVideoId;};
 
-	void InitShadow();
+	void InitShadow(GLEnv &m_env);
 	void InitRuler();
 	void InitWheelTracks();
 	void SetCurrentExtesionVideoId(int curChid){m_ExtVideoId=curChid;};
@@ -499,7 +499,7 @@ private:
 	void InitBowlDS();
 	void InitFollowCross();
 	void InitCalibrate();
-	void InitPanel(GLEnv &m_env,bool reset=false);
+	void InitPanel(GLEnv &m_env,int idx=0,bool reset=false);
 
 	void GenerateTriangleView();
 	void DrawBowl(GLEnv &m_env,bool needSendData);
@@ -524,10 +524,10 @@ private:
 	void generateAlphaList(Point2f AlphaList[], float alpha_index_x, float alpha_index_y, int i);
 	bool IsOverlay(bool AppDirection[6], int *direction);
 	void fillDataList(vector<cv::Point3f> *list,int x);
-	void panel_fillDataList(vector<cv::Point3f> *list,int x);
+	void panel_fillDataList(vector<cv::Point3f> *list,int x,int idx);
 	void markDirection(bool AppDirection[],int num);
 	void checkDirection(bool AppDirection[],int x);
-	int getOverlapIndex(int direction);
+	int getOverlapIndex(int direction,int idx);
 
 	bool getOverLapPointsValue(int direction, int x, Point2f *Point1, Point2f *Point2);
 	void getOffsetValue(int direction, int x, int* offset_L, int* offset_R);
@@ -606,15 +606,13 @@ public:
 						ForeSightFacade * GetpWholeFacade(){return p_ForeSightFacade;};
 						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
 						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
-						PBOReceiver *GetPBORcr(){return &PBORcr;};
+						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
 private:
 	GLBatch Petal[CAM_COUNT];
-
 	GLBatch *Petal_OverLap[CAM_COUNT]; // overlap area bwtween petal[i] and [(i+1)%CAM_COUNT]
-
 	GLBatch *OverLap[CAM_COUNT];
-	GLBatch *Panel_OverLap[CAM_COUNT];
-	GLBatch shadowBatch; //the shadow rect under vehicle
+
+
 	GLBatch degreescale45Batch; //the degree scale (45-0-45)
 	GLBatch degreescale90Batch; //the degree scale (90-0-90)
 	GLBatch degreescale180Batch; //the degree scale (180-0-180)
@@ -699,13 +697,7 @@ private:
 
 	GLuint textures[PETAL_TEXTURE_COUNT];
 	GLuint GL_TextureIDs[PETAL_TEXTURE_COUNT];
-	PBOReceiver PBORcr;
-	PBOSender PBOMgr;
-	PBOSender PBOExtMgr;
-	PBOSender PBOVGAMgr;
-	PBOSender PBOSDIMgr;
-	FBOManager FBOmgr;
-	pPBO_FBO_Facade mp_FboPboFacade;
+
 	DynamicTrack *p_DynamicTrack;
 	CornerMarkerGroup *p_CornerMarkerGroup;
 	float* pConerMarkerColors[CORNER_COUNT];
