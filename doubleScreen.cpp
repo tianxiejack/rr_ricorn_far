@@ -15,9 +15,9 @@ void InitBowlDS()
 void Render::RenderSceneDS()
 {
 	GLEnv &env=env2;
-	switch(displayMode)
+	switch(SecondDisplayMode)
 	{
-	case ALL_VIEW_MODE:
+	case SECOND_ALL_VIEW_MODE:
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 //	RenderRightPanoView(env,0,g_windowHeight*653.0/1080.0,g_windowWidth, g_windowHeight*115.0/1080.0);
@@ -26,9 +26,9 @@ void Render::RenderSceneDS()
 	//		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*809.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
 	//		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
 	//		RenderSDIView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1920.0,g_windowWidth*944/1024, g_windowHeight*538/768, true);
-	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
+			RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
 			RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
-			RenderSDIView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080, true);
+			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080);
 		break;
 
 	default :

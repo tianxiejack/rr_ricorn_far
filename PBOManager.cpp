@@ -138,9 +138,9 @@ else if(idx==1)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 #else
 if(idx==0)
-glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1920, 1080, pixel_format, GL_UNSIGNED_BYTE, 0);
 else if(idx==1)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1280, 1080, pixel_format, GL_UNSIGNED_BYTE, 0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1920, 1080, pixel_format, GL_UNSIGNED_BYTE, 0);
 
 #endif
 	// bind PBO to update pixel values
@@ -296,8 +296,6 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 		index = pIndex[idx] = (pIndex[idx]+PBOChannelCount) % PBOBufferCount;
 		nextIndex = (index + PBOChannelCount) % PBOBufferCount;
 	}
-
-
 //read data from FBO to PBO
 //glReadPixels() will return immediately
 	glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
@@ -308,9 +306,8 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 	if(GL_NO_ERROR != error){
 		cout<<"0 GLError = "<<gluErrorString(error)<<endl;
 	}
-
 	t[2]=(startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec);
-//	printf("deltatimet[5]-t[4] =%d us\n",t[2]);
+	//printf("deltatimet[5]-t[4] =%d us\n",t[2]);
 
 
 	// copy pixels from PBO to texture object
@@ -322,8 +319,6 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 	if(GL_NO_ERROR != error){
 		cout<<"1 GLError = "<<gluErrorString(error)<<endl;
 	}
-	gettimeofday(&startT[7],0);
-	t[3]=(startT[7].tv_sec-startT[6].tv_sec)*1000000+(startT[7].tv_usec-startT[6].tv_usec);
 	// map the buffer object into client's memory
 	// Note that glMapBufferARB() causes sync issue.
 	// If GPU is working with this buffer, glMapBufferARB() will wait(stall)
@@ -339,44 +334,6 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 		}
 	pPixelBuffer[nextIndex] = (GLubyte*)glMapBufferARB(GL_PIXEL_PACK_BUFFER_ARB, GL_READ_ONLY_ARB);
 	nowPboId=nextIndex;
-#if 0
-			int processId=render.GetPBORcr()->getCurrentPBOIdx();
-			Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
-			static int a=0;
-			a++;
-			if(a==50)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/111TEST_PBO.bmp",testData);
-			}
-			if(a==100)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/100TEST_PBO.bmp",testData);
-			}
-			if(a==150)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/150TEST_PBO.bmp",testData);
-			}
-			if(a==200)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/200TEST_PBO.bmp",testData);
-			}
-			if(a==250)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/250TEST_PBO.bmp",testData);
-			}
-			if(a==300)
-			{
-				memcpy(testData.data, (char *)*render.GetPBORcr()->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
-				imwrite("./data/300TEST_PBO.bmp",testData);
-			}
-
-#endif
-
 			if(pPixelBuffer[nextIndex])
 	{
 				OSA_semSignal(pSemPBO);

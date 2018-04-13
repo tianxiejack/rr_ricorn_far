@@ -477,8 +477,14 @@ void FBOManager::SetDrawBehaviour(p_InterFaceDrawBehaviour DrawBehaviour)
 
 void FBOManager::PboDraw(InterfacepboDrawCB& icb)
 {
+	int t[10]={0};
+	static timeval startT[20]={0};
 	InToFrameBuffer();
+	gettimeofday(&startT[4],0);
 	DrawFrame();
+	gettimeofday(&startT[5],0);
+		t[2]=(startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec);
+	//	printf("deltatimet[5]-t[4] =%d us\n",t[2]);
 	icb.callbackPBODraw();
     OutOfFrameBuffer();
 }

@@ -120,8 +120,8 @@ private:
 
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
-		PREVIEW_MODE,
 		ALL_VIEW_MODE,
+		PREVIEW_MODE,
 		VGA_WHITE_VIEW_MODE,
 		VGA_HOT_BIG_VIEW_MODE,
 		VGA_HOT_SMALL_VIEW_MODE,
@@ -166,6 +166,11 @@ private:
 
 		TOTAL_MODE_COUNT
 		} displayMode; 
+		enum SecondDisplay
+		{
+			SECOND_ALL_VIEW_MODE,
+			SECOND_TOTAL_MODE_COUNT
+		}SecondDisplayMode;
 
 		 enum FBO_MODE {
 			 FBO_ALL_VIEW_MODE,

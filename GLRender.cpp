@@ -620,6 +620,7 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
 		fboMode(FBO_ALL_VIEW_MODE),
+		SecondDisplayMode(SECOND_ALL_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
 		send_follow_angle_enable(false),p_CompassBillBoard(NULL),p_LineofRuler(NULL),refresh_ruler(true),
@@ -1856,7 +1857,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	/* Clear The Screen And The Depth Buffer*/
 	calcCommonZone();
 
-	cv::Point2f Point[3], Point1[3], Point2[3];
+	cv::Point2f Point[3], Point1[3], Point2[3],PointZero[3];
 	cv::Point2f Alpha[3];
 	vector<cv::Point3f> list;
 	GLBatch *pBatch = m_env.GetPanel_Petal(0);
@@ -1913,6 +1914,8 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 		set_alpha[y].x=x_data[y];
 		set_alpha[y].y=y_data[y];
 	}
+
+	getPointsValue(0,0,PointZero);
 	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
 	{
 		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
@@ -1955,58 +1958,58 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 			{
 				for(int k=0;k<3;k++)
 				{
-#if !WHOLE_PIC
-					Point[k].x = Point[k].x*FPGA_SCARE_X;
-					Point[k].y = Point[k].y/NUM_OF_H;
-					int dir=direction%CAM_COUNT;
-			switch(dir)
-			{
-			case 0:
-				dir=4;
+#if WHOLE_PIC
+			Point[k].x = Point[k].x*FPGA_SCARE_X;
+			Point[k].y = Point[k].y/NUM_OF_H;
+			int dir=direction%CAM_COUNT;
+	switch(dir)
+	{
+	case 0:
+		dir=4;
+		break;
+	case 1:
+		dir=0;
 				break;
-			case 1:
-				dir=0;
-						break;
-			case 2:
-				dir=1;
-						break;
-			case 3:
-				dir=9;
-						break;
-			case 4:
-				dir=5;
-						break;
-			case 5:
-				dir=6;
-						break;
-			case 6:
-				dir=2;
-						break;
-			case 7:
-				dir=3;
-						break;
-			case 8:
-				dir=7;
-						break;
-			case 9:
-				dir=8;
-						break;
-			default :
+	case 2:
+		dir=1;
 				break;
-			}
+	case 3:
+		dir=9;
+				break;
+	case 4:
+		dir=5;
+				break;
+	case 5:
+		dir=6;
+				break;
+	case 6:
+		dir=2;
+				break;
+	case 7:
+		dir=3;
+				break;
+	case 8:
+		dir=7;
+				break;
+	case 9:
+		dir=8;
+				break;
+	default :
+		break;
+	}
 #if 0
-					if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
-					{
-				//		dir-=3;
-					}
-					else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
-					{
-				//		dir+=2;
-					}
+			if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
+			{
+		//		dir-=3;
+			}
+			else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
+			{
+		//		dir+=2;
+			}
 #endif
-					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W));
-					Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
-					#endif
+			Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W))+100;
+			Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
+			#endif
 				}
 			}
 		}else if(!pixleList[direction].empty())
@@ -2070,7 +2073,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				//		dir+=2;
 					}
 #endif
-					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W));
+					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W))+100;
 					Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
 					#endif
 				}
@@ -2114,7 +2117,6 @@ DRAW:
 			{
 					pBatch->MultiTexCoord2f(0, Point[index].x/DEFAULT_IMAGE_WIDTH,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
 				//	pBatch->MultiTexCoord2f(0, Point[index].x/1920,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
-
 			}
 			pBatch->Vertex3f(list[index+1].x, list[index+1].y, list[index+1].z);
 		}
@@ -2320,7 +2322,7 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
 #define SEND_TEXTURE_TO_PETAL(i,m_env) 		{\
 											if(needSendData)\
-										    m_env.Getp_PBOMgr()->sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\
+											m_env.Getp_PBOMgr()->sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\
 											else{\
 												glBindTexture(GL_TEXTURE_2D, textures[0]);\
 											}\
@@ -2329,15 +2331,9 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
 #if USE_GAIN
 #if WHOLE_PIC
-#define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
+#define USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
                                                    m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
-                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
-                                                       }
-
-#define USE_TEXTURE_ON_PETAL_OVERLAP2(i)        {\
-                                               shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),1,\
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
 #else
@@ -2400,7 +2396,7 @@ void Render::DrawBowl(GLEnv &m_env,bool needSendData)
 
 			Petal[i].Draw();
 
-			USE_TEXTURE_ON_PETAL_OVERLAP(i);
+			USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
 			Petal_OverLap[i]->Draw();
 		}
 
@@ -2427,124 +2423,49 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 
 		if(p_petalNum==NULL)
 		{
-#if WHOLE_PIC
+				glActiveTexture(GL_TextureIDs[0]);
+				for(int i = 0; i < 2; i++){
+						SEND_TEXTURE_TO_PETAL(i,m_env);
+			}
+			for(int i = 0; i < CAM_COUNT; i++){
+	#if USE_GAIN
+					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+	 #else
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+	#endif
+				(*m_env.GetPanel_Petal(i)).Draw();
+				USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
+				m_env.Getp_Panel_Petal_OverLap(i)->Draw();
+			}
+		}
+		else
+		{
 			glActiveTexture(GL_TextureIDs[0]);
 			for(int i = 0; i < 2; i++){
 				    SEND_TEXTURE_TO_PETAL(i,m_env);
 		}
-#else
-			for(int i = 0; i < CAM_COUNT; i++){
-								glActiveTexture(GL_TextureIDs[i]);
-							    SEND_TEXTURE_TO_PETAL(i);
-					}
-#endif
-
-		for(int i = 0; i < CAM_COUNT; i++){
-#if USE_GAIN
-#if WHOLE_PIC
-		//	if(i<PARTITIONS1)
-			{
-				if(use_shadermgr2)
-				{
-					shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-				}
-				else
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-			}
-	//		else
-			{
-		//		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 1,i);
-			}
-			#else
-                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
-#endif
- #else
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
-#endif
-			(*m_env.GetPanel_Petal(i)).Draw();
-	//		if(i<PARTITIONS1)
-			{
-				if(use_shadermgr2)
-				{
-					   shaderManager2.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
-					                                                   m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
-					                                                  0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
-
-				}
-				else
-			USE_TEXTURE_ON_PETAL_OVERLAP(i);
-			}
-//			else
-			{
-//				USE_TEXTURE_ON_PETAL_OVERLAP2(i);
-			}
-			m_env.Getp_Panel_Petal_OverLap(i)->Draw();
-		}
-		}
-
-		else
-		{
-#if 0
-#if WHOLE_PIC
-			for(int i = 0; i < 2; i++){
-					glActiveTexture(GL_TextureIDs[i]);
-				    SEND_TEXTURE_TO_PETAL(i);
-		}
-#else
-			for(int i=0;i<CAM_COUNT;i++)
-			{
-				glActiveTexture(GL_TextureIDs[i]);
-								SEND_TEXTURE_TO_PETAL(i);
-			/*	if(p_petalNum[i]!=-1)
-				{
-					glActiveTexture(GL_TextureIDs[p_petalNum[i]]);
-					SEND_TEXTURE_TO_PETAL(p_petalNum[i]);
-				}*/
-			}
-#endif
 		for(int i=0;i<CAM_COUNT;i++)
 				{
 					if(p_petalNum[i]!=-1)
 					{
-						static int count=0;
 	#if USE_GAIN
-#if WHOLE_PIC
-						if(count<6)
 						{
 							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
-						else
-						{
-							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 1,i);
-						}
-#else
-	                       shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT,i);
-#endif
 	#else
 				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
-				Panel_Petal[p_petalNum[i]].Draw();
-#if WHOLE_PIC
-
-				if(count<6)
+			//	m_env.Getp_Panel_Petal_OverLap()->Draw();
+				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
 				{
-					USE_TEXTURE_ON_PETAL_OVERLAP(p_petalNum[i]);
+					USE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
 				}
-				else
-				{
-					USE_TEXTURE_ON_PETAL_OVERLAP2(p_petalNum[i]);
-				}
-#else
-				USE_TEXTURE_ON_PETAL_OVERLAP(p_petalNum[i]);
-#endif
-				Panel_Petal_OverLap[p_petalNum[i]]->Draw();
-				count++;
+				m_env.Getp_Panel_Petal_OverLap(p_petalNum[i])->Draw();
 					}
 				}
-#endif
 		}
 		m_env.GetmodelViewMatrix()->PopMatrix();
-		}
+	}
 
 
 
@@ -4390,17 +4311,21 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 		}
 
 #else
+				petal1[1]=1;
+				petal1[2]=2;
+				petal1[3]=3;
+
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,false,NULL);
+				DrawPanel(m_env,false,petal1);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
-				DrawPanel(m_env,false,NULL);
+				DrawPanel(m_env,false,petal1);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
-				DrawPanel(m_env,false,NULL);
+				DrawPanel(m_env,false,petal1);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
@@ -4687,7 +4612,9 @@ void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 			{
 				once = false;
 			}
-			if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
+			if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+					||displayMode==ALL_VIEW_MODE
+					||SecondDisplayMode==SECOND_TOTAL_MODE_COUNT)
 			{
 				if(panocamonforesight.GetFront())
 					panocamonforesight.getTwoTimesCam().GetCameraMatrix(mCamera);
@@ -5070,6 +4997,10 @@ void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 	memset(petal1,-1,sizeof(petal1));
 	int petal2[CAM_COUNT];
 	memset(petal2,-1,sizeof(petal2));
+	int petal3[CAM_COUNT];
+	memset(petal1,-1,sizeof(petal3));
+	int petal4[CAM_COUNT];
+	memset(petal2,-1,sizeof(petal4));
 
 	glViewport(x,y,w,h);
 	m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
@@ -5086,7 +5017,8 @@ void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 				||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
-				||displayMode==ALL_VIEW_MODE)
+				||displayMode==ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
 		{
 			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5098,7 +5030,7 @@ void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 	}
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
-		||fboMode==FBO_ALL_VIEW_MODE)
+	)
 
 {
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
@@ -5115,7 +5047,9 @@ else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,4.5);
 }
-else if(displayMode==ALL_VIEW_MODE)
+else if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
 	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
@@ -5245,30 +5179,30 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	//	DrawPanel(false,petal2);
 	}
 }
-else if(displayMode==ALL_VIEW_MODE)
+else if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
 {
-		petal2[0]=0;
-		DrawPanel(m_env,false,NULL);
-		for(int i=0;i<5;i++)
+		for(int i=5;i<10;i++)
 		{
 			petal2[i]=i;
 		}
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-		DrawPanel(m_env,false,NULL);
+		DrawPanel(m_env,false,petal2);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
 {
-	petal2[0]=0;
-	DrawPanel(m_env,false,petal2);
-	petal2[0]=0;
-	petal2[1]=1;
-	petal2[2]=2;
-	petal2[3]=3;
+	petal3[0]=0;
+	DrawPanel(m_env,false,petal3);
+	petal3[0]=0;
+	petal3[1]=1;
+	petal3[2]=2;
+	petal3[3]=3;
 	m_env.GetmodelViewMatrix()->PushMatrix();
 	m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-	DrawPanel(m_env,false,petal2);
+	DrawPanel(m_env,false,petal3);
 	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 /*
@@ -5332,6 +5266,10 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 	memset(petal1,-1,sizeof(petal1));
 	int petal2[CAM_COUNT];
 	memset(petal2,-1,sizeof(petal2));
+	int petal3[CAM_COUNT];
+	memset(petal3,-1,sizeof(petal3));
+	int petal4[CAM_COUNT];
+	memset(petal4,-1,sizeof(petal4));
 
 	glViewport(x,y,w,h);
 	if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE||
@@ -5339,6 +5277,7 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 			||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 			||displayMode==ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_MODE
+			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 			)
 	{
 		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
@@ -5358,7 +5297,8 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 				displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE ||
 				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||displayMode==ALL_VIEW_MODE
-				||fboMode==FBO_ALL_VIEW_MODE)
+				||fboMode==FBO_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
 		{
 			RightSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5370,8 +5310,7 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 	}
 
 if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
-		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
-		||fboMode==FBO_ALL_VIEW_MODE)
+		||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
 	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
@@ -5382,7 +5321,9 @@ else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
 	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
 }
-else if(displayMode==ALL_VIEW_MODE)
+else if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
 	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
@@ -5399,7 +5340,9 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
 }
-else if(displayMode==ALL_VIEW_MODE)
+else if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
@@ -5507,15 +5450,22 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 //DrawPanel(true,petal2);
 	DrawPanel(m_env,true,NULL);
 }
-else if(displayMode==ALL_VIEW_MODE)
+else if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+	||fboMode==FBO_ALL_VIEW_MODE)
 {
-	for(int i=0;i<12;i++)
+	for(int i=0;i<5;i++)
 		{
-			petal2[i]=i;
+			petal3[i]=i;
 		}
+		petal4[0]=0;
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-		DrawPanel(m_env,true,NULL);
+		DrawPanel(m_env,needSendData,petal3);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+	//	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
+		DrawPanel(m_env,false,petal4);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
@@ -6313,7 +6263,7 @@ void Render::RenderScene(void)
 	{
 		RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
 		RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
-		RenderSDIView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080, true);
+		RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080);
 		break;
 	}
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
@@ -6326,7 +6276,7 @@ void Render::RenderScene(void)
 			p_ForeSightFacade->Reset(ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE);
 		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
 		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
-//		    RenderOnetimeView(env,g_windowWidth*60.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+		    RenderOnetimeView(env,g_windowWidth*60.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 	//		RenderTwotimesView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 //		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 //			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
@@ -6915,11 +6865,13 @@ void Render::RenderScene(void)
 
 //	RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
 //	RenderMyLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+#if 1
 	if(env.Getp_FboPboFacade()->IsFboUsed())
 	{
-	//	FBOmgr.SetDrawBehaviour(&render);
-	//	mp_FboPboFacade->DrawAndGet();
+		env.Getp_FBOmgr()->SetDrawBehaviour(&render);
+		env.Getp_FboPboFacade()->DrawAndGet();
 	}
+#endif
 }
 
 
