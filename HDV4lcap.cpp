@@ -28,6 +28,7 @@
 
 #include"MvDetect.hpp"
 
+extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
 
 #define INPUT_IMAGE_WIDTH 1920
@@ -39,7 +40,8 @@ static int once_buffer;
 int m_bufId[8]={0};
 extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
 //Mat SDI_frame,VGA_frame;
-unsigned char * sdi_data[CAM_COUNT];
+unsigned char * sdi_data_main[CAM_COUNT];
+unsigned char * sdi_data_sub[CAM_COUNT];
 unsigned char * vga_data=NULL;
 OSA_SemHndl sem[CAM_COUNT];
 int currentWR[6]={-1,-1,-1,-1,-1,-1};
@@ -65,6 +67,42 @@ HDv4l_cam::~HDv4l_cam()
 	close_device();
 }
 
+void YUYV2UYVx(unsigned char *ptr,unsigned char *Yuyv, int ImgWidth, int ImgHeight)
+{
+	for(int j =0;j<ImgHeight;j++)
+	{
+		for(int i=0;i<ImgWidth*2/4;i++)
+		{
+			*(ptr+j*ImgWidth*4+i*8+1)=*(Yuyv+j*ImgWidth*2+i*4);
+			*(ptr+j*ImgWidth*4+i*8+0)=*(Yuyv+j*ImgWidth*2+i*4+1);
+			*(ptr+j*ImgWidth*4+i*8+2)=*(Yuyv+j*ImgWidth*2+i*4+3);
+			*(ptr+j*ImgWidth*4+i*8+3)=0;
+
+			*(ptr+j*ImgWidth*4+i*8+5)=*(Yuyv+j*ImgWidth*2+i*4+2);
+			*(ptr+j*ImgWidth*4+i*8+4)=*(Yuyv+j*ImgWidth*2+i*4+1);
+			*(ptr+j*ImgWidth*4+i*8+6)=*(Yuyv+j*ImgWidth*2+i*4+3);
+			*(ptr+j*ImgWidth*4+i*8+7)=0;
+		}
+	}
+}
+
+void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
+{
+	bool enhance=false;
+	//todo
+		//如果w=1280 h=1080,则进行截取
+		//否则直接转换
+	if(enhance)
+	{
+
+	}
+}
+
+void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
+{
+
+}
+
 void save_SDIyuyv_pic(void *pic)
 {
 	FILE * fp;
@@ -80,6 +118,17 @@ bool HDv4l_cam::Open()
 	if(ret < 0)
 			return false;
 */
+	static bool Once=true;
+	if(Once)
+	{
+		for(int i=0;i<6;i++)
+		{
+			sdi_data_main[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
+			sdi_data_sub[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
+		}
+		Once=false;
+	}
+	 start_queue(queue_main_sub);
 	ret = open_device();
 	if(ret < 0)
 		return false;
@@ -262,6 +311,21 @@ void yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
 	}
 	return ;
 }
+
+int HDv4l_cam::GetNowPicIdx()
+{
+	int picIdx=-1;
+	//todo
+	return picIdx;
+}
+int HDv4l_cam::ChangeIdx2chid(int idx)
+{//0~9
+	int picidx=(GetNowPicIdx()+2+idx*13);
+	return picidx;
+}
+
+
+
 int HDv4l_cam::read_frame(int now_pic_format)
 {
 	struct v4l2_buffer buf;
@@ -284,28 +348,80 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					}
 				}
 				assert(buf.index < n_buffers);
-
-
 			 if (buffers[buf.index].start!=NULL)
 			{
-				static bool Once=true;
-				#if TRACK_MODE
-				static  unsigned char * sdi_data2= NULL;
-				#endif
-					if(Once)
+					sdi_data_main[now_pic_format]=(unsigned char *)buffers[buf.index].start;
+					sdi_data_sub[now_pic_format]=(unsigned char *)buffers[buf.index].start;
+					int chid[2]={-1,-1};
+					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
+					switch(now_pic_format)
 					{
-						for(int i=0;i<CAM_COUNT;i++)
+					case FPGA_FOUR_CN:
+						chid[MAIN]=MAIN_FPGA_FOUR;
+						chid[SUB]=SUB_FPGA_FOUR;
+						nowpicW=FPGA_SCREEN_WIDTH;
+						nowpicH=FPGA_SCREEN_HEIGHT;
+						break;
+					case SUB_CN:
+						chid[SUB]=SUB_ONE_OF_TEN;
+						break;
+					case MAIN_CN:
+						chid[MAIN]=MAIN_ONE_OF_TEN;
+						break;
+					case MVDECT_CN:
+						chid[MAIN]=ChangeIdx2chid(MAIN);
+						chid[SUB]=ChangeIdx2chid(SUB);
+						break;
+					case FPGA_SIX_CN:
+						chid[MAIN]=MAIN_FPGA_SIX;
+						chid[SUB]=SUB_FPGA_SIX;
+						break;
+					default:
+						break;
+					}
+					if(chid[MAIN]!=-1) //把驾驶员十选一排除
+					{
+						if(Data2Queue(queue_main_sub,sdi_data_main[now_pic_format],nowpicW,nowpicH,chid[MAIN]))
 						{
-							int ret=OSA_semCreate(&sem[i],1,1);
-							if(ret<0)
+							if(getEmpty(queue_main_sub,&sdi_data_main[now_pic_format], chid[MAIN]))
 							{
-								printf("%d OSA_semCreate failed\n",i);
+								memcpy(sdi_data_main[now_pic_format],buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+								if(now_pic_format==MVDECT_CN)
+								{
+									//YUYV2GRAY();
+								}
+								else
+								{
+									YUYV2RGB(sdi_data_main[now_pic_format],sdi_data_main[now_pic_format],nowpicW,nowpicH);
+								}
 							}
-							sdi_data[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
 						}
-						Once=false;
+					}
+					if(chid[SUB]!=-1)//把车长十选一排除
+					{
+						if(Data2Queue(queue_main_sub,sdi_data_sub[now_pic_format],nowpicW,nowpicH,chid[MAIN]))
+						{
+							if(getEmpty(queue_main_sub,&sdi_data_sub[now_pic_format], chid[MAIN]))
+							{
+								if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
+								{
+									memcpy(sdi_data_sub[now_pic_format],buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+									YUYV2RGB(sdi_data_sub[now_pic_format],sdi_data_sub[now_pic_format],nowpicW,nowpicH);
+								}
+								else if(now_pic_format==MVDECT_CN)
+								{
+									//拷贝gray数据
+								}
+								else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
+								{
+									memcpy(sdi_data_sub[now_pic_format],sdi_data_main[now_pic_format],nowpicW*nowpicH*2);
+								}
+							}
+						}
 					}
 
+
+#if 0
 					OSA_semWait(&sem[now_pic_format],OSA_TIMEOUT_FOREVER);
 							currentWR[now_pic_format]=1;
 							if(currentWR[now_pic_format]==0) //０的时候线程里在写
@@ -313,11 +429,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								printf("%d OSA_sem failed\n",now_pic_format);
 							}
 							memcpy(sdi_data[now_pic_format],buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
-							unsigned char* abcd = (unsigned char*)malloc(1920*1080*1);
-							yuyv2gray((unsigned char *)buffers[buf.index].start,abcd,1920,1080);
-							Mat tmp = Mat(1080,1920,CV_8UC1,abcd);
-							imshow("abcd",tmp);
-							waitKey(0);
+				//			unsigned char* abcd = (unsigned char*)malloc(1920*1080*1);
+				//			yuyv2gray((unsigned char *)buffers[buf.index].start,abcd,1920,1080);
+			//				Mat tmp = Mat(1080,1920,CV_8UC1,abcd);
+			//				imshow("abcd",tmp);
+			//				waitKey(0);
 						//	mvDetect(uchar index,uchar* inframe,int width,int height,cv::Rect *boundRect);
 						//	mvDetect((unsigned char)now_pic_format,*(unsigned char *) buffers[buf.index].start,1920,1080,Rect *boundRect);
 							//index 代表第几个 检测OBJ 执行，boundRect 输出 目标的矩形框参数
@@ -325,7 +441,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							mv_detect.m_mvDetect(now_pic_format,(unsigned char*)sdi_data[now_pic_format]);
 							#endif
 							OSA_semSignal(&sem[now_pic_format]);
-
+#endif
 			}
 					if (-1 ==xioctl(m_devFd, VIDIOC_QBUF, &buf)){
 						fprintf(stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno));
@@ -625,7 +741,7 @@ void HDAsyncVCap4::Close()
 }
 
 
-void HDAsyncVCap4::Capture(char* ptr)
+void HDAsyncVCap4::Capture(char* ptr,int mainORsub)
 {
 	lock_read(ptr);
 }
@@ -703,6 +819,54 @@ void HDAsyncVCap4::initLock()
 	pthread_rwlock_init(&rwlock,&rwlockattr);
 }
 
+
+bool HDv4l_cam::getEmpty(Alg_Obj * p_queue,unsigned char** pYuvBuf, int chId)
+{
+	int status=0;
+	bool ret = true;
+	chId  =0;//Id*4+chId;
+
+	while(1)
+	{
+		status = OSA_bufGetEmpty(&p_queue->bufHndl[chId],&m_bufId[chId],0);
+		if(status == 0)
+		{
+			*pYuvBuf = (unsigned char*)p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].virtAddr;
+			break;
+		}else{
+			if(!OSA_bufGetFull(&p_queue->bufHndl[chId],&m_bufId[chId],OSA_TIMEOUT_FOREVER))
+			{
+				if(!OSA_bufPutEmpty(&p_queue->bufHndl[chId],m_bufId[chId]))
+				{
+					;
+				}
+			}
+		}
+	}
+	 return ret;
+}
+
+bool HDv4l_cam::Data2Queue(Alg_Obj * p_queue,unsigned char *pYuvBuf,int width,int height,int chId)
+{
+	int status;
+
+	chId = 0;
+	if(chId>=1)//if(chId >= CAM_COUNT+1)
+		return false;
+	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].width=width;
+	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].height=height;
+	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].strid=width;
+
+	OSA_bufPutFull(&p_queue->bufHndl[chId],m_bufId[chId]);
+	return true;
+}
+
+void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
+{
+	for (int i = 0; i < MAX_CC; i++) {
+		getEmpty(p_queue,&sdi_data_sub[i], i);
+	}
+}
 
 
 

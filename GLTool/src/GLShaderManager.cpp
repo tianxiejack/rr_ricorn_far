@@ -313,6 +313,26 @@ static const char *szTextureReplaceFP_bright =
 										"}";
 #endif
 
+
+static const char *szTextureORIVP =	"uniform mat4 mvpMatrix;"
+										"attribute vec4 vVertex;"
+										"attribute vec2 vTexCoord0;"
+										"varying vec2 vTex;"
+										"void main(void) "
+										"{ vTex = vTexCoord0;"
+										" gl_Position = mvpMatrix * vVertex; "
+										"}";
+
+static const char *szTextureORIFP =
+#ifdef OPENGL_ES
+										"precision mediump float;"
+#endif
+										"varying vec2 vTex;"
+										"uniform sampler2D textureUnit0;"
+										"void main(void) "
+										"{ gl_FragColor = texture2D(textureUnit0, vTex); "
+										"}";
+
 // Just put the texture on the polygons
 static const char *szTextureRectReplaceVP =	"uniform mat4 mvpMatrix;"
                                         "attribute vec4 vVertex;"
@@ -641,6 +661,9 @@ bool GLShaderManager::InitializeStockShaders(void)
 	uiStockShaders[GLT_SHADER_TEXTURE_BRIGHT]  = gltLoadShaderPairSrcWithAttributes(szTextureReplaceVP, szTextureReplaceFP_bright, 2,
 																									GLT_ATTRIBUTE_VERTEX, "vVertex", GLT_ATTRIBUTE_TEXTURE0, "vTexCoord0");
 
+	uiStockShaders[GLT_SHADER_ORI]  = gltLoadShaderPairSrcWithAttributes(szTextureORIVP, szTextureORIFP, 2,
+																										GLT_ATTRIBUTE_VERTEX, "vVertex", GLT_ATTRIBUTE_TEXTURE0, "vTexCoord0");
+
 	uiStockShaders[GLT_SHADER_TEXTURE_MODULATE] = gltLoadShaderPairSrcWithAttributes(szTextureModulateVP, szTextureModulateFP, 2,
 														GLT_ATTRIBUTE_VERTEX, "vVertex", GLT_ATTRIBUTE_TEXTURE0, "vTexCoord0");
 
@@ -732,7 +755,15 @@ GLint GLShaderManager::UseStockShader(GLT_STOCK_SHADER nShaderID, ...)
 			vColor = va_arg(uniformList, M3DVector4f*);
 			glUniform4fv(iColor, 1, *vColor);
 			break;
+		case GLT_SHADER_ORI:
+			iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
+			mvpMatrix = va_arg(uniformList, M3DMatrix44f*);
+			glUniformMatrix4fv(iTransform, 1, GL_FALSE, *mvpMatrix);
 
+			iTextureUnit = glGetUniformLocation(uiStockShaders[nShaderID], "textureUnit0");
+			iInteger = va_arg(uniformList, int);
+			glUniform1i(iTextureUnit, iInteger);
+			break;
         case GLT_SHADER_TEXTURE_RECT_REPLACE:
 		case GLT_SHADER_TEXTURE_BRIGHT:	// Just the texture place
 			iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
@@ -746,12 +777,12 @@ GLint GLShaderManager::UseStockShader(GLT_STOCK_SHADER nShaderID, ...)
 #if USE_GAIN
 			van_num = va_arg(uniformList, int);
 			locAmbient = glGetUniformLocation(uiStockShaders[nShaderID], "vanColor");
-					glUniform4fv(locAmbient, 1,vanColor[van_num]);
+			glUniform4fv(locAmbient, 1,vanColor[van_num]);
 #endif
 			break;
 
 		case GLT_SHADER_TEXTURE_REPLACE:	// Just the texture place
-			iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
+					iTransform = glGetUniformLocation(uiStockShaders[nShaderID], "mvpMatrix");
 				    mvpMatrix = va_arg(uniformList, M3DMatrix44f*);
 					glUniformMatrix4fv(iTransform, 1, GL_FALSE, *mvpMatrix);
 

@@ -858,8 +858,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 {
 	GLEnv & env=env1;
 	GLubyte *pBytes;
-	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
-	GLenum format= GL_BGRA;
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
+	GLenum format= GL_BGR;
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -2429,9 +2429,9 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 			}
 			for(int i = 0; i < CAM_COUNT; i++){
 	#if USE_GAIN
-					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 	 #else
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+				shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				(*m_env.GetPanel_Petal(i)).Draw();
 				USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
@@ -2450,10 +2450,10 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 					{
 	#if USE_GAIN
 						{
-							shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+							shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
 	#else
-				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+				shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 			//	m_env.Getp_Panel_Petal_OverLap()->Draw();
 				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();

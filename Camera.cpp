@@ -23,11 +23,8 @@
 
 using namespace std;
 using namespace cv;
-
-extern unsigned char *sdi_data[CAM_COUNT];
-extern unsigned char *vga_data;
-extern OSA_SemHndl sem[CAM_COUNT];
-extern int currentWR[CAM_COUNT];
+unsigned char * temp_data_main[MAX_CC];
+unsigned char * temp_data_sub[MAX_CC];
 
 BaseVCap::~BaseVCap()
 {
@@ -39,7 +36,7 @@ void BaseVCap::SavePic(const char* name)
 	cvSaveImage(name,src);
 }
 
-void SmallVCap::Capture(char* ptr)
+void SmallVCap::Capture(char* ptr,int mainORsub)
 {
 	get_buffer((unsigned char*)ptr, m_chId);
 //	printf("capture:%d\n",m_chId);
@@ -159,24 +156,7 @@ void SmallVCap::saveOverLap()
 }
 
 
-void YUYV2UYVx(unsigned char *ptr,unsigned char *Yuyv, int ImgWidth, int ImgHeight)
-{
-	for(int j =0;j<ImgHeight;j++)
-	{
-		for(int i=0;i<ImgWidth*2/4;i++)
-		{
-			*(ptr+j*ImgWidth*4+i*8+1)=*(Yuyv+j*ImgWidth*2+i*4);
-			*(ptr+j*ImgWidth*4+i*8+0)=*(Yuyv+j*ImgWidth*2+i*4+1);
-			*(ptr+j*ImgWidth*4+i*8+2)=*(Yuyv+j*ImgWidth*2+i*4+3);
-			*(ptr+j*ImgWidth*4+i*8+3)=0;
 
-			*(ptr+j*ImgWidth*4+i*8+5)=*(Yuyv+j*ImgWidth*2+i*4+2);
-			*(ptr+j*ImgWidth*4+i*8+4)=*(Yuyv+j*ImgWidth*2+i*4+1);
-			*(ptr+j*ImgWidth*4+i*8+6)=*(Yuyv+j*ImgWidth*2+i*4+3);
-			*(ptr+j*ImgWidth*4+i*8+7)=0;
-		}
-	}
-}
 
 void HDVCap::SavePic(const char* name)
 {
@@ -184,17 +164,14 @@ void HDVCap::SavePic(const char* name)
 	static unsigned char ptr[SDI_WIDTH*SDI_HEIGHT*4];
 	Mat img(SDI_HEIGHT,SDI_WIDTH,CV_8UC3);
 //	OSA_semWait(&sem[m_chId],OSA_TIMEOUT_FOREVER);
-	memcpy(buffer,&sdi_data[m_chId],sizeof(buffer));
-	YUYV2UYVx(ptr,buffer,SDI_WIDTH,SDI_HEIGHT);
-	UYVx2RGB(ptr, SDI_WIDTH, SDI_HEIGHT, &img);
+//	memcpy(buffer,&sdi_data[m_chId],sizeof(buffer));
+//	YUYV2UYVx(ptr,buffer,SDI_WIDTH,SDI_HEIGHT);
+//	UYVx2RGB(ptr, SDI_WIDTH, SDI_HEIGHT, &img);
 //	OSA_semSignal(&sem[m_chId]);
-	try{
-		imwrite(name,img);
+//	try{
+//		imwrite(name,img);
 //		waitKey(0);
-	}catch(cv::Exception& os)
-	{
-
-	}
+//	}catch(cv::Exception& os)
 }
 
 void save_yuyv_pic2(void *pic,int idx)
@@ -208,33 +185,75 @@ void save_yuyv_pic2(void *pic,int idx)
 	fclose(fp);
 }
 
-void HDVCap::YUV2RGB(unsigned char * ptr)
-{
-			static int ttt=0;
-			static int array[CAM_COUNT]={0,1,2,3,4,5};
-			OSA_semWait(&sem[m_chId],OSA_TIMEOUT_FOREVER);
-			currentWR[m_chId]=0;
-			if(currentWR[m_chId]==1) //1的时候main里在写
-			{
-				printf("%d OSA_sem failed\n",m_chId);
-			}
-			YUYV2UYVx(ptr,sdi_data[m_chId],SDI_WIDTH,SDI_HEIGHT);
-			OSA_semSignal(&sem[m_chId]);
 
-}
-/*
-void HDVCap::YUV2RGB(unsigned char * ptr,int dev_num)
-{
-		if(dev_num==VGA_DEV_NUM)
+void HDVCap::Capture(char* ptr,int mainORsub){
+	static bool once=true;
+	int chid[2]={-1,-1};
+	int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
+	if(once)
+	{
+		for(int i=0;i<MAX_CC;i++)
 		{
-			YUYV2UYVx(ptr,vga_data,VGA_WIDTH,VGA_HEIGHT);
+			if(i==MVDECT_CN)
+			{
+			//	printf{"检测不需要创建\n"};
+			}
+			else if(i==FPGA_FOUR_CN)//采集的时候大，但是已经经过了转换
+			{
+				temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*4);
+				temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*4);
+			}
+			else//普通1920*1080数据
+			{
+				temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*4);
+				temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*4);
+			}
 		}
-		else if(dev_num==SDI_DEV_NUM)
-		{
-			YUYV2UYVx(ptr,sdi_data,SDI_WIDTH,SDI_HEIGHT);
-		}
+		once=false;
+	}
+
+					switch(m_chId)
+					{
+					case FPGA_FOUR_CN:
+						chid[MAIN]=MAIN_FPGA_FOUR;
+						chid[SUB]=SUB_FPGA_FOUR;
+						nowpicW=FPGA_SCREEN_WIDTH;
+						nowpicH=FPGA_SCREEN_HEIGHT;
+						break;
+					case SUB_CN:
+						chid[SUB]=SUB_ONE_OF_TEN;
+						break;
+					case MAIN_CN:
+						chid[MAIN]=MAIN_ONE_OF_TEN;
+						break;
+			    case MVDECT_CN:
+			    	printf("there's no right use Mvdect  gray pic !!\n");
+			    	assert(false);
+					break;
+					case FPGA_SIX_CN:
+						chid[MAIN]=MAIN_FPGA_SIX;
+						chid[SUB]=SUB_FPGA_SIX;
+						break;
+					default:
+						break;
+					}
+					if(mainORsub==MAIN) //车长
+					{
+						get_buffer((unsigned char *)temp_data_main[m_chId],chid[MAIN]);
+						memcpy(ptr,temp_data_main[m_chId],nowpicW*nowpicH*4);
+					}
+					else if(mainORsub==SUB)//载员
+					{
+						get_buffer((unsigned char *)temp_data_sub[m_chId],chid[SUB]);
+						memcpy(ptr,temp_data_sub[m_chId],nowpicW*nowpicH*4);
+					}
+					else
+					{
+						printf("input main or sub is out of limit!\n");
+						assert(false);
+					}
 }
-*/
+
 
 
 //--------------the decorator cap class------------
@@ -268,7 +287,7 @@ void AsyncVCap::Close()
 	}
 	m_core->Close();
 }
-void AsyncVCap::Capture(char* ptr)
+void AsyncVCap::Capture(char* ptr,int mainORsub)
 {
 	lock_read(ptr);
 }
@@ -364,7 +383,7 @@ void V4lVcap::Close()
 		cvReleaseCapture(&capUSB);
 	capUSB= NULL;
 }
-void V4lVcap::Capture(char* ptr)
+void V4lVcap::Capture(char* ptr,int mainORsub)
 {
 	assert(ptr);
 	IplImage *tmp;
@@ -442,7 +461,7 @@ void BMPVcap::Close()
 		cvReleaseImage(&pic);
 	pic = NULL;
 }
-void BMPVcap::Capture(char* ptr)
+void BMPVcap::Capture(char* ptr,int mainORsub)
 {
 	assert(ptr);
 	if(pic)

@@ -22,7 +22,7 @@ using namespace cv;
 //#include "timing.h"
 //#include "struct.hpp"
 #include "osa_buf.h"
-
+#include"queue_display.h"
 using namespace cv;
 //#define SHOW_TIMES
 #define CLEAR(x) memset(&(x), 0, sizeof(x))
@@ -84,7 +84,7 @@ class HDAsyncVCap4:public Interface_VCap{
 		virtual ~HDAsyncVCap4();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr);
+		virtual void Capture(char* ptr,int mainORsub=-1);
 		void CaptureFish(char* ptr){};
 		virtual void SetDefaultImg( char *);
 		virtual void SavePic(const char* name);
@@ -121,7 +121,7 @@ public:
 	virtual ~HDv4l_cam();
 	bool Open();// open device   init deivce  start capturing
 	void Close(){};
-	void Capture(char*p){};
+	void Capture(char*p,int mainORsub){};
 	void CaptureFish(char*p){};
 	void saveOverLap(){};
 
@@ -140,6 +140,13 @@ public:
 	bool bRun;
 //	char *get_split_buffer_ch(){return split_buffer_ch;};
 private:
+	void YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h);
+	void YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h);
+	int GetNowPicIdx();
+	int ChangeIdx2chid(int idx);
+	bool Data2Queue(Alg_Obj * p_queue,unsigned char *pYuvBuf,int width,int height,int chId);
+	void start_queue(Alg_Obj * p_queue);
+	bool getEmpty(Alg_Obj * p_queue,unsigned char** pYuvBuf, int chId);
 	int  open_device(void);
 	void close_device(void);
 	int  init_device(void);

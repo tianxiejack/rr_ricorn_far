@@ -12,6 +12,7 @@ using namespace cv;
 typedef unsigned char byte;
 
 Alg_Obj * queue_dis=NULL;
+Alg_Obj * queue_main_sub=NULL;
 void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
 
 //void saveBmp(unsigned char *ptr, int chId)
@@ -225,7 +226,7 @@ void get_buffer(unsigned char* ptr, int chId)
 	width   = alg_handle->bufHndl[chId].bufInfo[bufId].width;
 	height  = alg_handle->bufHndl[chId].bufInfo[bufId].height;
 
-    yuv2UYVx(bufdata, ptr, width, height,chId);
+//    yuv2UYVx(bufdata, ptr, width, height,chId);
 
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }

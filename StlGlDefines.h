@@ -47,6 +47,18 @@ enum{
 
 #define FPGA_SCARE_X  (1920.0f/3200.0f)
 
+
+
+enum
+{
+	 FPGA_FOUR_CN  =1,
+	 SUB_CN ,
+	MAIN_CN ,
+	 MVDECT_CN	,
+	 FPGA_SIX_CN ,
+	 MAX_CC
+};
+
 #define NUM2_OF_W 2
 #define NUM2_OF_H 2
 #define PARTITIONS1 10
@@ -79,6 +91,44 @@ enum{
 	FORESIGHT_POS_COUNT
 };
 
+enum
+{
+	MAIN,
+	SUB,
+	MS_COUNT
+};
+enum
+{
+	MAIN_FPGA_FOUR,
+	MAIN_ONE_OF_TEN,
+	MAIN_1,
+	MAIN_2,
+	MAIN_3,
+	MAIN_4,
+	MAIN_5,
+	MAIN_6,
+	MAIN_7,
+	MAIN_8,
+	MAIN_9,
+	MAIN_10,
+	MAIN_FPGA_SIX,
+
+	SUB_FPGA_FOUR,
+	SUB_ONE_OF_TEN,
+	SUB_1,
+	SUB_2,
+	SUB_3,
+	SUB_4,
+	SUB_5,
+	SUB_6,
+	SUB_7,
+	SUB_8,
+	SUB_9,
+	SUB_10,
+	SUB_FPGA_SIX,
+
+	QUE_CHID_COUNT
+};
 
 #define   MOVE_UP  1
 #define   MOVE_DOWN  2
