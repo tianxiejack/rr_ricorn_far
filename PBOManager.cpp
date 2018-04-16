@@ -93,17 +93,17 @@ bool PBOSender::Init()
 	 return pboSupported;
 }
 
-void PBOSender::sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
+void PBOSender::sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub)
 {
        static GLubyte buffer[DEFAULT_IMAGE_WIDTH*DEFAULT_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH];
 	   if(fxn){
-		(*fxn)(buffer,idx);
+		(*fxn)(buffer,idx,mainOrsub);
 	   	}
 	glBindTexture(GL_TEXTURE_2D, textureId);
        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, buffer);
 }
 
-void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
+void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub)
 {
 	int index = 0, nextIndex = 0;                  // pbo index used for next frame
 	idx = idx %PBOChannelCount;
@@ -126,6 +126,7 @@ void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[index]);
 	error =glGetError();
 			if(GL_NO_ERROR != error){
+			//	printf("%d\n",idx);
 				cout<<"0 GLError = "<<gluErrorString(error)<<endl;
 			}
 	// copy pixels from PBO to texture object
@@ -161,7 +162,7 @@ else if(idx==1)
 	if(ptr && fxn)
 	{
 		// update data directly on the mapped buffer
-		(*fxn)(ptr,idx);
+		(*fxn)(ptr,idx,mainOrsub);
 // let OpenGL release it
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); // release pointer to mapping buffer
 		error =glGetError();
@@ -196,12 +197,12 @@ else if(idx==1)
     glFlush();
 }
 
-void PBOSender::sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx, bool bPBO)
+void PBOSender::sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub, bool bPBO)
 {
 	if(bPBO&&bUsePBO)
-             sendDataPBO(textureId, fxn, idx);
+             sendDataPBO(textureId, fxn, idx,mainOrsub);
 	else
-		sendDataNoPBO(textureId, fxn, idx);
+		sendDataNoPBO(textureId, fxn, idx,mainOrsub);
 }
 
 /***********************PBOReceiver******************************/
@@ -300,7 +301,7 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 //glReadPixels() will return immediately
 	glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, pboIds[index]);
 	gettimeofday(&startT[4],0);
-	glReadPixels(startX,startY,w,h,GL_BGRA,GL_UNSIGNED_BYTE,0);
+	glReadPixels(startX,startY,w,h,pixel_format,GL_UNSIGNED_BYTE,0);
 	gettimeofday(&startT[5],0);
 	error =glGetError();
 	if(GL_NO_ERROR != error){

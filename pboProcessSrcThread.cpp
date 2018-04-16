@@ -23,7 +23,7 @@ void *pbo_process_thread(void *arg)
 {
 	GLEnv &env=env1;
 	static bool once4=true;
-    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
+    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #if GSTREAM_CAP
  initGstCap();
 #endif
@@ -36,9 +36,9 @@ void *pbo_process_thread(void *arg)
 		#else
 		static int a=0;
 		a++;
-					if(a==50)
+					if(a==20)
 					{
-						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*4);
+						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*3);
 						imwrite("./data/50TEST_PBO.bmp",testData);
 					}
 #endif

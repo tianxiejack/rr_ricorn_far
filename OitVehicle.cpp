@@ -377,7 +377,7 @@ void OitVehicle::initFBOs(int screenWidth, int screenHeight)
     glLinkProgram(oitResolve);
 
 	// Load multisample resolve shader
-    msResolve =  gltLoadShaderPairWithAttributes("basic.vs", "msResolve.fs", 3, 
+    msResolve =  gltLoadShaderPairWithAttributes("basic.vs", "msResolve.fs", 3,
                             GLT_ATTRIBUTE_VERTEX, "vVertex", 
                             GLT_ATTRIBUTE_NORMAL, "vNormal", 
                             GLT_ATTRIBUTE_TEXTURE0, "vTexCoord0");

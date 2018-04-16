@@ -13,12 +13,12 @@
 #include "stdio.h"
 #include "FBOManager.h"
 
-typedef void(*PFN_PBOFILLBUFFER)(GLubyte *,int);
+typedef void(*PFN_PBOFILLBUFFER)(GLubyte *,int,int);
 typedef struct _OSA_SemHndl OSA_SemHndl,* pOSA_SemHndl;
 class PBOBase
 {
 public:
-	PBOBase(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = DEFAULT_IMAGE_WIDTH, unsigned int h=DEFAULT_IMAGE_HEIGHT, unsigned int cc=4,GLenum format = GL_BGRA);
+	PBOBase(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = DEFAULT_IMAGE_WIDTH, unsigned int h=DEFAULT_IMAGE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
 	virtual ~PBOBase()=0;
 protected:
 	unsigned int PBOChannelCount;// stitching cam + one individual video
@@ -36,20 +36,20 @@ protected:
 class PBOSender:public PBOBase
 {
 public:
-	PBOSender(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = PANO_TEXTURE_WIDTH, unsigned int h=PANO_TEXTURE_HEIGHT, unsigned int cc=4,GLenum format = GL_BGRA);
+	PBOSender(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = PANO_TEXTURE_WIDTH, unsigned int h=PANO_TEXTURE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
 	~PBOSender();
 	bool Init();
-	void sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx, bool bPBO=true);
+	void sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int  mainOrsub=MAIN,bool bPBO=true);
 private:
-	void sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
-	void sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
+	void sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub=MAIN);
+	void sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub=MAIN);
 };
 
 class PBOReceiver :public PBOBase,
 										 public InterfacepboDrawCB
 {
 public:
-	PBOReceiver(unsigned int PBOchcnt=2, unsigned int w = DEFAULT_IMAGE_WIDTH, unsigned int h=DEFAULT_IMAGE_HEIGHT, unsigned int cc=4,GLenum format = GL_BGRA);
+	PBOReceiver(unsigned int PBOchcnt=2, unsigned int w = MAX_SCREEN_WIDTH, unsigned int h=MAX_SCREEN_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
 	~PBOReceiver();
 	bool Init();
 	inline int getCurrentPBOIdx(){return nowPboId;};

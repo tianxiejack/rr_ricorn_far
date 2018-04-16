@@ -432,16 +432,17 @@ bool BMPVcap::Open()
 		Mat ycrcb;
 		Mat im=cvarrToMat(pic);
 
-		cvtColor( im, ycrcb, CV_RGB2YCrCb );
-		cvtColor( im,yuv_alpha,CV_RGB2RGBA);
 
+	//	cvtColor( im, ycrcb, CV_RGB2YCrCb );
+		cvtColor( im,yuv_alpha,CV_RGB2BGR); //RGB->RGB
+		memcpy(yuv_alpha.data,im.data,im.rows*im.cols*3);
+/*
 		Vec3b pix;
 		Vec4b pix_alpha;
 		for (int r = 0; r < ycrcb.rows; r++)
 		{
 			for (int c = 0; c < ycrcb.cols; c++)
 			{
-
 				pix = ycrcb.at<Vec3b>(r,c);
 				pix_alpha.val[0]=pix.val[1];
 				pix_alpha.val[1]=pix.val[0];
@@ -450,6 +451,7 @@ bool BMPVcap::Open()
 				yuv_alpha.at<Vec4b>(r,c) = pix_alpha;
 			}
 		}
+		*/
 		cout<<"BMPVCap Open "<<pFileName<<" OK."<<endl;
 		ret = true;
 	}

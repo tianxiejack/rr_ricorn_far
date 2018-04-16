@@ -7,11 +7,16 @@
 #include <GL/glut.h>
 #endif
 #include "GLRender.h"
+#include "GLEnv.h"
 using namespace cv;
 extern Render render;
+extern GLEnv env1;
+static const GLenum windowBuff[] = { GL_BACK_LEFT };
 
-FBOManager::FBOManager(	int TextureW,int TextureH):
+GLFrame				FBOcameraFrame;
+FBOManager::FBOManager(	int TextureW,int TextureH,GLenum format,GLenum internalFormat):
 				fboSupported(false),fboUsed(false),
+				m_format(format),m_internalFormat(internalFormat),
 				TextureHeight(TextureH),TextureWidth(TextureW),
 				rboColorId(0),rboDepthId(0),fboId(0),textureId(0)
 {
@@ -400,6 +405,7 @@ bool FBOManager::Init()
 	glInfo glInfo;
 	glInfo.getInfo();
 	glInfo.printSelf();
+    initscreenQuad(SCREEN_W,SCREEN_H);
 	if(glInfo.isExtensionSupported("GL_ARB_framebuffer_object"))
 	{
 		fboSupported = fboUsed = true;
@@ -429,7 +435,7 @@ bool FBOManager::Init()
 
         glGenTextures(1, &textureId);
 		glBindTexture(GL_TEXTURE_2D, textureId);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8,  TextureWidth, TextureHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat,  TextureWidth, TextureHeight, 0, m_format, GL_FLOAT, NULL);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -475,6 +481,95 @@ void FBOManager::SetDrawBehaviour(p_InterFaceDrawBehaviour DrawBehaviour)
 	mp_DrawBehaviour=DrawBehaviour;
 }
 
+void FBOManager::initscreenQuad(GLuint imageWidth, GLuint imageHeight)
+{
+	  	float right = (float)imageWidth;
+	    float quadWidth = right;
+	    float left  = 0.0f;
+	    float top = (float)imageHeight;
+	    float bottom = 0.0f;
+	screenQuad.Reset();
+	screenQuad.Begin(GL_TRIANGLE_STRIP, 4, 1);
+	screenQuad.Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+	screenQuad.MultiTexCoord2f(0, 0.0f, 0.0f);
+	screenQuad.Vertex3f(0.0f, 0.0f, 0.0f);
+
+	screenQuad.Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+	screenQuad.MultiTexCoord2f(0, 1.0f, 0.0f);
+	screenQuad.Vertex3f(right, 0.0f, 0.0f);
+
+	screenQuad.Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+	screenQuad.MultiTexCoord2f(0, 0.0f, 1.0f);
+	screenQuad.Vertex3f(0.0f, top, 0.0f);
+
+	screenQuad.Color4f(0.0f, 1.0f, 0.0f, 1.0f);
+	screenQuad.MultiTexCoord2f(0, 1.0f, 1.0f);
+	screenQuad.Vertex3f(right, top, 0.0f);
+	screenQuad.End();
+}
+void FBOManager::DrawTex2Front()
+{
+#if 0
+	GLEnv &env=env1;
+	env.GetmodelViewMatrix();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDrawBuffers(1, windowBuff);
+	glViewport(0, 0, SCREEN_W, SCREEN_H);
+	env.GetmodelViewMatrix()->PushMatrix();
+//	env.GetmodelViewMatrix()->Translate(20,20,0);
+//	M3DMatrix44f mCamera;
+//	FBOcameraFrame.GetCameraMatrix(mCamera);
+//	env.GetmodelViewMatrix()->MultMatrix(mCamera);
+	glBindTexture(GL_TEXTURE_2D, textureId);
+
+	render.getShaderManager()->UseStockShader(GLT_SHADER_TEXTURE_MODULATE, env.GettransformPipeline()->GetModelViewProjectionMatrix(), vWhite, 0);
+	screenQuad.Draw();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	env.GetmodelViewMatrix()->PopMatrix();
+
+
+ //   render.getShaderManager()->UseStockShader(GLT_SHADER_ORI, env1.GettransformPipeline()->GetModelViewProjectionMatrix(),  0,0);
+#else
+	GLEnv &env=env1;
+	glViewport(0, 0, SCREEN_W, SCREEN_H);
+			glClear(GL_DEPTH_BUFFER_BIT);
+			env.GetviewFrustum()->SetPerspective(90.0f, float(SCREEN_W) / float(SCREEN_H), 1.0f, 4000.0f);
+			env.GetprojectionMatrix()->LoadMatrix(env.GetviewFrustum()->GetProjectionMatrix());
+
+			env.GetmodelViewMatrix()->PushMatrix();
+			env.GetmodelViewMatrix()->LoadIdentity();
+			// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
+			M3DMatrix44f camera ;
+
+			render.getVGACameraFrame()->GetCameraMatrix(camera);
+			env.GetmodelViewMatrix()->PushMatrix(*(render.getVGACameraFrame()));
+			env.GetmodelViewMatrix()->PopMatrix();
+
+			env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -SCREEN_H);//-h
+			env.GetmodelViewMatrix()->Scale(SCREEN_W, SCREEN_H, 1.0f);
+
+			    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				glViewport(0, 0, SCREEN_W, SCREEN_H);
+
+				env.GetmodelViewMatrix()->PushMatrix();
+				env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+				env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
+				glActiveTexture(GL_TEXTURE31);
+				glBindTexture(GL_TEXTURE_2D, textureId);
+				 render.getShaderManager()->UseStockShader(GLT_SHADER_TEXTURE_REPLACE,env.GettransformPipeline()->GetModelViewProjectionMatrix(),31);// VGA texture start from 15
+				env.Getp_shadowBatch()->Draw();
+				glBindTexture(GL_TEXTURE_2D, 0);
+				env.GetmodelViewMatrix()->PopMatrix();
+			env.GetmodelViewMatrix()->PopMatrix();
+
+
+
+
+//screenQuad.Draw();
+    // draw a cube with the dynamic texture
+#endif
+}
+
 void FBOManager::PboDraw(InterfacepboDrawCB& icb)
 {
 	int t[10]={0};
@@ -488,6 +583,8 @@ void FBOManager::PboDraw(InterfacepboDrawCB& icb)
 	icb.callbackPBODraw();
     OutOfFrameBuffer();
 }
+
+
 
 
 

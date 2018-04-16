@@ -18,7 +18,7 @@
 #endif
 using namespace std;
 
-static CaptureGroup m_PanoGroup(SDI_WIDTH,SDI_HEIGHT,4,CAM_COUNT);
+static CaptureGroup m_PanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
 static CaptureGroup m_ExtGroup(EXT_CAM_COUNT);
 
 static CaptureGroup m_IconGroup(ICON_COUNT);
@@ -137,9 +137,9 @@ void CaptureGroup::Close()
 	}
 }
 
-void CaptureGroup::captureCam(GLubyte *ptr, int index)
+void CaptureGroup::captureCam(GLubyte *ptr, int index,int mainOrsub)
 {
-	capCamera[index]->Capture((char*)ptr);
+	capCamera[index]->Capture((char*)ptr,mainOrsub);
 }
 void CaptureGroup::captureCamFish(GLubyte *ptr, int index)
 {

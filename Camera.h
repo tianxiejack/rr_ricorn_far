@@ -40,7 +40,7 @@ typedef class Interface_VCap{
 	public:
 		virtual bool Open() = 0;
 		virtual void Close() = 0;
-		virtual void Capture(char* ptr,int mainORsub=-1) = 0;
+		virtual void Capture(char* ptr,int mainORsub=MAIN) = 0;
 		virtual void CaptureFish(char* ptr) = 0;
 		virtual void SetDefaultImg(char*) = 0;
 		virtual void SavePic(const char* name) = 0;
@@ -66,7 +66,7 @@ class AsyncVCap:public Interface_VCap{
 		virtual ~AsyncVCap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=-1);
+		virtual void Capture(char* ptr,int mainORsub=MAIN);
 		void CaptureFish(char* ptr){};
 		virtual void SetDefaultImg( char *);
 		virtual void SavePic(const char* name);
@@ -99,7 +99,7 @@ public:
 	~PseudoVCap(){};
 	bool Open(){return true;};
 	void Close(){};
-	void Capture(char* ptr,int mainORsub=-1){};
+	void Capture(char* ptr,int mainORsub=MAIN){};
 	void CaptureFish(char* ptr){};
 	void saveOverLap(){};
 };
@@ -111,7 +111,7 @@ public:
 	~SmallVCap(){free(m_buffer);};
 	bool Open(){return true;};
 	void Close(){};
-	void Capture(char* ptr,int mainORsub=-1);
+	void Capture(char* ptr,int mainORsub=MAIN);
 	void CaptureFish(char* ptr);
 	void SavePic(const char* name);
 	void saveOverLap();
@@ -132,7 +132,7 @@ public:
 	else if (m_chId==SDI_DEV_NUM)
 		YUV2RGB((unsigned char*)ptr,SDI_DEV_NUM);};
 */
-void Capture(char* ptr,int mainORsub=-1);
+void Capture(char* ptr,int mainORsub=MAIN);
 	void CaptureFish(char* ptr){};
 	void SavePic(const char* name);
 	void saveOverLap(){};
@@ -147,7 +147,7 @@ class V4lVcap : public BaseVCap{
 		virtual ~V4lVcap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=-1);
+		virtual void Capture(char* ptr,int mainORsub=MAIN);
 	private:
 		V4lVcap(){};
 		int m_deviceId;
@@ -160,7 +160,7 @@ class BMPVcap : public BaseVCap{
 		virtual ~BMPVcap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=-1);
+		virtual void Capture(char* ptr,int mainORsub=MAIN);
 		void CaptureFish(char* ptr){};
 		void SavePic(const char* name){};
 		void saveOverLap(){};

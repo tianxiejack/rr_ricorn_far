@@ -414,19 +414,19 @@ private:
 	void RenderRearTopView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderPresetViewByRotating(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderRotatingView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
-	void RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2=false);
+	void RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderCenterView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderCompassView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int type);
-	void RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 
 
 
 
-	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
-	void RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
-	void RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData=true);
+	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mianORsub=MAIN,bool needSendData=true);
+	void RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
+	void RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,bool needSendData=true);
 
 	void RenderIndividualView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData);
 	void RenderBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
@@ -444,7 +444,7 @@ private:
 	void SendtoTrack();
 	void RenderTriangleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderChineseCharacterBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
-	void RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
 	void Show_first_mode(int read_mode);
@@ -461,11 +461,11 @@ private:
 
 	void RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
-	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void RenderTwotimesView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderTwotimesView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
@@ -507,8 +507,8 @@ private:
 	void InitPanel(GLEnv &m_env,int idx=0,bool reset=false);
 
 	void GenerateTriangleView();
-	void DrawBowl(GLEnv &m_env,bool needSendData);
-	void DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_shadermgr2=false);
+	void DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub=MAIN);
+	void DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOrsub=MAIN);
 
 	void initAlphaMask();
 	void DrawVehicle();
@@ -612,6 +612,7 @@ public:
 						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
 						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
 						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
+						GLFrame	*getVGACameraFrame(){return &VGACameraFrame;};
 private:
 	GLBatch Petal[CAM_COUNT];
 	GLBatch *Petal_OverLap[CAM_COUNT]; // overlap area bwtween petal[i] and [(i+1)%CAM_COUNT]
@@ -731,6 +732,7 @@ private:
 	int GetWindowHeight(){return g_windowHeight;};
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
+	GLuint GL_FBOTextureIDs[1];
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
 	GLuint SDITextures[SDI_TEXTURE_COUNT];
 	GLuint GL_ExtensionTextureIDs[EXTENSION_TEXTURE_COUNT];

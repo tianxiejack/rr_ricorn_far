@@ -20,7 +20,7 @@ public:
 	CaptureGroup(unsigned int capCount);
 	CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
 	virtual ~CaptureGroup();
-	void captureCam(GLubyte *ptr, int index);
+	void captureCam(GLubyte *ptr, int index,int mainOrsub=MAIN);
 	void captureCamFish(GLubyte *ptr, int index);
 	void Open();
 	bool Append(pInterface_VCap cap);

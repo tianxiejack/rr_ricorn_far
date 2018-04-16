@@ -696,6 +696,8 @@ Render::~Render()
 
 
 
+
+
 void Render::destroyPixList()
 {
 	for(int i=0; i<CAM_COUNT; i++)
@@ -744,9 +746,9 @@ static void captureSDICam(GLubyte *ptr, int index)
 }
 
 
-static void captureCam(GLubyte *ptr, int index)
+static void captureCam(GLubyte *ptr, int index,int mainOrsub=MAIN)
 {
-	CaptureGroup::GetPanoCaptureGroup()->captureCam(ptr,index);
+	CaptureGroup::GetPanoCaptureGroup()->captureCam(ptr,index,mainOrsub);
 }
 //Fish calibrated
 static void captureCamFish(GLubyte *ptr, int index)
@@ -1008,7 +1010,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 				glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
-											format, GL_UNSIGNED_BYTE, 0);
+						format, GL_UNSIGNED_BYTE, 0);
 			}
 #else
 		for(int i = 0; i < CAM_COUNT; i++){
@@ -1029,32 +1031,32 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 								format, GL_UNSIGNED_BYTE, 0);
 		}
 #endif
-
-
+		//nComponents=GL_RGBA8;
+		// format= GL_RGBA;
 		// Alpha mask: 1/16 size of 1920x1080
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask);
 
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask0);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask0);
 
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX1]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask1);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask1);
 	}
 	//setting up extension textures etc.
 	{
@@ -1206,6 +1208,7 @@ void Render::GenerateGLTextureIds()
 		GL_SDITextureIDs[i] = GL_SDITextureIDs[i-1] + 1;
 	}
 
+	GL_FBOTextureIDs[0] = GL_TEXTURE31;
 #if USE_COMPASS_ICON
 	textureCount = sizeof(GL_IconTextureIDs)/sizeof(GL_IconTextureIDs[0]);
 	GL_IconTextureIDs[0] = GL_TEXTURE16;
@@ -2320,9 +2323,9 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
 /*PBOMgr.sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\*/
 
-#define SEND_TEXTURE_TO_PETAL(i,m_env) 		{\
+#define SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub) 		{\
 											if(needSendData)\
-											m_env.Getp_PBOMgr()->sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\
+											m_env.Getp_PBOMgr()->sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i,mainOrsub);\
 											else{\
 												glBindTexture(GL_TEXTURE_2D, textures[0]);\
 											}\
@@ -2366,7 +2369,7 @@ void Render::drawDynamicTracks(GLEnv &m_env)
 	prepareTexture(ALPHA_TEXTURE_IDX0);
 	p_DynamicTrack->DrawTracks(m_env);
 }
-void Render::DrawBowl(GLEnv &m_env,bool needSendData)
+void Render::DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub)
 {
 	glDisable(GL_BLEND);
 
@@ -2383,7 +2386,7 @@ void Render::DrawBowl(GLEnv &m_env,bool needSendData)
 
 		for(int i = 0; i < CAM_COUNT; i++){
 			glActiveTexture(GL_TextureIDs[i]);
-		    SEND_TEXTURE_TO_PETAL(i,m_env);
+		    SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
 		}
 		
 		for(int i = 0; i < CAM_COUNT; i++){
@@ -2404,7 +2407,7 @@ void Render::DrawBowl(GLEnv &m_env,bool needSendData)
 	}
 }
 
-void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_shadermgr2)
+void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOrsub)
 {
 #ifdef GET_ALARM_AERA
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pVehicle->msFBO);
@@ -2425,7 +2428,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 		{
 				glActiveTexture(GL_TextureIDs[0]);
 				for(int i = 0; i < 2; i++){
-						SEND_TEXTURE_TO_PETAL(i,m_env);
+						SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
 			}
 			for(int i = 0; i < CAM_COUNT; i++){
 	#if USE_GAIN
@@ -2442,7 +2445,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,bool use_s
 		{
 			glActiveTexture(GL_TextureIDs[0]);
 			for(int i = 0; i < 2; i++){
-				    SEND_TEXTURE_TO_PETAL(i,m_env);
+				    SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
 		}
 		for(int i=0;i<CAM_COUNT;i++)
 				{
@@ -3661,7 +3664,7 @@ void Render::RenderRotatingView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 
 	m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool use_shadermgr2)
+void Render::RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	glViewport(x,y,w,h);
 	m_env.GetviewFrustum()->SetPerspective(35.0f, float(w) / float(h), 1.0f, 500.0f);
@@ -3690,7 +3693,7 @@ void Render::RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bo
 
 
 
-	DrawPanel(m_env,true,NULL,use_shadermgr2);
+	DrawPanel(m_env,true,NULL,mainOrsub);
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		if(RulerAngle<180.0)
 		{
@@ -3776,7 +3779,7 @@ void Render::RenderCenterView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 
 }
 
-void Render::RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderRegionPanelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	static float last_scan_distance=0;
 	glViewport(x,y,w,h);
@@ -3836,11 +3839,11 @@ m_env.GetmodelViewMatrix()->Scale(1.0,1.0,1.0);//*SCAN_REGION_ANGLE/60.0f);
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
 
 
-	DrawPanel(m_env,false,NULL);
+	DrawPanel(m_env,false,NULL,mainOrsub);
 
 	m_env.GetmodelViewMatrix()->PushMatrix();
 	m_env.GetmodelViewMatrix()->Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
-	DrawPanel(m_env,false,NULL);
+	DrawPanel(m_env,false,NULL,mainOrsub);
 	m_env.GetmodelViewMatrix()->PopMatrix();
 
 
@@ -3918,7 +3921,7 @@ void Render::RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 }
 }
 
-void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -4062,18 +4065,18 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 #if 1
 				if(RulerAngle<=270 ||RulerAngle>300)
 				{
-					DrawPanel(m_env,true,petal2);
+					DrawPanel(m_env,true,petal2,mainOrsub);
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-					DrawPanel(m_env,false,petal1);
+					DrawPanel(m_env,false,petal1,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 				else if(RulerAngle<=300 && RulerAngle>270)
 				{
-					DrawPanel(m_env,true,petal1);
+					DrawPanel(m_env,true,petal1,mainOrsub);
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-					DrawPanel(m_env,false,petal1);
+					DrawPanel(m_env,false,petal1,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 
@@ -4126,7 +4129,7 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 }
 
 
-void Render::RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	glViewport(x,y,w,h);
 	m_env.GetviewFrustum()->SetPerspective(37.6f, float(w) / float(h), 1.0f, 100.0f);
@@ -4151,10 +4154,10 @@ void Render::RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 m_env.GetmodelViewMatrix()->Scale(4.0,1.0,4.5);
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 
-	DrawPanel(m_env,true,NULL);//
+	DrawPanel(m_env,true,NULL,mainOrsub);
 	m_env.GetmodelViewMatrix()->PushMatrix();
 	m_env.GetmodelViewMatrix()->Translate(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x(),0.0,0.0);
-	DrawPanel(m_env,false,NULL);
+	DrawPanel(m_env,false,NULL,mainOrsub);
 	m_env.GetmodelViewMatrix()->PopMatrix();
 	m_env.GetmodelViewMatrix()->PushMatrix();
 	if(RulerAngle<180.0)
@@ -4166,7 +4169,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 		m_env.GetmodelViewMatrix()->Translate(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 	}
 
-	DrawPanel(m_env,false,NULL);
+	DrawPanel(m_env,false,NULL,mainOrsub);
 	m_env.GetmodelViewMatrix()->PopMatrix();
 	DrawSlideonPanel(m_env);
 	if(getFollowValue())
@@ -4201,7 +4204,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 	delete(rect1);
 }
 
-void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 			int petal1[CAM_COUNT];
 			memset(petal1,-1,sizeof(petal1));
@@ -4317,15 +4320,15 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
@@ -4594,7 +4597,7 @@ void Render::RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 				int petal1[CAM_COUNT];
 				memset(petal1,-1,sizeof(petal1));
@@ -4767,36 +4770,36 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		float FXangle=foresightPos.GetAngle()[0];
 		if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 			{
-				DrawPanel(m_env,false,petal2);
+				DrawPanel(m_env,false,petal2,mainOrsub);
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 			}
 			else if(RulerAngle>135.0 && RulerAngle<175.0)
 			{
-				DrawPanel(m_env,false,petal2);
+				DrawPanel(m_env,false,petal2,mainOrsub);
 				if(FXangle>=270)
 				{
 						m_env.GetmodelViewMatrix()->PushMatrix();
 						m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-						DrawPanel(m_env,false,petal1);
+						DrawPanel(m_env,false,petal1,mainOrsub);
 						m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 				else{
 						m_env.GetmodelViewMatrix()->PushMatrix();
 						m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-						DrawPanel(m_env,false,petal1);
+						DrawPanel(m_env,false,petal1,mainOrsub);
 						m_env.GetmodelViewMatrix()->PopMatrix();
 				}
 
 			}
 			else// if(p_LineofRuler->Load()<270.0)
 			{
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-				DrawPanel(m_env,false,petal1);
+				DrawPanel(m_env,false,petal1,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 			}
  }
@@ -4804,15 +4807,15 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 	{
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-					DrawPanel(m_env,false,NULL);
+					DrawPanel(m_env,false,NULL,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
-					DrawPanel(m_env,false,NULL);
+					DrawPanel(m_env,false,NULL,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
-					DrawPanel(m_env,false,NULL);
+					DrawPanel(m_env,false,NULL,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 		{
@@ -4821,7 +4824,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
+void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	//get_delta;
 	int petal1[CAM_COUNT];
@@ -4926,26 +4929,26 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 				}
 				if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 					{
-						DrawPanel(m_env,false,petal2);
+						DrawPanel(m_env,false,petal2,mainOrsub);
 						m_env.GetmodelViewMatrix()->PushMatrix();
 						m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-						DrawPanel(m_env,false,petal1);
+						DrawPanel(m_env,false,petal1,mainOrsub);
 						m_env.GetmodelViewMatrix()->PopMatrix();
 					}
 					else if(RulerAngle>135.0 && RulerAngle<175.0)
 					{
-						DrawPanel(m_env,false,petal2);
+						DrawPanel(m_env,false,petal2,mainOrsub);
 						if(FXangle>=270)
 						{
 								m_env.GetmodelViewMatrix()->PushMatrix();
 								m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-								DrawPanel(m_env,false,petal1);
+								DrawPanel(m_env,false,petal1,mainOrsub);
 								m_env.GetmodelViewMatrix()->PopMatrix();
 						}
 						else{
 								m_env.GetmodelViewMatrix()->PushMatrix();
 								m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-								DrawPanel(m_env,false,petal1);
+								DrawPanel(m_env,false,petal1,mainOrsub);
 								m_env.GetmodelViewMatrix()->PopMatrix();
 						}
 
@@ -4963,7 +4966,7 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 		}
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub,bool needSendData)
 {
 		glViewport(x,y,w,h);
 		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
@@ -4986,12 +4989,12 @@ void Render::RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint 
 					}
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-				DrawPanel(m_env,true,NULL);
+				DrawPanel(m_env,true,NULL,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PopMatrix();
 }
-void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,bool needSendData)
+void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub,bool needSendData)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -5170,12 +5173,12 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 						}
 	if(RulerAngle<180.0)
 		{
-		DrawPanel(m_env,false,NULL);
+		DrawPanel(m_env,false,NULL,mainOrsub);
 		//DrawPanel(false,petal1);
 		}
 	else
 	{
-		DrawPanel(m_env,false,NULL);
+		DrawPanel(m_env,false,NULL,mainOrsub);
 	//	DrawPanel(false,petal2);
 	}
 }
@@ -5189,20 +5192,20 @@ else if(displayMode==ALL_VIEW_MODE
 		}
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-		DrawPanel(m_env,false,petal2);
+		DrawPanel(m_env,false,petal2,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
 {
 	petal3[0]=0;
-	DrawPanel(m_env,false,petal3);
+	DrawPanel(m_env,false,petal3,mainOrsub);
 	petal3[0]=0;
 	petal3[1]=1;
 	petal3[2]=2;
 	petal3[3]=3;
 	m_env.GetmodelViewMatrix()->PushMatrix();
 	m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-	DrawPanel(m_env,false,petal3);
+	DrawPanel(m_env,false,petal3,mainOrsub);
 	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 /*
@@ -5260,7 +5263,7 @@ else
 	m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,GLint scissor_x, GLint scissor_y, GLint scissor_w, GLint scissor_h,bool needSendData)
+void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub,GLint scissor_x, GLint scissor_y, GLint scissor_w, GLint scissor_h,bool needSendData)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
@@ -5448,7 +5451,7 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 					}
 
 //DrawPanel(true,petal2);
-	DrawPanel(m_env,true,NULL);
+	DrawPanel(m_env,true,NULL,mainOrsub);
 }
 else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
@@ -5461,11 +5464,11 @@ else if(displayMode==ALL_VIEW_MODE
 		petal4[0]=0;
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-		DrawPanel(m_env,needSendData,petal3);
+		DrawPanel(m_env,needSendData,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->PushMatrix();
 	//	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
-		DrawPanel(m_env,false,petal4);
+		DrawPanel(m_env,false,petal4,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
@@ -5476,7 +5479,7 @@ else
 			}
 			m_env.GetmodelViewMatrix()->PushMatrix();
 			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-			DrawPanel(m_env,true,NULL);
+			DrawPanel(m_env,true,NULL,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
 /*
@@ -6056,12 +6059,14 @@ void Render::SetdisplayMode( )
 
 void Render::RenderScene(void)
 {
+
 	GLEnv &env=env1;
 	bool bShowDirection = false, isBillBoardExtOn = false;
 	bool needSendData = true;
 	int billBoardx = 0, billBoardy = g_windowHeight*15/16;//7/8;
 	int extBillBoardx = 0, extBillBoardy = g_windowHeight*15/16;//*7/8;
 	static int last_mode=0;
+
 #ifdef GL_TIME_STAMP
 	GLuint queries[4];
 	GLuint startTime, rearTime, birdTime, fboTime;
@@ -6075,7 +6080,7 @@ void Render::RenderScene(void)
 #endif
 	// Clear the window with current clearing color
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-
+#if RENDER2FRONT
 #if USE_UART
 	zodiac_msg.setXspeedandMove();
 	zodiac_msg.setYspeedandMove();
@@ -6261,9 +6266,9 @@ void Render::RenderScene(void)
 		break;
 	case	ALL_VIEW_MODE:
 	{
-		RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
-		RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0);
-		RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080);
+		RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
+		RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
+		RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 		break;
 	}
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
@@ -6863,14 +6868,15 @@ void Render::RenderScene(void)
 	cout<<"mode="<<displayMode<<":rearTime="<<rearTime/1000000<<",birdTime="<<birdTime/1000000<<",fboTime="<<fboTime/1000000<<endl;
 #endif
 
-//	RenderRightPanoView(0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
-//	RenderMyLeftPanoView(0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0,needSendData);
+#endif// RENDER2FRONT
 #if 1
 	if(env.Getp_FboPboFacade()->IsFboUsed())
 	{
 		env.Getp_FBOmgr()->SetDrawBehaviour(&render);
 		env.Getp_FboPboFacade()->DrawAndGet();
+		env.Getp_FboPboFacade()->Render2Front();
 	}
+
 #endif
 }
 

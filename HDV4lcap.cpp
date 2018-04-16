@@ -89,9 +89,23 @@ void YUYV2UYVx(unsigned char *ptr,unsigned char *Yuyv, int ImgWidth, int ImgHeig
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
 	bool enhance=false;
-	//todo
+	if(w==MAX_SCREEN_WIDTH)
+	{
+		Mat Src(h,w,CV_8UC4,src);
+		Mat Dst(h,w,CV_8UC3,dst);
+		cvtColor(Src,Dst,CV_YUV2BGR_YUYV);
+	}
+	else if (w==FPGA_SCREEN_WIDTH)
+	{
+
 		//如果w=1280 h=1080,则进行截取
 		//否则直接转换
+	}
+	else
+	{
+		printf("there is no width like this :%d!\n",w);
+		assert(false);
+	}
 	if(enhance)
 	{
 
@@ -100,7 +114,11 @@ void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 
 void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
 {
-
+	for(int j = 0;j<h*w;j++)
+	{
+			dst[j] = src[2*j +1];
+	}
+	return ;
 }
 
 void save_SDIyuyv_pic(void *pic)
