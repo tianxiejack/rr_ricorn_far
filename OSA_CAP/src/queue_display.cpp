@@ -1,7 +1,7 @@
 #include "queue_display.h"
 //#include "display.h"
 
-#define NUMCHANAL (16)
+#define NUMCHANAL (4)
 
 AlgLink_Obj_Multi alglink_obj_mul[LINK_CHANL_MAX];
 void * alg_buf_init(void)
@@ -20,7 +20,7 @@ void * alg_buf_init(void)
 		alg_handle->bufCreate[i].numBuf=NUMCHANAL;
 		for(j=0;j<alg_handle->bufCreate[i].numBuf;j++)
 		{
-			alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(720*576*2);
+			alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(OSA_BUFFER_WIDTH*OSA_BUFFER_HEIGHT*OSA_BUFFER_CC);
 			OSA_assert(alg_handle->bufCreate[i].bufVirtAddr[j]!=NULL);
 		}
 		OSA_bufCreate(&alg_handle->bufHndl[i],&alg_handle->bufCreate[i]);
@@ -38,7 +38,7 @@ void alg_buf_destroy(void *queue_dis)
 		alg_handle->bufCreate[i].numBuf=NUMCHANAL;
 		for(j=0;j<alg_handle->bufCreate[i].numBuf;j++)
 		{
-			p = alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(720*576*2);
+			p = alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(OSA_BUFFER_WIDTH*OSA_BUFFER_HEIGHT*OSA_BUFFER_CC);
 			OSA_memFree(p);
 		}
 		OSA_bufDelete(&alg_handle->bufHndl[i]);

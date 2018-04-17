@@ -8,7 +8,9 @@
 #include <osa_buf.h>
 #include <osa_sem.h>
 
-#define LINK_CHANL_MAX 16  //12
+#if !defined LINK_CHANL_MAX
+#define LINK_CHANL_MAX 26  //12
+#endif
 typedef struct Alg_Obj_st
 {
     OSA_TskHndl     tsk;

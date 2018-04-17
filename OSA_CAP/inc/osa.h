@@ -9,6 +9,19 @@
 #include <signal.h>
 //#include <mcfw/interfaces/ti_media_std.h>
 
+#if !defined OSA_BUFFER_WIDTH
+#define OSA_BUFFER_WIDTH 1920
+#endif
+
+#if !defined OSA_BUFFER_HEIGHT
+#define OSA_BUFFER_HEIGHT 1080
+#endif
+
+#if !defined OSA_BUFFER_CC
+#define OSA_BUFFER_CC 3
+#endif
+
+
 #define OSA_DEBUG_MODE // enable OSA_printf, OSA_assert
 #define OSA_DEBUG_FILE // enable printf's during OSA_fileXxxx
 #define OSA_PRF_ENABLE // enable profiling APIs
