@@ -146,7 +146,7 @@ private:
 	int ChangeIdx2chid(int idx);
 	bool Data2Queue(Alg_Obj * p_queue,unsigned char *pYuvBuf,int width,int height,int chId);
 	void start_queue(Alg_Obj * p_queue);
-	bool getEmpty(Alg_Obj * p_queue,unsigned char** pYuvBuf, int chId);
+	bool getEmpty(Alg_Obj * p_queue,unsigned char** pBGRBuf, int chId);
 	int  open_device(void);
 	void close_device(void);
 	int  init_device(void);

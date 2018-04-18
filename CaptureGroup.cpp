@@ -18,28 +18,34 @@
 #endif
 using namespace std;
 
-static CaptureGroup m_PanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
-static CaptureGroup m_ExtGroup(EXT_CAM_COUNT);
-
-static CaptureGroup m_IconGroup(ICON_COUNT);
-static CaptureGroup m_Ruler45Group(ICON_COUNT);
-static CaptureGroup m_Ruler90Group(ICON_COUNT);
-static CaptureGroup m_Ruler180Group(ICON_COUNT);
 
 
+//static HDv4l_cam v4lcap(0,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam v4lcap1(1,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam v4lcap2(2,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam v4lcap3(3,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam v4lcap4(4,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam v4lcap5(5,SDI_WIDTH,SDI_HEIGHT);
 
-static HDv4l_cam v4lcap(0,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam v4lcap2(1,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam v4lcap3(2,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam v4lcap4(3,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam v4lcap5(4,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam v4lcap6(5,SDI_WIDTH,SDI_HEIGHT);
 
-static HDAsyncVCap4* pHDAsyncVCap[CAM_COUNT]={0};
+static MainExtCaptureGroup m_MainExtGroup(SDI_WIDTH,SDI_HEIGHT,3,MAIN_EXT_COUNT);
+static SubExtCaptureGroup m_SubExtGroup(SDI_WIDTH,SDI_HEIGHT,3,SUB_EXT_COUNT);
+
+
+
+
+static ExtCaptureGroup m_ExtGroup(SDI_WIDTH,SDI_HEIGHT,3,EXT_CAM_COUNT);
+
+static IconCaptureGroup m_IconGroup(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
+static Ruler45CaptureGroup m_Ruler45Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
+static Ruler90CaptureGroup m_Ruler90Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
+static Ruler180CaptureGroup m_Ruler180Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
+
+
 
 
 CaptureGroup::CaptureGroup(unsigned int capCount):m_TotalCamCount(capCount),m_currentIdx(0),
-		width(IMAGEWIDTH),height(IMAGEHEIGHT),depth(DEFAULT_IMAGE_DEPTH),Defaultimage(NULL)
+		width(SDI_WIDTH),height(SDI_HEIGHT),depth(DEFAULT_IMAGE_DEPTH),Defaultimage(NULL)
 {
 	capCamera = new pInterface_VCap[m_TotalCamCount];
 	for(int i = 0; i < capCount; i ++){
@@ -62,7 +68,13 @@ CaptureGroup::CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsig
 	fillColorBar();
 }
 
-
+void CaptureGroup::init()
+{
+	CreateProducers();
+	SetConsumers(GetConsumers());
+	OpenProducers();
+	Open();
+}
 
 CaptureGroup::~CaptureGroup()
 {
@@ -77,16 +89,21 @@ CaptureGroup::~CaptureGroup()
 
 	delete [] capCamera;
 	delete [] Defaultimage;
-
-	for(int i=0 ;i<CAM_COUNT;i++)
-	{
-		if(pHDAsyncVCap[i]){
-					delete pHDAsyncVCap[i];
-					pHDAsyncVCap[i]= NULL;
-		}
-	}
-
 }
+
+void CaptureGroup::SetConsumers(vector<Consumer>  h)
+{
+     int size = h.size();
+     for(int i = 0; i < size; i++){
+    //re-oder the cameras according to idx
+    	 for(int j = 0; j<size;j++){
+    			 if(h[j].idx == i){
+    				 Append(h[j].pcap);
+    			 }
+    	 }
+     }
+}
+
 
 void CaptureGroup::fillColorBar()
 {
@@ -195,12 +212,11 @@ void CaptureGroup::saveOverLap()
 			printf("cap:%d error\n",i);
 	}
 }
+
 CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 {
-	HDv4l_cam * pv4lcap[CAM_COUNT]={&v4lcap,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5,&v4lcap6};
-	//		HDv4l_cam * pv4lcap[CAM_COUNT]={&v4lcap,&v4lcap2,&v4lcap3,&v4lcap4};
-
-			static bool Once = false;
+	HDv4l_cam * pv4lcap[MAX_CC]={NULL,&v4lcap1,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5};
+	static bool Once = false;
 	if(!Once){
 		Once = true;
 		char fileName[64];
@@ -210,40 +226,81 @@ CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 #endif
 		CaptureGroup::GetRuler45CaptureGroup();
 
-#if  USE_BMPCAP
-#if WHOLE_PIC
-
+#if  !USE_BMPCAP
 		for(int i=0; i < 2; i++){
 			sprintf(fileName,"./data/pic%d.bmp",i);
 				m_PanoGroup.Append(new BMPVcap(fileName));
 		}
-
-
 #else
-		for(int i=0; i < CAM_COUNT; i++){
-			sprintf(fileName,"./data/%02d.bmp",i);
-			m_PanoGroup.Append(new BMPVcap(fileName));
-		}
 
-#endif
-#else
-		for(int i=0;i<CAM_COUNT;i++)
-		{
-		if(pHDAsyncVCap[i]==NULL)
-			pHDAsyncVCap[i] = new HDAsyncVCap4(auto_ptr<BaseVCap>(pv4lcap[i]),i);
-		}
-		for(i=0;i<CAM_COUNT;i++){
-					m_PanoGroup.Append(new HDVCap(i,SDI_WIDTH,SDI_HEIGHT));
-				}
-		for(int i=0;i<CAM_COUNT;i++)
-		{
-			pHDAsyncVCap[i]->Open();
-		}
+		dev_id=FPGA_FOUR_CN;
+		m_PanoGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
+		dev_id=FPGA_SIX_CN;
+		m_PanoGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
+
+		dev_id=FPGA_FOUR_CN;
+		pHDAsyncVCap[dev_id]->Open();
+		dev_id=FPGA_SIX_CN;
+		pHDAsyncVCap[dev_id]->Open();
+
 #endif
 		m_PanoGroup.Open();
 	}
 	return &m_PanoGroup;
 }
+CaptureGroup* CaptureGroup:: GetMainExtCaptureGroup()
+{
+		static bool once=false;
+		if(!once){
+			char filename[64];
+			once = true;
+	#if !USE_BMPCAP
+			sprintf(filename,"./data/pic0.bmp");
+			for(int i=0;i<MAIN_EXT_COUNT;i++)
+			{
+				m_MainExtGroup.Append(new BMPVcap(filename));
+			}
+	#else
+				HDv4l_cam * pv4lcap[MAX_CC]={NULL,&v4lcap1,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5};
+				int dev_id=MAIN_CN;
+				if(pHDAsyncVCap[dev_id]==NULL)
+					pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(pv4lcap[dev_id]),dev_id);
+			m_MainExtGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
+			pHDAsyncVCap[dev_id]->Open();
+	#endif
+			m_MainExtGroup.Open();
+		}
+		return &m_MainExtGroup;
+}
+
+CaptureGroup* CaptureGroup:: GetSubExtCaptureGroup()
+{
+		static bool once=false;
+		if(!once){
+			char filename[64];
+			once = true;
+	#if !USE_BMPCAP
+			sprintf(filename,"./data/pic2.bmp");
+			for(int i=0;i<MAIN_EXT_COUNT;i++)
+			{
+				m_SubExtGroup.Append(new BMPVcap(filename));
+			}
+	#else
+				HDv4l_cam * pv4lcap[MAX_CC]={NULL,&v4lcap1,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5};
+				int dev_id=SUB_CN;
+				if(pHDAsyncVCap[dev_id]==NULL)
+					pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(pv4lcap[dev_id]),dev_id);
+				m_SubExtGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
+				pHDAsyncVCap[dev_id]->Open();
+	#endif
+			m_SubExtGroup.Open();
+		}
+		return &m_SubExtGroup;
+}
+
+
+
+
 
 CaptureGroup* CaptureGroup::GetExtCaptureGroup()
 {
@@ -403,5 +460,9 @@ bool CaptureGroup::saveSingleCapImg(int cam_num)
 
 	return true;
 }
+
+
+
+
 
 

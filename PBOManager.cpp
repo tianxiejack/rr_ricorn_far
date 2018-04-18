@@ -17,8 +17,8 @@
 #include "PBOManager.h"
 using namespace std;
 extern Render render;
-PBOBase::PBOBase(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format):
-		width(w),height(h),chncnt(cc),pboMode(2),pixel_format(format),bUsePBO(true),PBOChannelCount(PBOchcnt)
+PBOBase::PBOBase(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format,unsigned int pbo_mode,bool buse_pbo):
+		width(w),height(h),chncnt(cc),pboMode(pbo_mode),pixel_format(format),bUsePBO(buse_pbo),PBOChannelCount(PBOchcnt)
 {
 	dataSize=w*h*cc;
 	PBOBufferCount = pboMode*PBOChannelCount;
@@ -37,16 +37,9 @@ PBOBase::~PBOBase()
 
 /***********************PBOSender******************************/
 
-PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, unsigned int cc,GLenum format)
+PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, unsigned int cc,GLenum format):
+		PBOBase(PBOchcnt,w,h,cc,format,2,true)
 {
-	width=w;
-	height=h;
-	chncnt=cc;
-	pboMode=2;
-	pixel_format=format;
-	bUsePBO=true;
-	PBOChannelCount=PBOchcnt;
-
 	dataSize=w*h*cc;
 	PBOBufferCount = pboMode*PBOChannelCount;
 	pboIds = new GLuint[ PBOBufferCount];
@@ -207,16 +200,9 @@ void PBOSender::sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int
 
 /***********************PBOReceiver******************************/
 
-PBOReceiver::PBOReceiver(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format)
+PBOReceiver::PBOReceiver(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format):
+		PBOBase(PBOchcnt,w,h,cc,format,2,true)
 {
-	width=w;
-	height=h;
-	chncnt=cc;
-	pboMode=2;
-	pixel_format=format;
-	bUsePBO=true;
-	PBOChannelCount=PBOchcnt;
-
 	dataSize=w*h*cc;
 	PBOBufferCount = pboMode*PBOChannelCount;
 	pboIds = new GLuint[ PBOBufferCount];

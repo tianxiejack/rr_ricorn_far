@@ -18,7 +18,8 @@ typedef struct _OSA_SemHndl OSA_SemHndl,* pOSA_SemHndl;
 class PBOBase
 {
 public:
-	PBOBase(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = DEFAULT_IMAGE_WIDTH, unsigned int h=DEFAULT_IMAGE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
+		PBOBase(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = DEFAULT_IMAGE_WIDTH, unsigned int h=DEFAULT_IMAGE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR
+			,unsigned int pbo_mode=2,bool buse_pbo=true);
 	virtual ~PBOBase()=0;
 protected:
 	unsigned int PBOChannelCount;// stitching cam + one individual video

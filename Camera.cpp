@@ -187,31 +187,31 @@ void save_yuyv_pic2(void *pic,int idx)
 
 
 void HDVCap::Capture(char* ptr,int mainORsub){
+	int BGR_CC=3;
 	static bool once=true;
 	int chid[2]={-1,-1};
 	int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
 	if(once)
 	{
-		for(int i=0;i<MAX_CC;i++)
+		for(int i=1;i<MAX_CC;i++)  //0 is not used!
 		{
 			if(i==MVDECT_CN)
 			{
 			//	printf{"检测不需要创建\n"};
 			}
-			else if(i==FPGA_FOUR_CN)//采集的时候大，但是已经经过了转换
+			else if(i==FPGA_FOUR_CN)//采集的时候大，但是已经经过了转换 //4
 			{
-				temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*4);
-				temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*4);
+				temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+				temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
 			}
-			else//普通1920*1080数据
+			else//普通1920*1080数据  6
 			{
-				temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*4);
-				temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*4);
+				temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
+				temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
 			}
 		}
 		once=false;
 	}
-
 					switch(m_chId)
 					{
 					case FPGA_FOUR_CN:
@@ -240,12 +240,12 @@ void HDVCap::Capture(char* ptr,int mainORsub){
 					if(mainORsub==MAIN) //车长
 					{
 						get_buffer((unsigned char *)temp_data_main[m_chId],chid[MAIN]);
-						memcpy(ptr,temp_data_main[m_chId],nowpicW*nowpicH*4);
+						memcpy(ptr,temp_data_main[m_chId],nowpicW*nowpicH*BGR_CC);
 					}
 					else if(mainORsub==SUB)//载员
 					{
 						get_buffer((unsigned char *)temp_data_sub[m_chId],chid[SUB]);
-						memcpy(ptr,temp_data_sub[m_chId],nowpicW*nowpicH*4);
+						memcpy(ptr,temp_data_sub[m_chId],nowpicW*nowpicH*BGR_CC);
 					}
 					else
 					{

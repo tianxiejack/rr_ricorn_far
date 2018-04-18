@@ -213,6 +213,14 @@ enum{
 
 #define DS_CHAN_MAX         (4)
 
+enum{
+	MAIN_EXT_0,
+	MAIN_EXT_COUNT
+};
+enum{
+	SUB_EXT_0,
+	SUB_EXT_COUNT
+};
 
 enum{
 	EXT_CAM_0,
