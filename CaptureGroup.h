@@ -48,11 +48,6 @@ public:
 	bool saveCapImg();
 	void saveOverLap();
 	virtual void CreateProducers(){};
-
-
-//	static CaptureGroup* GetRuler45CaptureGroup();
-//	static CaptureGroup* GetRuler90CaptureGroup();
-//	static CaptureGroup* GetRuler180CaptureGroup();
 	bool saveSingleCapImg(int cam_num);
 #if USE_12
 	bool saveExposureCompensationCapImg();
@@ -68,6 +63,21 @@ protected:
 	CaptureGroup():m_TotalCamCount(0),m_currentIdx(0){};
 };
 
+class PseudoCaptureGroup:public CaptureGroup
+{
+public:
+	static	PseudoCaptureGroup *GetInstance();
+	PseudoCaptureGroup(unsigned int w,unsigned int h,int NCHAN,unsigned int capCount=1):
+		CaptureGroup(w,h,NCHAN,capCount){};
+	~PseudoCaptureGroup(){};
+	virtual vector<Consumer>  GetConsumers(int *queueid,int count)
+		{return vector<Consumer>(0);};
+	virtual void CreateProducers(){};
+	virtual void OpenProducers(){};
+private:
+	static PseudoCaptureGroup pseudoCaptureGroup;
+};
+
 class HDCaptureGroup:public CaptureGroup
 {
 public:
@@ -78,33 +88,5 @@ public:
 	HDCaptureGroup(){};
 };
 
-
-
-
-
-
-class Ruler45CaptureGroup:public CaptureGroup
-{
-public:
-	Ruler45CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual	void SetConsumers(){};
-private:
-};
-
-class Ruler90CaptureGroup:public CaptureGroup
-{
-public:
-	Ruler90CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual	void SetConsumers(){};
-private:
-};
-
-class Ruler180CaptureGroup:public CaptureGroup
-{
-public:
-	Ruler180CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual	void SetConsumers(){};
-private:
-};
 
 #endif /* CAPTUREGROUP_H_ */

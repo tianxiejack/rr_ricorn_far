@@ -56,10 +56,11 @@
 #endif
 #include "gst_capture.h"
 #include"GLEnv.h"
-#include"PanoCaptureGroup.h"
-#include"ChosenCaptureGroup.h"
-GLEnv env1(PanoCaptureGroup::GetMainInstance(),ChosenCaptureGroup::GetMainInstance());
-GLEnv env2(PanoCaptureGroup::GetSubInstance(),ChosenCaptureGroup::GetSubInstance());
+
+extern GLEnv env1;
+extern GLEnv env2;
+
+
 bool isTracking=false;
 
 PanoCamOnForeSight  panocamonforesight;
@@ -764,23 +765,23 @@ static void captureCamFish(GLubyte *ptr, int index,GLEnv &env)
 	env.GetPanoCaptureGroup()->captureCamFish(ptr,index);
 }
 
-#if 0
-static void captureRuler45Cam(GLubyte *ptr, int index)
+#if 1
+static void captureRuler45Cam(GLubyte *ptr, int index,GLEnv &env)
 {
 #if USE_ICON
-	CaptureGroup::GetRuler45CaptureGroup()->captureCam(ptr,index);
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_45DEGREESCALE);
 #endif
 }
-static void captureRuler90Cam(GLubyte *ptr, int index)
+static void captureRuler90Cam(GLubyte *ptr, int index,GLEnv &env)
 {
 #if USE_ICON
-	CaptureGroup::GetRuler90CaptureGroup()->captureCam(ptr,index);
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_90DEGREESCALE);
 #endif
 }
-static void captureRuler180Cam(GLubyte *ptr, int index)
+static void captureRuler180Cam(GLubyte *ptr, int index,GLEnv &env)
 {
 #if USE_ICON
-	CaptureGroup::GetRuler180CaptureGroup()->captureCam(ptr,index);
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_180DEGREESCALE);
 #endif
 }
 #endif
@@ -6027,7 +6028,7 @@ void Render::RenderScene(void)
 #endif
 	// Clear the window with current clearing color
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-#if RENDER2FRONT
+#if !RENDER2FRONT
 #if USE_UART
 	zodiac_msg.setXspeedandMove();
 	zodiac_msg.setYspeedandMove();
@@ -6276,10 +6277,6 @@ void Render::RenderScene(void)
 
 	case CHECK_MYSELF:
 	{
-	//	CaptureGroup::GetExtCaptureGroup();
-	//	CaptureGroup::GetSDICaptureGroup();
-//		CaptureGroup::GetVGACaptureGroup();
-		CaptureGroup::GetPanoCaptureGroup();
 		static bool Once=true;
 		if(Once)
 		{
@@ -6434,7 +6431,6 @@ void Render::RenderScene(void)
 		case	PAL1_WHITE_BIG_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(PAL1_WHITE_BIG_VIEW_MODE);
 				SetCurrentExtesionVideoId(EXT_CAM_0);
-				RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
 				RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 				render.SendtoTrack();
 				RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
@@ -6445,7 +6441,6 @@ void Render::RenderScene(void)
 		{
 			p_ForeSightFacade_Track->Reset(SDI2_HOT_BIG_VIEW_MODE);
 			SetCurrentExtesionVideoId(EXT_CAM_0);
-			RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
 			RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 			render.SendtoTrack();
 			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
@@ -6456,7 +6451,6 @@ void Render::RenderScene(void)
 		case		PAL2_HOT_BIG_VIEW_MODE:
 			p_ForeSightFacade_Track->Reset(PAL2_HOT_BIG_VIEW_MODE);
 					SetCurrentExtesionVideoId(EXT_CAM_1);
-					RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
 					RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 					render.SendtoTrack();
 					RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
@@ -6466,7 +6460,6 @@ void Render::RenderScene(void)
 		{
 			p_ForeSightFacade_Track->Reset(PAL2_HOT_SMALL_VIEW_MODE);
 			SetCurrentExtesionVideoId(EXT_CAM_1);
-			RenderExtensionView(env,0,0,g_windowWidth*1346/1920, g_windowHeight, needSendData);
 			RenderTrackForeSightView(env,0,0,g_windowWidth*1346/1920, g_windowHeight);
 			render.SendtoTrack();
 			RenderCompassView(env,g_windowWidth*1495/1920,g_windowHeight*140/1080.0, g_windowWidth*290.0/1920.0, g_windowWidth*290.0/1920.0);
@@ -7397,7 +7390,6 @@ void Render::mouseMotionPress(int x, int y)
 		delta_x = ((MOUSEx - x)*(tanf(PI/180*15)*(Z_Depth+scale)))*.005;
 		delta_y = ((MOUSEy - y)*(tanf(PI/180*15)*(Z_Depth+scale)))*.005;
 		setMouseCor(x,y);
-
 		if(bControlViewCamera){
 			birdViewCameraFrame.SetOrigin(camOrigin);
 			birdViewCameraFrame.MoveRight(delta_x);
@@ -7430,7 +7422,6 @@ void Render::mouseMotionPress(int x, int y)
 			m_freeCamera.Rotate((float)m3dDegToRad(delta_y), 1.0f, 0.0f,0.0f);
 			m_freeCamera.Rotate((float)m3dDegToRad(delta_x), 0.0f,0.0f,1.0f);
 		}
-
 	}
 	if (BUTTON == RMB)
 	{
@@ -11384,48 +11375,7 @@ void Render::RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int
 
 void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 {
-#if 0
-
-/*	int idx =0;// GetCurrentExtesionVideoId();
-#if USE_ICON
-	m_env.GetmodelViewMatrix()->PushMatrix();
-	//m_env.GetmodelViewMatrix()->Rotate(90.0f, 1.0f, 0.0f, 0.0f);
-	//m_env.GetmodelViewMatrix()->Scale(2.0,1.0,1.0);
-	//m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	//m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
-	glActiveTexture(GL_IconRuler45TextureIDs[idx]);
-	//glBindTexture(GL_TEXTURE_2D,  iconRuler45Textures[idx]);
-	//PBOExtMgr.sendData(iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,idx);
-	{
-		//glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[idx]);
-	}
-//	shaderManager.UseStockShader(GLT_SHADER_FLAT,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), vWhite);//ICON texture start from 16
-
-	if(needSendData){
-		PBOExtMgr.sendData(iconTextures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,idx);
-	}
-	else{
-		glBindTexture(GL_TEXTURE_2D, iconTextures[idx]);
-	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+16);//ICON texture start from 16
-
-	switch(type)
-	{
-	case RULER_45:
-		degreescale45Batch.Draw();
-		break;
-	case RULER_90:
-		degreescale90Batch.Draw();
-		break;
-	case RULER_180:
-		degreescale180Batch.Draw();
-		break;
-	}
-
-
-	m_env.GetmodelViewMatrix()->PopMatrix();
-
-#endif*/
+#if 1
 	int idx =0;// GetCurrentExtesionVideoId();
 #if USE_ICON
 	m_env.GetmodelViewMatrix()->PushMatrix();
@@ -11439,7 +11389,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler45TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,idx);
+			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,ICON_45DEGREESCALE);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[idx]);
@@ -11449,7 +11399,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler90TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(iconRuler90Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90Cam,idx);
+			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler90Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90Cam,ICON_90DEGREESCALE);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler90Textures[idx]);
@@ -11459,17 +11409,14 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler180TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(iconRuler180Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180Cam,idx);
+			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler180Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180Cam,ICON_180DEGREESCALE);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler180Textures[idx]);
 		}
 		break;
 	}
-
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
-
-	//shadowBatch.Draw();
 
 	switch(type)
 	{

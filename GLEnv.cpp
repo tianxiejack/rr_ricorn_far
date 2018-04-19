@@ -1,8 +1,9 @@
 #include"GLEnv.h"
 #include"StlGlDefines.h"
-GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen):
+GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc):
 m_panoCaptureGroup(p_pano),
 m_chosenCaptureGroup(p_chosen),
+m_miscCaptureGroup(p_misc),
 PBOMgr(PBOSender(CAM_COUNT,PANO_TEXTURE_WIDTH,PANO_TEXTURE_HEIGHT,3,GL_BGR)),
 FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,GL_BGR,GL_RGB8)),
 PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,3,GL_BGR)),
@@ -85,5 +86,12 @@ pPBO_FBO_Facade GLEnv::Getp_FboPboFacade()
 void GLEnv::Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr)
 {
 	mp_FboPboFacade=new PBO_FBO_Facade(FBOMgr,PBORcr);
+}
+
+void GLEnv::init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc)
+{
+	m_panoCaptureGroup=p_pano;
+	m_chosenCaptureGroup=p_chosen;
+	m_miscCaptureGroup=p_misc;
 }
 

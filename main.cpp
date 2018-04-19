@@ -18,9 +18,20 @@
 #include "mvDetector.hpp"
 #endif
 #include"MvDetect.hpp"
+
+#if USE_BMPCAP
+#include "BMPCaptureGroup.h"
+#else
+#include"PanoCaptureGroup.h"
+#include"ChosenCaptureGroup.h"
+#endif
+#include"GLEnv.h"
 RenderMain mainWin;
 Common common;
 AlarmTarget mainAlarmTarget;
+GLEnv env1;
+GLEnv env2;
+
 #if MVDECT
 MvDetect mv_detect;
 #endif
@@ -62,6 +73,23 @@ int main(int argc, char** argv)
 	Parayml param;
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
+
+#if USE_BMPCAP
+	env1.init(BMPPanoGroup::GetInstance(),
+			BMPPanoGroup::GetInstance(),
+			BMPMiscGroup::GetInstance());
+	env2.init(BMPPanoGroup::GetInstance(),
+			BMPPanoGroup::GetInstance(),
+			BMPMiscGroup::GetInstance());
+#else
+	env1.init(PanoCaptureGroup::GetMainInstance(),
+		ChosenCaptureGroup::GetMainInstance(),
+		BMPMiscGroup::GetInstance());
+	env2.init(PanoCaptureGroup::GetSubInstance(),
+		ChosenCaptureGroup::GetSubInstance(),
+		BMPMiscGroup::GetInstance());
+#endif
+
 
 
 //	start_overLap();

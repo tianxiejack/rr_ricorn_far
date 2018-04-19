@@ -456,7 +456,6 @@ private:
 	void RenderUpCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
 	void RenderFwdCords(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
 	void RenderCordsView(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
-	void RenderExtensionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderExtensionBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
 
 	void RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);

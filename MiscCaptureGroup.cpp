@@ -1,0 +1,31 @@
+#include"BMPCaptureGroup.h"
+BMPMiscGroup BMPMiscGroup::miscCaptureGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
+
+vector<Consumer>  BMPMiscGroup::GetConsumers(int *queueid,int count)
+{
+	vector<Consumer> v_cons(count);
+	 Consumer cons;
+	 char *str[]={"45","90","180"};
+	 char filename[64];
+	 for(int i=0;i<count;i++)
+	 {
+		 sprintf(filename,"./data/%s.bmp",str[i]);
+		   cons.pcap = new BMPVcap(filename);
+		   cons.idx = i;
+		   v_cons.push_back(cons);
+	 }
+	   return v_cons;
+}
+
+BMPMiscGroup * BMPMiscGroup::GetInstance()
+{
+	static bool once =true;
+	if(once){
+		miscCaptureGroup.init(NULL,ICON_COUNT);
+		once =false;
+	}
+	return &miscCaptureGroup;
+
+}
+
+

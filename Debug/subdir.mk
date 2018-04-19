@@ -4,6 +4,10 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../MiscCaptureGroup.cpp\
+../BMPCaptureGroup.cpp\
+../ChosenCaptureGroup.cpp\
+../PanoCaptureGroup.cpp\
 ../GLEnv.cpp\
 ../doubleScreen.cpp\
 ../AlarmTarget.cpp \
@@ -58,6 +62,10 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./MiscCaptureGroup.o\
+./BMPCaptureGroup.o\
+./ChosenCaptureGroup.o\
+./PanoCaptureGroup.o\
 ./GLEnv.o\
 ./doubleScreen.o\
 ./AlarmTarget.o \
@@ -109,6 +117,10 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./MiscCaptureGroup.d\
+./BMPCaptureGroup.d\
+./ChosenCaptureGroup.d\
+./PanoCaptureGroup.d\
 ./GLEnv.d\
 ./doubleScreen.d\
 ./AlarmTarget.d \

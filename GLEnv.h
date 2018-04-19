@@ -11,8 +11,9 @@
 class GLEnv
 {
 public:
-	GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen);
+	GLEnv(CaptureGroup *p_pano=NULL,CaptureGroup *p_chosen=NULL,CaptureGroup *p_misc=NULL);
 	~GLEnv(){};
+	void init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc);
 	GLMatrixStack *GetmodelViewMatrix();
 	GLMatrixStack	*GetprojectionMatrix();
 	GLGeometryTransform *GettransformPipeline();
@@ -33,10 +34,11 @@ public:
 	void Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr);
 	CaptureGroup *GetPanoCaptureGroup(){return m_panoCaptureGroup;};
 	CaptureGroup *GetChosenCaptureGroup(){return m_chosenCaptureGroup;};
+	CaptureGroup *GetMiscCaptureGroup(){return m_miscCaptureGroup;};
 private:
 	CaptureGroup * m_panoCaptureGroup;
 	CaptureGroup * m_chosenCaptureGroup;
-
+	CaptureGroup * m_miscCaptureGroup;
 	GLMatrixStack	modelViewMatrix;
 	GLMatrixStack	projectionMatrix;
 	GLGeometryTransform transformPipeline;

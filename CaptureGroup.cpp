@@ -18,13 +18,7 @@
 #endif
 using namespace std;
 
-
-//static Ruler45CaptureGroup m_Ruler45Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
-//static Ruler90CaptureGroup m_Ruler90Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
-//static Ruler180CaptureGroup m_Ruler180Group(SDI_WIDTH,SDI_HEIGHT,3,ICON_COUNT);
-
-
-
+PseudoCaptureGroup PseudoCaptureGroup::pseudoCaptureGroup(0,0,0,0);
 
 CaptureGroup::CaptureGroup(unsigned int capCount):m_TotalCamCount(capCount),m_currentIdx(0),
 		width(SDI_WIDTH),height(SDI_HEIGHT),depth(DEFAULT_IMAGE_DEPTH),Defaultimage(NULL)
@@ -195,77 +189,6 @@ void CaptureGroup::saveOverLap()
 	}
 }
 
-#if 0
-CaptureGroup* CaptureGroup:: GetMainExtCaptureGroup()
-{
-		static bool once=false;
-		if(!once){
-			char filename[64];
-			once = true;
-			sprintf(filename,"./data/pic0.bmp");
-			for(int i=0;i<MAIN_EXT_COUNT;i++)
-			{
-				m_MainExtGroup.Append(new BMPVcap(filename));
-			}
-			m_MainExtGroup.Open();
-		}
-		return &m_MainExtGroup;
-}
-#endif
-
-
-
-
-
-#if 0
-CaptureGroup* CaptureGroup::GetRuler45CaptureGroup()
-{
-	static bool once=false;
-	if(!once){
-		char filename[64];
-		once = true;
-
-		sprintf(filename,"./data/45.bmp");
-		m_Ruler45Group.Append(new BMPVcap(filename));
-
-		m_Ruler45Group.Open();
-
-	}
-	return &m_Ruler45Group;
-}
-
-CaptureGroup* CaptureGroup::GetRuler90CaptureGroup()
-{
-	static bool once=false;
-	if(!once){
-		char filename[64];
-		once = true;
-
-		sprintf(filename,"./data/90.bmp");
-		m_Ruler90Group.Append(new BMPVcap(filename));
-
-		m_Ruler90Group.Open();
-
-	}
-	return &m_Ruler90Group;
-}
-
-CaptureGroup* CaptureGroup::GetRuler180CaptureGroup()
-{
-	static bool once=false;
-	if(!once){
-		char filename[64];
-		once = true;
-
-		sprintf(filename,"./data/180.bmp");
-		m_Ruler180Group.Append(new BMPVcap(filename));
-
-		m_Ruler180Group.Open();
-
-	}
-	return &m_Ruler180Group;
-}
-#endif
 bool CaptureGroup::saveSingleCapImg(int cam_num)
 {
 	char buf[32];
@@ -284,7 +207,7 @@ bool CaptureGroup::saveSingleCapImg(int cam_num)
 
 vector<Consumer>  HDCaptureGroup::GetConsumers(int *queueid,int count)
 {
-	vector<Consumer> v_cons(2);
+	vector<Consumer> v_cons(MS_COUNT);
 	 Consumer cons;
 	 for(int i=0;i<count;i++)
 	 {
@@ -296,4 +219,14 @@ vector<Consumer>  HDCaptureGroup::GetConsumers(int *queueid,int count)
 	   return v_cons;
 }
 
+
+PseudoCaptureGroup *PseudoCaptureGroup::GetInstance()
+{
+	static bool once =true;
+	if(once){
+		pseudoCaptureGroup.init(NULL,0);
+		once =false;
+	}
+	return &pseudoCaptureGroup;
+}
 
