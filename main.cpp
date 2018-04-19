@@ -63,7 +63,7 @@ int main(int argc, char** argv)
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
 
-//	start_scanner();
+
 //	start_overLap();
 //	startrecv( );
 

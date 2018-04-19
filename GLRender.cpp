@@ -56,7 +56,10 @@
 #endif
 #include "gst_capture.h"
 #include"GLEnv.h"
-GLEnv env1,env2;
+#include"PanoCaptureGroup.h"
+#include"ChosenCaptureGroup.h"
+GLEnv env1(PanoCaptureGroup::GetMainInstance(),ChosenCaptureGroup::GetMainInstance());
+GLEnv env2(PanoCaptureGroup::GetSubInstance(),ChosenCaptureGroup::GetSubInstance());
 bool isTracking=false;
 
 PanoCamOnForeSight  panocamonforesight;
@@ -705,7 +708,7 @@ void Render::destroyPixList()
 }
 
 
-static void captureVGACam(GLubyte *ptr, int index)
+static void captureVGACam(GLubyte *ptr, int index,GLEnv &env)
 {
 //	CaptureGroup::GetVGACaptureGroup()->captureCam(ptr,index);
 	#if TRACK_MODE
@@ -725,7 +728,7 @@ static void captureVGACam(GLubyte *ptr, int index)
 	#endif
 }
 
-static void captureSDICam(GLubyte *ptr, int index)
+static void captureSDICam(GLubyte *ptr, int index,GLEnv &env)
 {
 //	CaptureGroup::GetSDICaptureGroup()->captureCam(ptr,index);
 	#if TRACK_MODE
@@ -746,42 +749,22 @@ static void captureSDICam(GLubyte *ptr, int index)
 }
 
 
-static void captureCam(GLubyte *ptr, int index,int mainOrsub=MAIN)
+static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 {
-	CaptureGroup::GetPanoCaptureGroup()->captureCam(ptr,index,mainOrsub);
+	env.GetPanoCaptureGroup()->captureCam(ptr,index);
+}
+
+static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
+{
+	env.GetChosenCaptureGroup()->captureCam(ptr,index);
 }
 //Fish calibrated
-static void captureCamFish(GLubyte *ptr, int index)
+static void captureCamFish(GLubyte *ptr, int index,GLEnv &env)
 {
-	CaptureGroup::GetPanoCaptureGroup()->captureCamFish(ptr,index);
+	env.GetPanoCaptureGroup()->captureCamFish(ptr,index);
 }
 
-static void captureExtCam(GLubyte *ptr, int index)
-{
-	CaptureGroup::GetExtCaptureGroup()->captureCam(ptr,index);
-	#if TRACK_MODE
-	Point p1,p2;
-	p1.x=track_pos[0];
-	p1.y=track_pos[1];
-	p2.x=p1.x+track_pos[2];
-	p2.y=p1.y+track_pos[3];
-	if(track_pos[2]>0&&track_pos[3]>0)
-	{
-		if(isTracking)
-		{
-			Mat frame(576,720,CV_8UC4,ptr);
-			cv::rectangle( frame,p1,p2,Scalar(0,0,0, 0),2);
-
-		}
-	}
-	#endif
-}
-static void captureIconCam(GLubyte *ptr, int index)
-{
-#if USE_COMPASS_ICON
-	CaptureGroup::GetIconCaptureGroup()->captureCam(ptr,index);
-#endif
-}
+#if 0
 static void captureRuler45Cam(GLubyte *ptr, int index)
 {
 #if USE_ICON
@@ -800,7 +783,7 @@ static void captureRuler180Cam(GLubyte *ptr, int index)
 	CaptureGroup::GetRuler180CaptureGroup()->captureCam(ptr,index);
 #endif
 }
-
+#endif
 /* Sets up Projection matrix according to command switch -o or -p */
 /* called from initgl and the window resize function */
 void Render::SetView(int Width, int Height)
@@ -2238,7 +2221,7 @@ void Render::DrawIndividualVideo(GLEnv &m_env,bool needSendData)
 	glActiveTexture(GL_TextureIDs[idx]);
 	
 	if(needSendData){
-		m_env.Getp_PBOMgr()->sendData(textures[idx], (PFN_PBOFILLBUFFER)captureCamFish /* captureCam */,idx);
+		m_env.Getp_PBOMgr()->sendData(m_env,textures[idx], (PFN_PBOFILLBUFFER)captureCamFish /* captureCam */,idx);
 	}
 	else{
 		glBindTexture(GL_TEXTURE_2D, textures[idx]);
@@ -2266,7 +2249,7 @@ void Render::DrawVGAVideo(GLEnv &m_env,bool needSendData)
 		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 		glActiveTexture(GL_VGATextureIDs[idx]);
 		if(needSendData){
-			m_env.Getp_PBOVGAMgr()->sendData(VGATextures[idx], (PFN_PBOFILLBUFFER)captureVGACam,idx);
+			m_env.Getp_PBOVGAMgr()->sendData(m_env,VGATextures[idx], (PFN_PBOFILLBUFFER)captureVGACam,idx);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, VGATextures[idx]);
@@ -2288,7 +2271,7 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 		glActiveTexture(GL_SDITextureIDs[idx]);
 			if(needSendData){
-				m_env.Getp_PBOSDIMgr()->sendData(SDITextures[idx], (PFN_PBOFILLBUFFER)captureSDICam,idx);
+				m_env.Getp_PBOSDIMgr()->sendData(m_env,SDITextures[idx], (PFN_PBOFILLBUFFER)captureSDICam,idx);
 			}
 			else{
 				glBindTexture(GL_TEXTURE_2D, SDITextures[idx]);
@@ -2299,33 +2282,13 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 	}
 }
 
-// Draw the extension video on shadow rect
-void Render::DrawExtensionVideo(GLEnv &m_env,bool needSendData)
-{
-	int idx = GetCurrentExtesionVideoId();
-	m_env.GetmodelViewMatrix()->PushMatrix();
-	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
-	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
-	glActiveTexture(GL_ExtensionTextureIDs[idx]);
-
-	if(needSendData){
-		m_env.Getp_PBOExtMgr()->sendData(extensionTextures[idx], (PFN_PBOFILLBUFFER)captureExtCam,idx);
-	}
-	else{
-		glBindTexture(GL_TEXTURE_2D, extensionTextures[idx]);
-	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+25);// extension texture start from 15
-	m_env.Getp_shadowBatch()->Draw();
-	m_env.GetmodelViewMatrix()->PopMatrix();
-}
-
 int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
 /*PBOMgr.sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i);\*/
 
-#define SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub) 		{\
+#define SEND_TEXTURE_TO_PETAL(i,m_env) 		{\
 											if(needSendData)\
-											m_env.Getp_PBOMgr()->sendData(textures[0], (PFN_PBOFILLBUFFER)captureCam,i,mainOrsub);\
+											m_env.Getp_PBOMgr()->sendData(m_env,textures[0], (PFN_PBOFILLBUFFER)capturePanoCam,i);\
 											else{\
 												glBindTexture(GL_TEXTURE_2D, textures[0]);\
 											}\
@@ -2386,7 +2349,7 @@ void Render::DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub)
 
 		for(int i = 0; i < CAM_COUNT; i++){
 			glActiveTexture(GL_TextureIDs[i]);
-		    SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
+		    SEND_TEXTURE_TO_PETAL(i,m_env);
 		}
 		
 		for(int i = 0; i < CAM_COUNT; i++){
@@ -2428,7 +2391,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 		{
 				glActiveTexture(GL_TextureIDs[0]);
 				for(int i = 0; i < 2; i++){
-						SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
+						SEND_TEXTURE_TO_PETAL(i,m_env);
 			}
 			for(int i = 0; i < CAM_COUNT; i++){
 	#if USE_GAIN
@@ -2445,7 +2408,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 		{
 			glActiveTexture(GL_TextureIDs[0]);
 			for(int i = 0; i < 2; i++){
-				    SEND_TEXTURE_TO_PETAL(i,m_env,mainOrsub);
+				    SEND_TEXTURE_TO_PETAL(i,m_env);
 		}
 		for(int i=0;i<CAM_COUNT;i++)
 				{
@@ -5676,23 +5639,7 @@ void Render::RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool
 }
 
 
-void Render::RenderExtensionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
-{
-	glViewport(x,y,w,h);
-	glClear(GL_DEPTH_BUFFER_BIT);
-	m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
-	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
-	m_env.GetmodelViewMatrix()->PushMatrix();
-	m_env.GetmodelViewMatrix()->LoadIdentity();
-		M3DMatrix44f camera ;
-	ExtCameraFrame.GetCameraMatrix(camera);
-	m_env.GetmodelViewMatrix()->PushMatrix(ExtCameraFrame);
-	m_env.GetmodelViewMatrix()->PopMatrix();
-	m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
-	m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
-	DrawExtensionVideo(m_env,needSendData);
-	m_env.GetmodelViewMatrix()->PopMatrix();
-}
+
 void PrintGLText(GLint x, GLint y, const char *string)
 {
     if (string == NULL)
@@ -5830,7 +5777,7 @@ void Render::DrawSigleVideo(GLEnv &m_env,GLint idx, bool needSendData)
 	glActiveTexture(GL_TextureIDs[idx]);
 
 	if(needSendData){
-		m_env.Getp_PBOMgr()->sendData(textures[idx], (PFN_PBOFILLBUFFER)captureCam,idx);
+		m_env.Getp_PBOMgr()->sendData(m_env,textures[idx], (PFN_PBOFILLBUFFER)capturePanoCam,idx);
 	}
 	else{
 		glBindTexture(GL_TEXTURE_2D, textures[idx]);
@@ -7522,6 +7469,8 @@ void Render::SetShowDirection(int dir,bool show_mobile)
 
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
+GLEnv & env=env1;
+
 	int Now_Window_Width,Now_Window_Height;
 	Now_Window_Width=glutGet(GLUT_WINDOW_WIDTH);
 	Now_Window_Width=glutGet(GLUT_WINDOW_HEIGHT);
@@ -7852,7 +7801,7 @@ void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 
 							if(enterNumberofCam>=0&&enterNumberofCam<CAM_COUNT)
 							{
-								CaptureGroup::GetPanoCaptureGroup()->saveSingleCapImg(enterNumberofCam);
+								env.GetPanoCaptureGroup()->saveSingleCapImg(enterNumberofCam);
 								picSaveState[enterNumberofCam]=true;
 							}
 							enterNumberofCam=0;
@@ -11435,6 +11384,8 @@ void Render::RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int
 
 void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 {
+#if 0
+
 /*	int idx =0;// GetCurrentExtesionVideoId();
 #if USE_ICON
 	m_env.GetmodelViewMatrix()->PushMatrix();
@@ -11535,6 +11486,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 
 	m_env.GetmodelViewMatrix()->PopMatrix();
 
+#endif
 #endif
 }
 

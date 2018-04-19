@@ -201,12 +201,7 @@ private:
 
 class HDv4l_cam_Producer{
 public:
-	HDv4l_cam_Producer();
-	~HDv4l_cam_Producer(){};
-	void Set_pHDv4l_cap(HDv4l_cam & hdv4lcap,int idx);
-	void Get_pHDv4l_cap(int idx);
-private:
-	HDv4l_cam * pHDv4l_cap[MAX_CC];
+	static HDv4l_cam *Get_pHDv4l_cap(int idx);
 };
 
 #endif

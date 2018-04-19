@@ -12,9 +12,10 @@
 #include "StlGlDefines.h"
 #include "stdio.h"
 #include "FBOManager.h"
-
-typedef void(*PFN_PBOFILLBUFFER)(GLubyte *,int,int);
+class GLEnv;
+typedef void(*PFN_PBOFILLBUFFER)(GLubyte *,int,GLEnv &);
 typedef struct _OSA_SemHndl OSA_SemHndl,* pOSA_SemHndl;
+class GLEnv;
 class PBOBase
 {
 public:
@@ -34,16 +35,17 @@ protected:
 	 int nowPboId;
 };
 
+
 class PBOSender:public PBOBase
 {
 public:
 	PBOSender(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = PANO_TEXTURE_WIDTH, unsigned int h=PANO_TEXTURE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
 	~PBOSender();
 	bool Init();
-	void sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int  mainOrsub=MAIN,bool bPBO=true);
+	void sendData(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,bool bPBO=true);
 private:
-	void sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub=MAIN);
-	void sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub=MAIN);
+	void sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
+	void sendDataNoPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
 };
 
 class PBOReceiver :public PBOBase,

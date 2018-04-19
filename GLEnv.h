@@ -1,5 +1,5 @@
-#ifndef _GLENV_
-#define  _GLENV_
+#ifndef _GLENV_H_
+#define  _GLENV_H_
 #include <GLMatrixStack.h>
 #include <GLMatrixStack.h>
 #include <GLGeometryTransform.h>
@@ -7,10 +7,11 @@
 #include"StlGlDefines.h"
 #include"PBOManager.h"
 #include"PBO_FBO_Facade.h"
+#include"CaptureGroup.h"
 class GLEnv
 {
 public:
-	GLEnv();
+	GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen);
 	~GLEnv(){};
 	GLMatrixStack *GetmodelViewMatrix();
 	GLMatrixStack	*GetprojectionMatrix();
@@ -30,7 +31,11 @@ public:
 	FBOManager *Getp_FBOmgr();
 	pPBO_FBO_Facade Getp_FboPboFacade();
 	void Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr);
+	CaptureGroup *GetPanoCaptureGroup(){return m_panoCaptureGroup;};
+	CaptureGroup *GetChosenCaptureGroup(){return m_chosenCaptureGroup;};
 private:
+	CaptureGroup * m_panoCaptureGroup;
+	CaptureGroup * m_chosenCaptureGroup;
 
 	GLMatrixStack	modelViewMatrix;
 	GLMatrixStack	projectionMatrix;

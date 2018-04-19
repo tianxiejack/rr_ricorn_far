@@ -47,22 +47,15 @@ public:
 	bool getScannerPic(IplImage *pImage);
 	bool saveCapImg();
 	void saveOverLap();
-	virtual void StartProducers(){};
-	static CaptureGroup* GetPanoCaptureGroup();
-	static CaptureGroup* GetMainExtCaptureGroup();
-	static CaptureGroup* GetSubExtCaptureGroup();
-	static CaptureGroup* GetMvdectCaptureGroup();
+	virtual void CreateProducers(){};
 
-	static CaptureGroup* GetExtCaptureGroup();
-	static CaptureGroup* GetIconCaptureGroup();
-	static CaptureGroup* GetRuler45CaptureGroup();
-	static CaptureGroup* GetRuler90CaptureGroup();
-	static CaptureGroup* GetRuler180CaptureGroup();
+
+//	static CaptureGroup* GetRuler45CaptureGroup();
+//	static CaptureGroup* GetRuler90CaptureGroup();
+//	static CaptureGroup* GetRuler180CaptureGroup();
 	bool saveSingleCapImg(int cam_num);
 #if USE_12
 	bool saveExposureCompensationCapImg();
-	static CaptureGroup* GetSDICaptureGroup();
-	static CaptureGroup* GetVGACaptureGroup();
 #endif
 protected:
 	void Close();
@@ -75,28 +68,20 @@ protected:
 	CaptureGroup():m_TotalCamCount(0),m_currentIdx(0){};
 };
 
-
-
-
-
-
-
-class ExtCaptureGroup:public CaptureGroup
+class HDCaptureGroup:public CaptureGroup
 {
 public:
-	ExtCaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual void SetConsumers(){};
-	virtual void StartProducers(){};
-private:
+	HDCaptureGroup(unsigned int w,unsigned int h,int NCHAN,unsigned int capCount=1):
+		CaptureGroup(w,h,NCHAN,capCount){};
+	virtual ~HDCaptureGroup(){};
+	virtual vector<Consumer>  GetConsumers(int *queueid,int count);
+	HDCaptureGroup(){};
 };
 
-class IconCaptureGroup:public CaptureGroup
-{
-public:
-	IconCaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual	void SetConsumers(){};
-private:
-};
+
+
+
+
 
 class Ruler45CaptureGroup:public CaptureGroup
 {
@@ -121,25 +106,5 @@ public:
 	virtual	void SetConsumers(){};
 private:
 };
-
-class SDICaptureGroup:public CaptureGroup
-{
-public:
-	SDICaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual void StartProducers(){};
-	virtual	void SetConsumers(){};
-private:
-};
-
-class VGACaptureGroup:public CaptureGroup
-{
-public:
-	VGACaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual void StartProducers(){};
-	virtual	void SetConsumers(){};
-private:
-};
-
-
 
 #endif /* CAPTUREGROUP_H_ */

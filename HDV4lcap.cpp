@@ -43,6 +43,17 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
 
+//static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam hdv4lcap1(1,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam hdv4lcap2(2,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam hdv4lcap3(3,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam hdv4lcap4(4,SDI_WIDTH,SDI_HEIGHT);
+static HDv4l_cam hdv4lcap5(5,SDI_WIDTH,SDI_HEIGHT);
+HDv4l_cam_Producer hdCamProducer;
+
+
+
+
 unsigned char * select_bgr_data_sub=NULL;
 unsigned char * select_bgr_data_main=NULL;
 unsigned char * FPGA6_bgr_data_sub=NULL;
@@ -939,21 +950,19 @@ void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
 	getEmpty(p_queue,&FPGA4_bgr_data_sub, SUB_FPGA_FOUR);
 }
 
+//-------------------HDv4l_cam_Producer methods----------------------
 
-HDv4l_cam_Producer::HDv4l_cam_Producer()
+static HDv4l_cam * pHDv4l_cap[MAX_CC]={
+		NULL,
+		&hdv4lcap1,
+		&hdv4lcap2,
+		&hdv4lcap3,
+		&hdv4lcap4,
+		&hdv4lcap5
+};
+
+HDv4l_cam *HDv4l_cam_Producer::Get_pHDv4l_cap(int idx)
 {
-
-}
-HDv4l_cam_Producer::~HDv4l_cam_Producer()
-{
-
-}
-void HDv4l_cam_Producer::Set_pHDv4l_cap(HDv4l_cam & hdv4lcap,int idx)
-{
-
-}
-void HDv4l_cam_Producer::Get_pHDv4l_cap(int idx)
-{
-
+	return pHDv4l_cap[idx];
 }
 

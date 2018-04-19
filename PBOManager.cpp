@@ -15,6 +15,7 @@
 #include "pboProcessSrcThread.h"
 #include <osa_sem.h>
 #include "PBOManager.h"
+#include"GLEnv.h"
 using namespace std;
 extern Render render;
 PBOBase::PBOBase(unsigned int PBOchcnt, unsigned int w, unsigned int h, unsigned int cc,GLenum format,unsigned int pbo_mode,bool buse_pbo):
@@ -86,17 +87,17 @@ bool PBOSender::Init()
 	 return pboSupported;
 }
 
-void PBOSender::sendDataNoPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub)
+void PBOSender::sendDataNoPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 {
        static GLubyte buffer[DEFAULT_IMAGE_WIDTH*DEFAULT_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH];
 	   if(fxn){
-		(*fxn)(buffer,idx,mainOrsub);
+		(*fxn)(buffer,idx,env);
 	   	}
 	glBindTexture(GL_TEXTURE_2D, textureId);
        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, buffer);
 }
 
-void PBOSender::sendDataPBO(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub)
+void PBOSender::sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
 {
 	int index = 0, nextIndex = 0;                  // pbo index used for next frame
 	idx = idx %PBOChannelCount;
@@ -155,7 +156,7 @@ else if(idx==1)
 	if(ptr && fxn)
 	{
 		// update data directly on the mapped buffer
-		(*fxn)(ptr,idx,mainOrsub);
+		(*fxn)(ptr,idx,env);
 // let OpenGL release it
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB); // release pointer to mapping buffer
 		error =glGetError();
@@ -190,12 +191,12 @@ else if(idx==1)
     glFlush();
 }
 
-void PBOSender::sendData(GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,int mainOrsub, bool bPBO)
+void PBOSender::sendData(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,bool bPBO)
 {
 	if(bPBO&&bUsePBO)
-             sendDataPBO(textureId, fxn, idx,mainOrsub);
+             sendDataPBO(env,textureId, fxn, idx);
 	else
-		sendDataNoPBO(textureId, fxn, idx,mainOrsub);
+		sendDataNoPBO(env,textureId, fxn, idx);
 }
 
 /***********************PBOReceiver******************************/

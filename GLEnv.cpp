@@ -1,6 +1,8 @@
 #include"GLEnv.h"
 #include"StlGlDefines.h"
-GLEnv::GLEnv():
+GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen):
+m_panoCaptureGroup(p_pano),
+m_chosenCaptureGroup(p_chosen),
 PBOMgr(PBOSender(CAM_COUNT,PANO_TEXTURE_WIDTH,PANO_TEXTURE_HEIGHT,3,GL_BGR)),
 FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,GL_BGR,GL_RGB8)),
 PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,3,GL_BGR)),

@@ -25,12 +25,7 @@ pthread_t start_thread(void *(*__start_routine) (void *), void * __arg)
 	return ret;
 }
 
-int start_scanner()
-{
-	pthread_t ret = start_thread(thread_scanner, NULL);
 
-	return ret;
-}
 int start_overLap()
 {
 	pthread_t ret = start_thread(thread_overlap, NULL);

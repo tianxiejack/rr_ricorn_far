@@ -16,9 +16,10 @@ static int pano_stitch_state=0;
 
 int initStitchConfig(bool needSavePic)
 {
+	GLEnv &env =env1;
 	if(needSavePic==true)
 	{
-		CaptureGroup::GetPanoCaptureGroup()->saveCapImg();
+		env.GetPanoCaptureGroup()->saveCapImg();
 	}
 	char buf[128];
 	int ret=0,state;
@@ -118,54 +119,16 @@ bool startStitch(bool state)
 	return false;
 }
 
-void* thread_scanner(void*)
-{
-	bool ret=false;
-	char code[64];
-	IplImage *img = cvCreateImage(Size(IMAGEWIDTH, IMAGEHEIGHT), IPL_DEPTH_8U, DEFAULT_IMAGE_DEPTH);
-	if((img==NULL) || (img->imageData==NULL))
-	{
-		puts("create img failure");
-		return NULL;
-	}
-
-	while(1)
-	{
-		usleep(1000*1000);
-		if(render.isStitchingMode())
-			continue;
-		bzero(code,sizeof(code));
-		bzero(img->imageData,sizeof(img->imageSize));
-		//get img
-		bool cap = CaptureGroup::GetExtCaptureGroup()->getScannerPic(img);
-		if((cap == false) || (img->nSize<=0))
-		{
-			continue;
-		}
-
-		ret = isOrderCode(img,code);
-		if(ret == false)
-		{
-			continue;
-		}
-
-		puts(code);
-
-		if(codeParse(code))
-			continue;
-	}
-
-	return NULL;
-}
 
 void* thread_overlap(void*)
 {
+	GLEnv &env=env1;
 	sleep(5);
 	while(1)
 	{
 		usleep(300*1000);
 		if(ISDYNAMIC==1)
-		CaptureGroup::GetPanoCaptureGroup()->saveOverLap();
+			env.GetPanoCaptureGroup()->saveOverLap();
 	}
 	return NULL;
 }

@@ -1,41 +1,29 @@
 #include "PanoCaptureGroup.h"
-static PanoCaptureGroup MainPanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
+#include"HDV4lcap.h"
+ PanoCaptureGroup PanoCaptureGroup::MainPanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
+ PanoCaptureGroup PanoCaptureGroup::SubPanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
 
-static PanoCaptureGroup SubPanoGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
-static HDAsyncVCap4* pHDAsyncVCap[MAX_CC]={0};
+ static HDAsyncVCap4* pHDAsyncVCap[MAX_CC]={0};
+	static bool ProduceOnce = true;
 PanoCaptureGroup::PanoCaptureGroup(unsigned int w,unsigned int h,int NCHAN,unsigned int capCount):
-		CaptureGroup(w,h,NCHAN,capCount)
-{ }
+		HDCaptureGroup(w,h,NCHAN,capCount)
+{
+}
 
 void  PanoCaptureGroup::CreateProducers()
 {
-	if(m_ProducerOnce)
+	if(ProduceOnce)
 	{
-		m_ProducerOnce=false;
-		HDv4l_cam * pv4lcap[MAX_CC]={NULL,&v4lcap1,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5};
+		ProduceOnce=false;
 		int dev_id=FPGA_FOUR_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(pv4lcap[dev_id]),dev_id);
+			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(HDv4l_cam_Producer::Get_pHDv4l_cap(dev_id)),dev_id);
 		dev_id=FPGA_SIX_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(pv4lcap[dev_id]),dev_id);
+			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(HDv4l_cam_Producer::Get_pHDv4l_cap(dev_id)),dev_id);
 	}
 };
 
-vector<Consumer>  PanoCaptureGroup::GetConsumers(int *queueid,int count)
-{
-	vector<Consumer> v_cons(2);
-	 Consumer cons;
-	 for(int i=0;i<count;i++)
-	 {
-		 int qid=*(queueid[i]);
-		   cons.pcap = new HDVCap(qid,SDI_WIDTH,SDI_HEIGHT);
-		   cons.idx = i;
-		   v_cons.push_back(cons);
-	 }
-
-	   return v_cons;
-}
 
 void  PanoCaptureGroup::OpenProducers()
 {

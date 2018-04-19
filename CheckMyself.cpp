@@ -79,7 +79,7 @@ void SelfCheck::Check12CAM()//0~11
 	GLubyte  *ptr=(GLubyte *)malloc(DEFAULT_IMAGE_WIDTH*DEFAULT_IMAGE_HEIGHT*4);
 	int index=0;
 	for(int index=0;index<CAM_COUNT;index++){
-	CaptureGroup::GetPanoCaptureGroup()->captureCam(ptr,index);
+//	CaptureGroup::GetPanoCaptureGroup()->captureCam(ptr,index);
 	CheckCaptureState(ptr,index,DEFAULT_IMAGE_WIDTH,DEFAULT_IMAGE_HEIGHT);
 	}
 	free(ptr);

@@ -321,7 +321,7 @@ private:
 			const char* GetFwdCords();
 		private:
 			GLFrame m_CameraFrame;
-			String Cords;
+			std::string Cords;
 		} m_freeCamera;
 
 	class FixedBillBoard{
