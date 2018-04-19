@@ -26,7 +26,7 @@ class interfaceCapGroup
 public:
 	virtual void CreateProducers()=0;
 	virtual void OpenProducers()=0;
-	virtual vector<Consumer>  GetConsumers()=0;
+	virtual vector<Consumer>  GetConsumers(int *queueid,int count)=0;
 };
 
 class CaptureGroup:public interfaceCapGroup
@@ -38,7 +38,8 @@ public:
 	virtual ~CaptureGroup();
 
 	void SetConsumers(vector<Consumer> h);
-	void init();
+	void init(int *queueid,int count);
+
 	void captureCam(GLubyte *ptr, int index,int mainOrsub=MAIN);
 	void captureCamFish(GLubyte *ptr, int index);
 	void Open();
@@ -77,23 +78,8 @@ protected:
 
 
 
-class MainExtCaptureGroup:public CaptureGroup
-{
-public:
-	MainExtCaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual void SetConsumers(){};
-	virtual void StartProducers(){};
-private:
-};
 
-class SubExtCaptureGroup:public CaptureGroup
-{
-public:
-	SubExtCaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsigned int capCount=1);
-	virtual void SetConsumers(){};
-	virtual void StartProducers(){};
-private:
-};
+
 
 class ExtCaptureGroup:public CaptureGroup
 {

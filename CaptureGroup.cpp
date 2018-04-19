@@ -28,7 +28,6 @@ static HDv4l_cam v4lcap4(4,SDI_WIDTH,SDI_HEIGHT);
 static HDv4l_cam v4lcap5(5,SDI_WIDTH,SDI_HEIGHT);
 
 
-static MainExtCaptureGroup m_MainExtGroup(SDI_WIDTH,SDI_HEIGHT,3,MAIN_EXT_COUNT);
 static SubExtCaptureGroup m_SubExtGroup(SDI_WIDTH,SDI_HEIGHT,3,SUB_EXT_COUNT);
 
 
@@ -68,10 +67,10 @@ CaptureGroup::CaptureGroup(unsigned int wide,unsigned int height,int NCHAN,unsig
 	fillColorBar();
 }
 
-void CaptureGroup::init()
+void CaptureGroup::init(int *queueid,int count)
 {
 	CreateProducers();
-	SetConsumers(GetConsumers());
+	SetConsumers(GetConsumers(queueid,count));
 	OpenProducers();
 	Open();
 }
@@ -215,6 +214,7 @@ void CaptureGroup::saveOverLap()
 
 CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 {
+#if 0
 	HDv4l_cam * pv4lcap[MAX_CC]={NULL,&v4lcap1,&v4lcap2,&v4lcap3,&v4lcap4,&v4lcap5};
 	static bool Once = false;
 	if(!Once){
@@ -233,7 +233,7 @@ CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 		}
 #else
 
-		dev_id=FPGA_FOUR_CN;
+		int dev_id=FPGA_FOUR_CN;
 		m_PanoGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
 		dev_id=FPGA_SIX_CN;
 		m_PanoGroup.Append(new HDVCap(dev_id,SDI_WIDTH,SDI_HEIGHT));
@@ -246,10 +246,12 @@ CaptureGroup* CaptureGroup::GetPanoCaptureGroup()
 #endif
 		m_PanoGroup.Open();
 	}
-	return &m_PanoGroup;
+#endif
+	//return &m_PanoGroup;
 }
 CaptureGroup* CaptureGroup:: GetMainExtCaptureGroup()
 {
+#if 0
 		static bool once=false;
 		if(!once){
 			char filename[64];
@@ -270,11 +272,13 @@ CaptureGroup* CaptureGroup:: GetMainExtCaptureGroup()
 	#endif
 			m_MainExtGroup.Open();
 		}
+#endif
 		return &m_MainExtGroup;
 }
 
 CaptureGroup* CaptureGroup:: GetSubExtCaptureGroup()
 {
+#if 0
 		static bool once=false;
 		if(!once){
 			char filename[64];
@@ -295,6 +299,7 @@ CaptureGroup* CaptureGroup:: GetSubExtCaptureGroup()
 	#endif
 			m_SubExtGroup.Open();
 		}
+#endif
 		return &m_SubExtGroup;
 }
 

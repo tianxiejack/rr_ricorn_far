@@ -940,5 +940,20 @@ void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
 }
 
 
+HDv4l_cam_Producer::HDv4l_cam_Producer()
+{
 
+}
+HDv4l_cam_Producer::~HDv4l_cam_Producer()
+{
+
+}
+void HDv4l_cam_Producer::Set_pHDv4l_cap(HDv4l_cam & hdv4lcap,int idx)
+{
+
+}
+void HDv4l_cam_Producer::Get_pHDv4l_cap(int idx)
+{
+
+}
 
