@@ -19,12 +19,11 @@
 #endif
 #include"MvDetect.hpp"
 
-#if USE_BMPCAP
+
 #include "BMPCaptureGroup.h"
-#else
 #include"PanoCaptureGroup.h"
 #include"ChosenCaptureGroup.h"
-#endif
+
 #include"GLEnv.h"
 RenderMain mainWin;
 Common common;
@@ -76,10 +75,10 @@ int main(int argc, char** argv)
 
 #if USE_BMPCAP
 	env1.init(BMPPanoGroup::GetInstance(),
-			BMPPanoGroup::GetInstance(),
+			BMPMiscGroup::GetInstance(),
 			BMPMiscGroup::GetInstance());
 	env2.init(BMPPanoGroup::GetInstance(),
-			BMPPanoGroup::GetInstance(),
+			BMPMiscGroup::GetInstance(),
 			BMPMiscGroup::GetInstance());
 #else
 	env1.init(PanoCaptureGroup::GetMainInstance(),

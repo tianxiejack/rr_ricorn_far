@@ -130,9 +130,9 @@ void CaptureGroup::Close()
 	}
 }
 
-void CaptureGroup::captureCam(GLubyte *ptr, int index,int mainOrsub)
+void CaptureGroup::captureCam(GLubyte *ptr, int index)
 {
-	capCamera[index]->Capture((char*)ptr,mainOrsub);
+	capCamera[index]->Capture((char*)ptr);
 }
 void CaptureGroup::captureCamFish(GLubyte *ptr, int index)
 {
@@ -207,7 +207,6 @@ bool CaptureGroup::saveSingleCapImg(int cam_num)
 
 vector<Consumer>  HDCaptureGroup::GetConsumers(int *queueid,int count)
 {
-	vector<Consumer> v_cons(MS_COUNT);
 	 Consumer cons;
 	 for(int i=0;i<count;i++)
 	 {

@@ -38,9 +38,11 @@ PBOBase::~PBOBase()
 
 /***********************PBOSender******************************/
 
-PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, unsigned int cc,GLenum format):
+PBOSender::PBOSender(unsigned int PBOchcnt, unsigned int w , unsigned int h, unsigned int cc,GLenum format,float ratio_1,float ratio_2):
 		PBOBase(PBOchcnt,w,h,cc,format,2,true)
 {
+	m_ratio_1=ratio_1;
+	m_ratio_2=ratio_2;
 	dataSize=w*h*cc;
 	PBOBufferCount = pboMode*PBOChannelCount;
 	pboIds = new GLuint[ PBOBufferCount];
@@ -127,10 +129,13 @@ void PBOSender::sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, 
 	// Use offset instead of pointer.
 
 #if WHOLE_PIC
-if(idx==0)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*3/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
-else if(idx==1)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+if(idx==0)//10路拼接中2*3
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else if(idx==1)//10路拼接中2*2
+	glTexSubImage2D(GL_TEXTURE_2D, 0, width*m_ratio_1, 0, width*m_ratio_2, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+
 #else
 if(idx==0)
 glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1920, 1080, pixel_format, GL_UNSIGNED_BYTE, 0);
@@ -177,10 +182,11 @@ else if(idx==1)
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
 if(idx==0)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*3/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else if(idx==1)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, width*3/5, 0, width*2/5, height, pixel_format, GL_UNSIGNED_BYTE, 0);
-	
+	glTexSubImage2D(GL_TEXTURE_2D, 0, width*m_ratio_1, 0, width*m_ratio_2, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+else
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
     // it is good idea to release PBOs with ID 0 after use.
     // Once bound with 0, all pixel operations behave normal ways.
     glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);

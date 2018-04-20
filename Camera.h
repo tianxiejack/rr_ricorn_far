@@ -40,7 +40,7 @@ typedef class Interface_VCap{
 	public:
 		virtual bool Open() = 0;
 		virtual void Close() = 0;
-		virtual void Capture(char* ptr,int mainORsub=MAIN) = 0;
+		virtual void Capture(char* ptr) = 0;
 		virtual void CaptureFish(char* ptr) = 0;
 		virtual void SetDefaultImg(char*) = 0;
 		virtual void SavePic(const char* name) = 0;
@@ -66,7 +66,7 @@ class AsyncVCap:public Interface_VCap{
 		virtual ~AsyncVCap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=MAIN);
+		virtual void Capture(char* ptr);
 		void CaptureFish(char* ptr){};
 		virtual void SetDefaultImg( char *);
 		virtual void SavePic(const char* name);
@@ -99,7 +99,7 @@ public:
 	~PseudoVCap(){};
 	bool Open(){return true;};
 	void Close(){};
-	void Capture(char* ptr,int mainORsub=MAIN){};
+	void Capture(char* ptr){};
 	void CaptureFish(char* ptr){};
 	void saveOverLap(){};
 };
@@ -124,20 +124,15 @@ private:
 
 class HDVCap:public BaseVCap{
 public:
-	HDVCap(int chId,int wide,int height):m_chId(chId){};
+	HDVCap(int qid,int wide,int height):m_qid(qid){};
 	bool Open(){return true;};
 	void Close(){};
-/*	void Capture(char* ptr){if(m_chId==VGA_DEV_NUM)
-		YUV2RGB((unsigned char*)ptr,VGA_DEV_NUM);
-	else if (m_chId==SDI_DEV_NUM)
-		YUV2RGB((unsigned char*)ptr,SDI_DEV_NUM);};
-*/
-void Capture(char* ptr,int mainORsub=MAIN);
+	void Capture(char* ptr);
 	void CaptureFish(char* ptr){};
 	void SavePic(const char* name);
 	void saveOverLap(){};
 private:
-	int m_chId;
+	int m_qid;
 };
 
 
@@ -147,7 +142,7 @@ class V4lVcap : public BaseVCap{
 		virtual ~V4lVcap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=MAIN);
+		virtual void Capture(char* ptr);
 	private:
 		V4lVcap(){};
 		int m_deviceId;
@@ -160,7 +155,7 @@ class BMPVcap : public BaseVCap{
 		virtual ~BMPVcap();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=MAIN);
+		virtual void Capture(char* ptr);
 		void CaptureFish(char* ptr){};
 		void SavePic(const char* name){};
 		void saveOverLap(){};

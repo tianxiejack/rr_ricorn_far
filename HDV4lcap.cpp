@@ -813,7 +813,7 @@ void HDAsyncVCap4::Close()
 }
 
 
-void HDAsyncVCap4::Capture(char* ptr,int mainORsub)
+void HDAsyncVCap4::Capture(char* ptr)
 {
 	lock_read(ptr);
 }

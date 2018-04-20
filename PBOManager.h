@@ -39,11 +39,13 @@ protected:
 class PBOSender:public PBOBase
 {
 public:
-	PBOSender(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = PANO_TEXTURE_WIDTH, unsigned int h=PANO_TEXTURE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR);
+	PBOSender(unsigned int PBOchcnt=CAM_COUNT, unsigned int w = PANO_TEXTURE_WIDTH, unsigned int h=PANO_TEXTURE_HEIGHT, unsigned int cc=3,GLenum format = GL_BGR,float ratio_1=1,float ratio_2=1);
 	~PBOSender();
 	bool Init();
 	void sendData(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx,bool bPBO=true);
 private:
+    float m_ratio_1;
+    float m_ratio_2;
 	void sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
 	void sendDataNoPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx);
 };

@@ -82,11 +82,14 @@ public:
 	void readScanAngle(const char * filename);
 	void writeScanAngle(const char *filename,float angle,float angleofruler);
 	void ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y);
+	void ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y);
 	void mouseButtonPress(int button, int state, int x, int y);
 	void mouseMotionPress(int x, int y);
 	inline GLShaderManager* getShaderManager(){return &shaderManager;}
 //	inline GLGeometryTransform* getTransformPipeline(){return &transformPipeline;}
 	void keyPressed(GLEnv &m_env,unsigned char key, int x, int y);
+	void keyPressedDS(GLEnv &m_env,unsigned char key, int x, int y);
+
 	void specialkeyPressed (GLEnv &m_env,int key, int x, int y);
 	void BowlParseSTLAscii(const char* filename);
 	void PanelParseSTLAscii(const char* filename);
@@ -166,15 +169,16 @@ private:
 
 		TOTAL_MODE_COUNT
 		} displayMode; 
-		enum SecondDisplay
-		{
+
+		enum SECOND_DISPLAY{
 			SECOND_ALL_VIEW_MODE,
+			SECOND_CHOSEN_VIEW_MODE,
 			SECOND_TOTAL_MODE_COUNT
 		}SecondDisplayMode;
 
 		 enum FBO_MODE {
 			 FBO_ALL_VIEW_MODE,
-			 FBO_VGA_VIEW_MODE,
+			 FBO_CHOSEN_VIEW_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
 
@@ -382,13 +386,17 @@ private:
 	int  GetCurrentExtesionVideoId(){return m_ExtVideoId;};
 
 	void InitShadow(GLEnv &m_env);
-	void InitRuler();
+	void InitRuler(GLEnv &m_env);
 	void InitWheelTracks();
 	void SetCurrentExtesionVideoId(int curChid){m_ExtVideoId=curChid;};
 	void DrawVGAVideo(GLEnv &m_env,bool needSendData);
 	void DrawSDIVideo(GLEnv &m_env,bool needSendData);
+	void DrawChosenVideo(GLEnv &m_env,bool needSendData);
+
 	int GetCurrentVGAVideoId(){return m_VGAVideoId;};
 	int GetCurrentSDIVideoId(){return m_SDIVideoId;};
+	int GetCurrentChosenVideoId(){return m_ChosenVideoId;};
+
 	void InitForesightGroupTrack(GLEnv &m_env);
 
 	void InitFrontTracks();
@@ -460,6 +468,7 @@ private:
 
 	void RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
@@ -481,9 +490,11 @@ private:
 	void GenerateCenterView();
 	void GenerateScanPanelView();
 	void GeneratePanoView();
+	void GenerateChosenView();
 
 	void GenerateSDIView();
 	void GenerateVGAView();
+	void GenerateRender2FrontView();
 	void GeneratePanoTelView();
 	void GenerateTrack();
 
@@ -612,15 +623,12 @@ public:
 						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
 						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
 						GLFrame	*getVGACameraFrame(){return &VGACameraFrame;};
+						GLFrame	*getRender2FrontCameraFrame(){return &Render2FrontCameraFrame;};
+
 private:
 	GLBatch Petal[CAM_COUNT];
 	GLBatch *Petal_OverLap[CAM_COUNT]; // overlap area bwtween petal[i] and [(i+1)%CAM_COUNT]
 	GLBatch *OverLap[CAM_COUNT];
-
-
-	GLBatch degreescale45Batch; //the degree scale (45-0-45)
-	GLBatch degreescale90Batch; //the degree scale (90-0-90)
-	GLBatch degreescale180Batch; //the degree scale (180-0-180)
 	GLBatch WheelTrackBatch; // tracks behind the vehicle
 	GLBatch WheelTrackBatch2;
 	GLBatch WheelTrackBatch5;
@@ -691,9 +699,11 @@ private:
 
 	GLFrame	VGACameraFrame;
 	GLFrame	SDICameraFrame;
+	GLFrame Render2FrontCameraFrame;
+	GLFrame ChosenCameraFrame;
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
-
+#define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
 #define PETAL_TEXTURE_COUNT (CAM_COUNT+3)
 
 #define ALPHA_TEXTURE_IDX0	(CAM_COUNT)
@@ -729,11 +739,13 @@ private:
 	float PanoHeight;
 	int GetWindowWidth(){return g_windowWidth;};
 	int GetWindowHeight(){return g_windowHeight;};
+	GLuint GL_ChosenTextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
 	GLuint GL_FBOTextureIDs[1];
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
 	GLuint SDITextures[SDI_TEXTURE_COUNT];
+	GLuint GL_ChosenTextures[CHOSEN_TEXTURE_COUNT];
 	GLuint GL_ExtensionTextureIDs[EXTENSION_TEXTURE_COUNT];
 	GLuint extensionTextures[EXTENSION_TEXTURE_COUNT];
 	GLuint GL_IconTextureIDs[1];
@@ -771,6 +783,7 @@ private:
 	int m_ExtVideoId;
 	int m_VGAVideoId;
 	int m_SDIVideoId;
+	int m_ChosenVideoId;
 	float distance_of_tank[4];
 	float cross_center_pos[2];
 	bool follow_enable;

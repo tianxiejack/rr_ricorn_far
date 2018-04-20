@@ -558,12 +558,7 @@ bool stop_scan=false;
 
 #define USE_ICON 1
 
-typedef enum{
-	RULER_45=0,
-	RULER_90,
-	RULER_180,
-	RULER_COUNT
-}RULER_ANGLE;
+
 
 void Render::initPixle(void)
 {
@@ -749,7 +744,6 @@ static void captureSDICam(GLubyte *ptr, int index,GLEnv &env)
 	#endif
 }
 
-
 static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 {
 	env.GetPanoCaptureGroup()->captureCam(ptr,index);
@@ -855,7 +849,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				|| !env.Getp_PBOExtMgr()->Init()
 				||!env.Getp_PBORcr()->Init()
 				|| !env.Getp_PBOVGAMgr()->Init()
-				|| !env.Getp_PBOSDIMgr()->Init()){
+				|| !env.Getp_PBOSDIMgr()->Init()
+				||!env.Getp_PBOChosenMgr()->Init()){
 		cout<<"Failed to init PBO manager"<<endl;
 			exit(1);
 		}
@@ -921,9 +916,10 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		GenerateFrontView();
 		GenerateRearTopView();
 		GenerateExtentView();
-
+		GenerateChosenView();
 		GenerateSDIView();
 		GenerateVGAView();
+		GenerateRender2FrontView();
 #endif
 
 		PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
@@ -945,7 +941,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		InitPanoScaleArrayData();
 		InitPanel(env);
 		InitFollowCross();
-		InitRuler();
+		InitRuler(env);
 		InitCalibrate();
 	//	InitOitVehicle(env);
 	//	    glmDelete(VehicleLoader);
@@ -1083,6 +1079,19 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 							format, GL_UNSIGNED_BYTE, 0);
 				}
 
+		glGenTextures(CHOSEN_TEXTURE_COUNT, GL_ChosenTextures);
+						for(int i = 0; i < CHOSEN_TEXTURE_COUNT; i++){
+							glBindTexture(GL_TEXTURE_2D, GL_ChosenTextures[i]);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+							glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+							glTexImage2D(GL_TEXTURE_2D,0,nComponents,SDI_WIDTH, SDI_HEIGHT, 0,
+									format, GL_UNSIGNED_BYTE, 0);
+						}
+
 #if USE_COMPASS_ICON
 		glGenTextures(1, iconTextures);
 		for(int i = 0; i < 1; i++){
@@ -1107,7 +1116,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -1120,7 +1129,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -1133,7 +1142,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 #endif
@@ -1192,7 +1201,18 @@ void Render::GenerateGLTextureIds()
 		GL_SDITextureIDs[i] = GL_SDITextureIDs[i-1] + 1;
 	}
 
+	textureCount = sizeof(GL_ChosenTextureIDs)/sizeof(GL_ChosenTextureIDs[0]);
+	GL_ChosenTextureIDs[0] = GL_TEXTURE30;
+	for(int i = 1; i < textureCount; i++){
+		GL_ChosenTextureIDs[i] = GL_ChosenTextureIDs[i-1] + 1;
+	}
+
+	textureCount = sizeof(GL_FBOTextureIDs)/sizeof(GL_FBOTextureIDs[0]);
 	GL_FBOTextureIDs[0] = GL_TEXTURE31;
+	for(int i = 1; i < textureCount; i++){
+		GL_FBOTextureIDs[i] = GL_FBOTextureIDs[i-1] + 1;
+	}
+
 #if USE_COMPASS_ICON
 	textureCount = sizeof(GL_IconTextureIDs)/sizeof(GL_IconTextureIDs[0]);
 	GL_IconTextureIDs[0] = GL_TEXTURE16;
@@ -2264,7 +2284,7 @@ void Render::DrawVGAVideo(GLEnv &m_env,bool needSendData)
 
 void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 {
-	if(1)//(sdi_data!=NULL)
+	if(1)
 	{
 		int idx = GetCurrentSDIVideoId();
 		m_env.GetmodelViewMatrix()->PushMatrix();
@@ -2272,7 +2292,7 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 		glActiveTexture(GL_SDITextureIDs[idx]);
 			if(needSendData){
-				m_env.Getp_PBOSDIMgr()->sendData(m_env,SDITextures[idx], (PFN_PBOFILLBUFFER)captureSDICam,idx);
+				m_env.Getp_PBOSDIMgr()->sendData(m_env,SDITextures[idx], (PFN_PBOFILLBUFFER)captureSDICam,idx+MAGICAL_NUM);
 			}
 			else{
 				glBindTexture(GL_TEXTURE_2D, SDITextures[idx]);
@@ -2282,6 +2302,29 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 }
+
+
+void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData)
+{
+	if(1)
+	{
+		int idx = GetCurrentChosenVideoId();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
+		glActiveTexture(GL_ChosenTextureIDs[idx]);
+			if(needSendData){
+				m_env.Getp_PBOChosenMgr()->sendData(m_env,GL_ChosenTextures[idx], (PFN_PBOFILLBUFFER)captureChosenCam,idx+MAGICAL_NUM);
+			}
+			else{
+				glBindTexture(GL_TEXTURE_2D, GL_ChosenTextures[idx]);
+			}
+			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);// VGA texture start from 15
+			m_env.Getp_shadowBatch()->Draw();
+		m_env.GetmodelViewMatrix()->PopMatrix();
+	}
+}
+
 
 int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 
@@ -5614,7 +5657,6 @@ void Render::RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool
 		VGACameraFrame.GetCameraMatrix(camera);
 		m_env.GetmodelViewMatrix()->PushMatrix(VGACameraFrame);
 		m_env.GetmodelViewMatrix()->PopMatrix();
-
 		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
 		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 		DrawVGAVideo(m_env,needSendData);
@@ -5638,6 +5680,25 @@ void Render::RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool
 		DrawSDIVideo(m_env,needSendData);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
+
+void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
+{
+		glViewport(x,y,w,h);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->LoadIdentity();
+		M3DMatrix44f camera ;
+		ChosenCameraFrame.GetCameraMatrix(camera);
+		m_env.GetmodelViewMatrix()->PushMatrix(ChosenCameraFrame);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+		DrawChosenVideo(m_env,needSendData);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+}
+
 
 
 
@@ -6028,7 +6089,7 @@ void Render::RenderScene(void)
 #endif
 	// Clear the window with current clearing color
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-#if !RENDER2FRONT
+#if RENDER2FRONT
 #if USE_UART
 	zodiac_msg.setXspeedandMove();
 	zodiac_msg.setYspeedandMove();
@@ -7612,6 +7673,12 @@ GLEnv & env=env1;
 			}
 		}
 			break;
+		case  'n':
+		{
+			FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
+			fboMode = nextMode;
+		}
+			break;
 		case 'L':
 		//case 'l':
 			DISPLAYMODE_SWITCH_TO(TRIPLE_VIEW_MODE);
@@ -8491,6 +8558,7 @@ GLEnv & env=env1;
 	}
 
 }
+
 
 /* The function called whenever a key is pressed. */
 void Render::keyPressed(GLEnv &m_env,unsigned char key, int x, int y)
@@ -11250,6 +11318,25 @@ void Render::GenerateVGAView()
 	VGACameraFrame.SetOrigin(camPanoView);
 }
 
+void Render::GenerateRender2FrontView()
+{
+	static M3DVector3f camPanoView;
+	static bool once =true;
+	if(once){
+		once = false;
+
+		Render2FrontCameraFrame.RotateLocalX(0.0);
+		Render2FrontCameraFrame.MoveForward(0.0);
+		Render2FrontCameraFrame.MoveUp(0.0);
+
+		Render2FrontCameraFrame.RotateLocalY(0.0);
+		Render2FrontCameraFrame.MoveRight(0.0);
+		Render2FrontCameraFrame.GetOrigin(camPanoView);
+	}
+	Render2FrontCameraFrame.SetOrigin(camPanoView);
+}
+
+
 
 void Render::GenerateSDIView()
 {
@@ -11267,6 +11354,24 @@ void Render::GenerateSDIView()
 		SDICameraFrame.GetOrigin(camPanoView);
 	}
 	SDICameraFrame.SetOrigin(camPanoView);
+}
+
+void Render::GenerateChosenView()
+{
+	static M3DVector3f camPanoView;
+	static bool once =true;
+	if(once){
+		once = false;
+
+		ChosenCameraFrame.RotateLocalX(0.0);
+		ChosenCameraFrame.MoveForward(0.0);
+		ChosenCameraFrame.MoveUp(0.0);
+
+		ChosenCameraFrame.RotateLocalY(0.0);
+		ChosenCameraFrame.MoveRight(0.0);
+		ChosenCameraFrame.GetOrigin(camPanoView);
+	}
+	ChosenCameraFrame.SetOrigin(camPanoView);
 }
 
 void Render::GenerateExtentView()
@@ -11287,7 +11392,7 @@ void Render::GenerateExtentView()
 	ExtCameraFrame.SetOrigin(camPanoView);
 }
 
-void Render::InitRuler()
+void Render::InitRuler(GLEnv &m_env)
 {
 	GLuint texture = 0;
 	float panel_width=0,panel_height=0;
@@ -11295,44 +11400,45 @@ void Render::InitRuler()
 	panel_height=PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z();
 	float scale=1.0,hight_scale=0.1;
 	scale=2.0;
-	degreescale45Batch.Begin(GL_TRIANGLE_FAN, 4, 1);
-	degreescale45Batch.MultiTexCoord2f(texture, 0.0f, 0.0f);
-	//degreescale45Batch.Vertex3f(-1.0f,-1.0f, 0.0f );//(-panel_width/scale,0.0,-panel_height*hight_scale);//(-10,0,0);//
-	degreescale45Batch.Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
-	degreescale45Batch.MultiTexCoord2f(texture, 0.0f, 1.0f);
-	//degreescale45Batch.Vertex3f(-1.0f, 1.0f, 0.0f);//(-panel_width/scale,0.0,panel_height*hight_scale);//(-10,10,0);//
-	degreescale45Batch.Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
-	degreescale45Batch.MultiTexCoord2f(texture, 1.0f, 1.0f);
-	//degreescale45Batch.Vertex3f( 1.0f,1.0f,  0.0f);//( panel_width/scale,0.0,panel_height*hight_scale);//(10,10,0);//
-	degreescale45Batch.Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
-	degreescale45Batch.MultiTexCoord2f(texture, 1.0f, 0.0f);
-	//degreescale45Batch.Vertex3f( 1.0f,-1.0f,  0.0f);	//( panel_width/scale,0.0,-panel_height*hight_scale);//(10,0,0);//
-	degreescale45Batch.Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
-	degreescale45Batch.End();
+	m_env.Getdegreescale45Batch()->Begin(GL_TRIANGLE_FAN, 4, 1);
+	m_env.Getdegreescale45Batch()->MultiTexCoord2f(texture, 0.0f, 0.0f);
+	//m_env.Getdegreescale45Batch()->Vertex3f(-1.0f,-1.0f, 0.0f );//(-panel_width/scale,0.0,-panel_height*hight_scale);//(-10,0,0);//
+	m_env.Getdegreescale45Batch()->Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
+	m_env.Getdegreescale45Batch()->MultiTexCoord2f(texture, 0.0f, 1.0f);
+	//m_env.Getdegreescale45Batch()->Vertex3f(-1.0f, 1.0f, 0.0f);//(-panel_width/scale,0.0,panel_height*hight_scale);//(-10,10,0);//
+	m_env.Getdegreescale45Batch()->Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale45Batch()->MultiTexCoord2f(texture, 1.0f, 1.0f);
+	//m_env.Getdegreescale45Batch()->Vertex3f( 1.0f,1.0f,  0.0f);//( panel_width/scale,0.0,panel_height*hight_scale);//(10,10,0);//
+	m_env.Getdegreescale45Batch()->Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale45Batch()->MultiTexCoord2f(texture, 1.0f, 0.0f);
+	//m_env.Getdegreescale45Batch()->Vertex3f( 1.0f,-1.0f,  0.0f);	//( panel_width/scale,0.0,-panel_height*hight_scale);//(10,0,0);//
+	m_env.Getdegreescale45Batch()->Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
+	m_env.Getdegreescale45Batch()->End();
 
 	scale=2.0;
-	degreescale90Batch.Begin(GL_TRIANGLE_FAN, 4, 1);
-	degreescale90Batch.MultiTexCoord2f(texture, 0.0f, 0.0f);
-	degreescale90Batch.Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
-	degreescale90Batch.MultiTexCoord2f(texture, 0.0f, 1.0f);
-	degreescale90Batch.Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
-	degreescale90Batch.MultiTexCoord2f(texture, 1.0f, 1.0f);
-	degreescale90Batch.Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
-	degreescale90Batch.MultiTexCoord2f(texture, 1.0f, 0.0f);
-	degreescale90Batch.Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
-	degreescale90Batch.End();
+
+	m_env.Getdegreescale90Batch()->Begin(GL_TRIANGLE_FAN, 4, 1);
+	m_env.Getdegreescale90Batch()->MultiTexCoord2f(texture, 0.0f, 0.0f);
+	m_env.Getdegreescale90Batch()->Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
+	m_env.Getdegreescale90Batch()->MultiTexCoord2f(texture, 0.0f, 1.0f);
+	m_env.Getdegreescale90Batch()->Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale90Batch()->MultiTexCoord2f(texture, 1.0f, 1.0f);
+	m_env.Getdegreescale90Batch()->Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale90Batch()->MultiTexCoord2f(texture, 1.0f, 0.0f);
+	m_env.Getdegreescale90Batch()->Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
+	m_env.Getdegreescale90Batch()->End();
 
 	scale=2.0;
-	degreescale180Batch.Begin(GL_TRIANGLE_FAN, 4, 1);
-	degreescale180Batch.MultiTexCoord2f(texture, 0.0f, 0.0f);
-	degreescale180Batch.Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
-	degreescale180Batch.MultiTexCoord2f(texture, 0.0f, 1.0f);
-	degreescale180Batch.Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
-	degreescale180Batch.MultiTexCoord2f(texture, 1.0f, 1.0f);
-	degreescale180Batch.Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
-	degreescale180Batch.MultiTexCoord2f(texture, 1.0f, 0.0f);
-	degreescale180Batch.Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
-	degreescale180Batch.End();
+	m_env.Getdegreescale180Batch()->Begin(GL_TRIANGLE_FAN, 4, 1);
+	m_env.Getdegreescale180Batch()->MultiTexCoord2f(texture, 0.0f, 0.0f);
+	m_env.Getdegreescale180Batch()->Vertex3f(-panel_width/scale,-panel_height/2.0,0.0f);//(-10,0,0);//
+	m_env.Getdegreescale180Batch()->MultiTexCoord2f(texture, 0.0f, 1.0f);
+	m_env.Getdegreescale180Batch()->Vertex3f(-panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale180Batch()->MultiTexCoord2f(texture, 1.0f, 1.0f);
+	m_env.Getdegreescale180Batch()->Vertex3f(panel_width/scale,panel_height/2.0,0.0f);
+	m_env.Getdegreescale180Batch()->MultiTexCoord2f(texture, 1.0f, 0.0f);
+	m_env.Getdegreescale180Batch()->Vertex3f(panel_width/scale,-panel_height/2.0,0.0f);
+	m_env.Getdegreescale180Batch()->End();
 }
 
 void Render::RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int type)
@@ -11389,7 +11495,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler45TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,ICON_45DEGREESCALE);
+					m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler45Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45Cam,ICON_45DEGREESCALE+MAGICAL_NUM);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[idx]);
@@ -11399,7 +11505,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler90TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler90Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90Cam,ICON_90DEGREESCALE);
+			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler90Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90Cam,ICON_90DEGREESCALE+MAGICAL_NUM);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler90Textures[idx]);
@@ -11409,25 +11515,25 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		glActiveTexture(GL_IconRuler180TextureIDs[idx]);
 
 		if(needSendData){
-			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler180Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180Cam,ICON_180DEGREESCALE);
+			m_env.Getp_PBOExtMgr()->sendData(m_env,iconRuler180Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180Cam,ICON_180DEGREESCALE+MAGICAL_NUM);
 		}
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler180Textures[idx]);
 		}
 		break;
 	}
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 
 	switch(type)
 	{
 	case RULER_45:
-		degreescale45Batch.Draw();
+		m_env.Getdegreescale45Batch()->Draw();
 		break;
 	case RULER_90:
-		degreescale90Batch.Draw();
+		m_env.Getdegreescale90Batch()->Draw();
 		break;
 	case RULER_180:
-		degreescale180Batch.Draw();
+		m_env.Getdegreescale180Batch()->Draw();
 		break;
 	}
 

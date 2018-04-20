@@ -48,6 +48,8 @@ public:
 	static void ReSizeGLScene(int Width, int Height);
 
 	static void keyPressed(unsigned char key, int x, int y);
+	static void keyPressedDS(unsigned char key, int x, int y);
+
 	static void specialkeyPressed (int key, int x, int y);
 	static void mouseButtonPress(int button, int state, int x, int y);
 	static void mouseMotionPress(int x, int y);

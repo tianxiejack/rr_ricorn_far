@@ -4,9 +4,8 @@ BMPPanoGroup BMPPanoGroup::bmpCaptureGroup(SDI_WIDTH,SDI_HEIGHT,3,CAM_COUNT);
 
 vector<Consumer>  BMPPanoGroup::GetConsumers(int *queueid,int count)
 {
-	vector<Consumer> v_cons(count);
 	 Consumer cons;
-	 char *str[]={"00","01","02","03","04","05","06","07","08","09"};
+	 char *str[]={"pic0","pic1"};
 	 char filename[64];
 	 for(int i=0;i<count;i++)
 	 {
@@ -22,7 +21,7 @@ BMPPanoGroup * BMPPanoGroup::GetInstance()
 {
 			static bool once =true;
 			if(once){
-				bmpCaptureGroup.init(NULL,CAM_COUNT);
+				bmpCaptureGroup.init(NULL,2);
 				once =false;
 			}
 			return &bmpCaptureGroup;

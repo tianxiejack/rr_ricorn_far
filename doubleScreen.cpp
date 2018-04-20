@@ -15,22 +15,19 @@ void InitBowlDS()
 void Render::RenderSceneDS()
 {
 	GLEnv &env=env2;
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-//	RenderRightPanoView(env,0,g_windowHeight*653.0/1080.0,g_windowWidth, g_windowHeight*115.0/1080.0);
-//	RenderLeftPanoView(env,0,g_windowHeight*538.0/1080.0,g_windowWidth, g_windowHeight*115.0/1080.0);
-//	RenderSDIView(env,0,0,g_windowWidth*944/1024, g_windowHeight*538/768, true);
-	//		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*809.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
-	//		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0);
-	//		RenderSDIView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1920.0,g_windowWidth*944/1024, g_windowHeight*538/768, true);
-			RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
-			RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
-			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,SUB);
+	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+	RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,SUB);
+	RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
+	RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
+	break;
+	case	SECOND_CHOSEN_VIEW_MODE:
+		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
-
 	default :
 		break;
 	}
@@ -40,8 +37,8 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 //#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
 	GLEnv &env=env2;
 	GLubyte *pBytes;
-	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
-	GLenum format= GL_BGRA;
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
+	GLenum format= GL_BGR;
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -51,7 +48,8 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 				|| !env.Getp_PBOExtMgr()->Init()
 				||!env.Getp_PBORcr()->Init()
 				|| !env.Getp_PBOVGAMgr()->Init()
-				|| !env.Getp_PBOSDIMgr()->Init()){
+				|| !env.Getp_PBOSDIMgr()->Init()
+				||!env.Getp_PBOChosenMgr()->Init()){
 		cout<<"Failed to init PBO manager"<<endl;
 			exit(1);
 		}
@@ -118,6 +116,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 
 		GenerateSDIView();
 		GenerateVGAView();
+		GenerateChosenView();
 #endif
 
 		PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
@@ -139,7 +138,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 		InitPanoScaleArrayData();
 		InitPanel(env);
 		InitFollowCross();
-		InitRuler();
+		InitRuler(env);
 		InitCalibrate();
 	//	InitOitVehicle(env);
 	//	    glmDelete(VehicleLoader);
@@ -171,8 +170,6 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 
 		pthread_t th_rec;
 	   	int arg_rec = 10;
-
-		//mp_FboPboFacade=new PBO_FBO_Facade(FBOmgr,PBORcr);
 	 	env.Set_FboPboFacade(*(env.Getp_FBOmgr()),*(env.Getp_PBORcr()));
 	   	mPresetCamGroup.LoadCameras();
 		// Load up CAM_COUNT textures
@@ -217,24 +214,24 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask);
 
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask0);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask0);
 
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX1]);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,nComponents,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				format, GL_UNSIGNED_BYTE, alphaMask1);
+		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask1);
 	}
 	//setting up extension textures etc.
 	{
@@ -276,6 +273,18 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 					glTexImage2D(GL_TEXTURE_2D,0,nComponents,SDI_WIDTH, SDI_HEIGHT, 0,
 							format, GL_UNSIGNED_BYTE, 0);
 				}
+				glGenTextures(CHOSEN_TEXTURE_COUNT, GL_ChosenTextures);
+								for(int i = 0; i < CHOSEN_TEXTURE_COUNT; i++){
+									glBindTexture(GL_TEXTURE_2D, GL_ChosenTextures[i]);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+									glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+									glTexImage2D(GL_TEXTURE_2D,0,nComponents,SDI_WIDTH, SDI_HEIGHT, 0,
+											format, GL_UNSIGNED_BYTE, 0);
+								}
 
 #if USE_COMPASS_ICON
 		glGenTextures(1, iconTextures);
@@ -291,7 +300,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 #endif
-#if USE_ICON
+
 		glGenTextures(1, iconRuler45Textures);
 		for(int i = 0; i < 1; i++){
 			glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[i]);
@@ -301,7 +310,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,PAL_WIDTH, PAL_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -314,7 +323,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,PAL_WIDTH, PAL_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -327,15 +336,27 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,PAL_WIDTH, PAL_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
-#endif
+
 	}
 	glMatrixMode(GL_MODELVIEW);
 }
-
-
+void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
+{
+	switch(key)
+		{
+			case  'N':
+			{
+				SECOND_DISPLAY nextMode=SECOND_DISPLAY(((int)SecondDisplayMode+1)%SECOND_TOTAL_MODE_COUNT);
+				SecondDisplayMode = nextMode;
+			}
+				break;
+			default:
+		break;
+		}
+}
 void Render::GetFPSDS()
 {
 	/* Number of samples for frame rate */
@@ -441,6 +462,11 @@ void Render::ReSizeGLSceneDS(int Width, int Height)
 	ChangeSize(Width, Height);
 	comSecondSC.setUpdate(GL_YES);
 }
+void Render::keyPressedDS(GLEnv &m_env,unsigned char key, int x, int y)
+{
+	usleep(100);
+	ProcessOitKeysDS(m_env,key, x, y);
+}
 
 
 
@@ -452,6 +478,11 @@ void RenderMain::DrawGLSceneDS()
 {
 		render.DrawGLSceneDS();
 //	render.DrawGLScene();
+}
+void RenderMain::keyPressedDS(unsigned char key, int x, int y)
+{
+	GLEnv &env=env2;
+	render.keyPressedDS(env,key,x,y);
 }
 	void 	RenderMain::doubleScreenInit(int argc, char **argv)
 	{
@@ -496,7 +527,7 @@ void RenderMain::DrawGLSceneDS()
 			glutDisplayFunc(DrawGLSceneDS); /* Register the function to do all our OpenGL drawing. */
 			glutIdleFunc(DrawIdle); /* Even if there are no events, redraw our gl scene. */
 			glutReshapeFunc(ReSizeGLSceneDS); /* Register the function called when our window is resized. */
-//			glutKeyboardFunc(keyPressed); /* Register the function called when the keyboard is pressed. */
+			glutKeyboardFunc(keyPressedDS); /* Register the function called when the keyboard is pressed. */
 	//		glutSpecialFunc(specialkeyPressed); /* Register the special key function */
 //			glutMouseFunc(mouseButtonPress); /* Register the function called when the mouse buttons are pressed */
 //			glutMotionFunc(mouseMotionPress); /*Register the mouse motion function */

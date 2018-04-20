@@ -84,7 +84,7 @@ class HDAsyncVCap4:public Interface_VCap{
 		virtual ~HDAsyncVCap4();
 		virtual bool Open();
 		virtual void Close();
-		virtual void Capture(char* ptr,int mainORsub=-1);
+		virtual void Capture(char* ptr);
 		void CaptureFish(char* ptr){};
 		virtual void SetDefaultImg( char *);
 		virtual void SavePic(const char* name);
@@ -121,7 +121,7 @@ public:
 	virtual ~HDv4l_cam();
 	bool Open();// open device   init deivce  start capturing
 	void Close(){};
-	void Capture(char*p,int mainORsub){};
+	void Capture(char*p){};
 	void CaptureFish(char*p){};
 	void saveOverLap(){};
 

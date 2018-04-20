@@ -29,12 +29,16 @@ public:
 	PBOSender *Getp_PBOExtMgr();
 	PBOSender *Getp_PBOVGAMgr();
 	PBOSender *Getp_PBOSDIMgr();
+	PBOSender *Getp_PBOChosenMgr();
 	FBOManager *Getp_FBOmgr();
 	pPBO_FBO_Facade Getp_FboPboFacade();
 	void Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr);
 	CaptureGroup *GetPanoCaptureGroup(){return m_panoCaptureGroup;};
 	CaptureGroup *GetChosenCaptureGroup(){return m_chosenCaptureGroup;};
 	CaptureGroup *GetMiscCaptureGroup(){return m_miscCaptureGroup;};
+	GLBatch *Getdegreescale45Batch(){return &degreescale45Batch;};
+	GLBatch *Getdegreescale90Batch(){return &degreescale90Batch;};
+	GLBatch *Getdegreescale180Batch(){return &degreescale180Batch;};
 private:
 	CaptureGroup * m_panoCaptureGroup;
 	CaptureGroup * m_chosenCaptureGroup;
@@ -47,11 +51,15 @@ private:
 	GLBatch *Panel_Petal_OverLap[CAM_COUNT];
 	GLBatch *Panel_OverLap[CAM_COUNT];
 	GLBatch shadowBatch; //the shadow rect under vehicle
+	GLBatch degreescale45Batch; //the degree scale (45-0-45)
+	GLBatch degreescale90Batch; //the degree scale (90-0-90)
+	GLBatch degreescale180Batch; //the degree scale (180-0-180)
 	PBOReceiver PBORcr;
 	PBOSender PBOMgr;
 	PBOSender PBOExtMgr;
 	PBOSender PBOVGAMgr;
 	PBOSender PBOSDIMgr;
+	PBOSender PBOChosenMgr;
 	FBOManager FBOmgr;
 	pPBO_FBO_Facade mp_FboPboFacade;
 };

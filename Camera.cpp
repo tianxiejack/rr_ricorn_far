@@ -186,7 +186,7 @@ void save_yuyv_pic2(void *pic,int idx)
 }
 
 
-void HDVCap::Capture(char* ptr,int mainORsub){
+void HDVCap::Capture(char* ptr){
 	int BGR_CC=3;
 	static bool once=true;
 	int chid[2]={-1,-1};
@@ -212,40 +212,44 @@ void HDVCap::Capture(char* ptr,int mainORsub){
 		}
 		once=false;
 	}
-					switch(m_chId)
+					int 	m_chId[2]={-1,-1};
+					switch(m_qid)//现在是qid　而不是chid
 					{
-					case FPGA_FOUR_CN:
-						chid[MAIN]=MAIN_FPGA_FOUR;
-						chid[SUB]=SUB_FPGA_FOUR;
-						nowpicW=FPGA_SCREEN_WIDTH;
-						nowpicH=FPGA_SCREEN_HEIGHT;
+					case MAIN_FPGA_FOUR:
+						m_chId[MAIN]=FPGA_FOUR_CN;
 						break;
-					case SUB_CN:
-						chid[SUB]=SUB_ONE_OF_TEN;
+					case MAIN_ONE_OF_TEN:
+						m_chId[MAIN]=MAIN_CN;
 						break;
-					case MAIN_CN:
-						chid[MAIN]=MAIN_ONE_OF_TEN;
+					case MAIN_FPGA_SIX:
+						m_chId[MAIN]=FPGA_SIX_CN;
 						break;
-			    case MVDECT_CN:
-			    	printf("there's no right use Mvdect  gray pic !!\n");
-			    	assert(false);
+			    case SUB_FPGA_FOUR:
+			    	m_chId[SUB]=FPGA_FOUR_CN;
 					break;
-					case FPGA_SIX_CN:
-						chid[MAIN]=MAIN_FPGA_SIX;
-						chid[SUB]=SUB_FPGA_SIX;
+					case SUB_ONE_OF_TEN:
+						m_chId[SUB]=SUB_CN;
+						break;
+					case SUB_FPGA_SIX:
+						m_chId[SUB]=FPGA_SIX_CN;
 						break;
 					default:
+						printf("m_qid=%d\n",m_qid);
+						printf("m_qid is not used!!\n");
+						assert(false);
 						break;
 					}
-					if(mainORsub==MAIN) //车长
+
+					if(m_qid>=MAIN_FPGA_FOUR && m_qid<=MAIN_FPGA_SIX)
 					{
-						get_buffer((unsigned char *)temp_data_main[m_chId],chid[MAIN]);
-						memcpy(ptr,temp_data_main[m_chId],nowpicW*nowpicH*BGR_CC);
+						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
+						memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
 					}
-					else if(mainORsub==SUB)//载员
+
+					else if(m_qid>=SUB_FPGA_FOUR && m_qid<=SUB_FPGA_SIX)
 					{
-						get_buffer((unsigned char *)temp_data_sub[m_chId],chid[SUB]);
-						memcpy(ptr,temp_data_sub[m_chId],nowpicW*nowpicH*BGR_CC);
+						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
+						memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
 					}
 					else
 					{
@@ -287,7 +291,7 @@ void AsyncVCap::Close()
 	}
 	m_core->Close();
 }
-void AsyncVCap::Capture(char* ptr,int mainORsub)
+void AsyncVCap::Capture(char* ptr)
 {
 	lock_read(ptr);
 }
@@ -383,7 +387,7 @@ void V4lVcap::Close()
 		cvReleaseCapture(&capUSB);
 	capUSB= NULL;
 }
-void V4lVcap::Capture(char* ptr,int mainORsub)
+void V4lVcap::Capture(char* ptr)
 {
 	assert(ptr);
 	IplImage *tmp;
@@ -419,20 +423,26 @@ bool BMPVcap::Open()
 	if(pic)
 		cvReleaseImage(&pic);
 	pic = cvLoadImage(pFileName);
+	if(strcmp(pFileName,"45.bmp")==0)
+	{
+		printf("0\n");
+	}
 	if(pic == NULL)
 	{
 		cerr<<"failed 2 load "<<pFileName<<".bmp filled with color bar"<<endl;
 		pic = cvCreateImage(Size(width, height), IPL_DEPTH_8U, depth);
 		if(pic != NULL){
-			memcpy(pic->imageData,GetDefaultImg(),GetTotalBytes());
+			int pic_bytes =0;
+			pic_bytes=pic->height*pic->width*pic->depth;
+			if(pic_bytes >GetTotalBytes() )
+				pic_bytes=GetTotalBytes();
+			memcpy(pic->imageData,GetDefaultImg(),pic_bytes);
 			ret = true;
 		}
 	}
 	else{
 		Mat ycrcb;
 		Mat im=cvarrToMat(pic);
-
-
 	//	cvtColor( im, ycrcb, CV_RGB2YCrCb );
 		cvtColor( im,yuv_alpha,CV_RGB2BGR); //RGB->RGB
 		memcpy(yuv_alpha.data,im.data,im.rows*im.cols*3);
@@ -463,7 +473,7 @@ void BMPVcap::Close()
 		cvReleaseImage(&pic);
 	pic = NULL;
 }
-void BMPVcap::Capture(char* ptr,int mainORsub)
+void BMPVcap::Capture(char* ptr)
 {
 	assert(ptr);
 	if(pic)

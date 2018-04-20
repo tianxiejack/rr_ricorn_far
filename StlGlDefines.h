@@ -33,7 +33,9 @@ typedef enum{
 #define PRINT_MACRO(x) #x"="PRINT_MACRO_HELPER(x)
 #pragma message(PRINT_MACRO(CAM_COUNT) )
 #endif
-
+//跳过10路拼接的前两个  因为pbosend里面　idx 1, 2 被固定设置为2*3　2*2的纹理
+// 所以跳过idx 1,2,设置为３则起始值则为3
+#define MAGICAL_NUM 3
 #if USE_GAIN
 enum{
        RIGHT_ROI,
@@ -46,6 +48,8 @@ enum{
 #define NUM_OF_H 2
 
 #define FPGA_SCARE_X  (1920.0f/3200.0f)
+
+
 
 
 
@@ -72,6 +76,9 @@ enum
 #define ALARM_MAX_COUNT 4
 #define MAX_SCREEN_WIDTH 1920
 #define MAX_SCREEN_HEIGHT 1080
+#define PAL_WIDTH 720
+#define PAL_HEIGHT 576
+
 #if USE_12
 #define TELXLIMIT 8.0
 enum{
@@ -160,7 +167,10 @@ enum{
 	RECV_TRACK_FRAME_Y,
 	RECV_TRACK_NUM
 };
-
+enum{
+	CHOSEN_CAM_0,
+	CHOSEN_CAM_COUNT
+};
 
 
 enum{
@@ -550,10 +560,17 @@ typedef enum{
     CORNER_COUNT
 } CORNER_POSITION;
 
+typedef enum{
+	RULER_45=0,
+	RULER_90,
+	RULER_180,
+	RULER_COUNT
+}RULER_ANGLE;
 enum{
 	ICON_45DEGREESCALE,
 	ICON_90DEGREESCALE,
 	ICON_180DEGREESCALE,
+	CHOSEN_PIC,
 	ICON_COUNT
 };
 #define MAX_PANO_CAMERA_COUNT 16

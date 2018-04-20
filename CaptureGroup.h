@@ -40,7 +40,7 @@ public:
 	void SetConsumers(vector<Consumer> h);
 	void init(int *queueid,int count);
 
-	void captureCam(GLubyte *ptr, int index,int mainOrsub=MAIN);
+	void captureCam(GLubyte *ptr, int index);
 	void captureCamFish(GLubyte *ptr, int index);
 	void Open();
 	bool Append(pInterface_VCap cap);
@@ -61,6 +61,7 @@ protected:
 	unsigned int width, height, depth;
 	unsigned char * Defaultimage;
 	CaptureGroup():m_TotalCamCount(0),m_currentIdx(0){};
+	vector<Consumer> v_cons;
 };
 
 class PseudoCaptureGroup:public CaptureGroup
@@ -86,6 +87,7 @@ public:
 	virtual ~HDCaptureGroup(){};
 	virtual vector<Consumer>  GetConsumers(int *queueid,int count);
 	HDCaptureGroup(){};
+
 };
 
 

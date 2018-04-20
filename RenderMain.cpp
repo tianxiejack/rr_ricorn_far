@@ -28,6 +28,7 @@ void RenderMain::ReSizeGLScene(int Width, int Height)
 {
 	render.ReSizeGLScene(Width,Height);
 }
+
 void RenderMain::keyPressed(unsigned char key, int x, int y)
 {
 	GLEnv &env=env1;
@@ -38,6 +39,7 @@ void RenderMain::specialkeyPressed(int key, int x, int y)
 	GLEnv &env=env1;
 	render.specialkeyPressed(env,key,x,y);
 }
+
 void RenderMain::mouseButtonPress(int button, int state, int x, int y)
 {
 	render.mouseButtonPress(button,state,x,y);
