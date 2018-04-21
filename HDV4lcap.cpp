@@ -112,17 +112,17 @@ void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 	bool enhance=false;
 	if(w==MAX_SCREEN_WIDTH)//６副图
 	{
-		Mat Src(h,w,CV_8UC4,src);
+		Mat Src(h,w,CV_8UC2,src);
 		Mat Dst(h,w,CV_8UC3,dst);
 		cvtColor(Src,Dst,CV_YUV2BGR_YUYV);
 	}
 	else if (w==FPGA_SCREEN_WIDTH) //4副先进行切割
 	{
-		Mat Src(SDI_HEIGHT,SDI_WIDTH,CV_8UC4,src);
+		Mat Src(SDI_HEIGHT,SDI_WIDTH,CV_8UC2,src);
 		Rect rect(0,0,w,h);
 		Mat Roi=Src(rect);
 		Mat Dst(h,w,CV_8UC3,dst);
-		cvtColor(Src,Roi,CV_YUV2BGR_YUYV);
+		cvtColor(Roi,Dst,CV_YUV2BGR_YUYV);
 		//如果w=1280 h=1080,则进行截取
 		//否则直接转换
 	}
@@ -412,8 +412,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					int chid[2]={-1,-1};
 					int nowGrayidx=-1;
 					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
-					unsigned char *transformed_src_main=NULL;
-					unsigned char *transformed_src_sub=NULL;
+					unsigned char **transformed_src_main=NULL;
+					unsigned char **transformed_src_sub=NULL;
 					switch(now_pic_format)
 					{
 					case FPGA_FOUR_CN:
@@ -421,68 +421,68 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						chid[SUB]=SUB_FPGA_FOUR;
 						nowpicW=FPGA_SCREEN_WIDTH;
 						nowpicH=FPGA_SCREEN_HEIGHT;
-						transformed_src_main=FPGA4_bgr_data_main;
-						transformed_src_sub=FPGA4_bgr_data_sub;
+						transformed_src_main=&FPGA4_bgr_data_main;
+						transformed_src_sub=&FPGA4_bgr_data_sub;
 						break;
 					case SUB_CN:
 						chid[SUB]=SUB_ONE_OF_TEN;
-						transformed_src_sub=select_bgr_data_sub;
+						transformed_src_sub=&select_bgr_data_sub;
 						break;
 					case MAIN_CN:
 						chid[MAIN]=MAIN_ONE_OF_TEN;
-						transformed_src_main=select_bgr_data_main;
+						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
 						chid[MAIN]=ChangeIdx2chid(MAIN);
 						chid[SUB]=ChangeIdx2chid(SUB);
 						nowGrayidx=GetNowPicIdx();
-						transformed_src_main=GRAY_data_main[nowGrayidx];
-						transformed_src_sub=GRAY_data_sub[nowGrayidx];
+						transformed_src_main=&GRAY_data_main[nowGrayidx];
+						transformed_src_sub=&GRAY_data_sub[nowGrayidx];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
 						chid[SUB]=SUB_FPGA_SIX;
-						transformed_src_main=FPGA6_bgr_data_main;
-						transformed_src_sub=FPGA6_bgr_data_sub;
+						transformed_src_main=&FPGA6_bgr_data_main;
+						transformed_src_sub=&FPGA6_bgr_data_sub;
 						break;
 					default:
 						break;
 					}
 					if(chid[MAIN]!=-1) //车长
 					{
-						if(Data2Queue(queue_main_sub,transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
+						if(Data2Queue(queue_main_sub,*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
 						{
-							if(getEmpty(queue_main_sub,&transformed_src_main, chid[MAIN]))
+							if(getEmpty(queue_main_sub,&*transformed_src_main, chid[MAIN]))
 							{
 								if(now_pic_format==MVDECT_CN)//移动检测
 								{
-									YUYV2GRAY((unsigned char *)buffers[buf.index].start,transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
+									YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
 								}
 								else //４副　６副　　车长１０选一
 								{
-									YUYV2RGB((unsigned char *)buffers[buf.index].start,transformed_src_main,nowpicW,nowpicH);
+									YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
 								}
 							}
 						}
 					}
 					if(chid[SUB]!=-1)//驾驶员
 					{
-						if(Data2Queue(queue_main_sub,transformed_src_sub,nowpicW,nowpicH,chid[MAIN]))
+						if(Data2Queue(queue_main_sub,*transformed_src_sub,nowpicW,nowpicH,chid[MAIN]))
 						{
-							if(getEmpty(queue_main_sub,&transformed_src_sub, chid[MAIN]))
+							if(getEmpty(queue_main_sub,&*transformed_src_sub, chid[MAIN]))
 							{
 								if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 								{
-									YUYV2RGB((unsigned char *)buffers[buf.index].start,transformed_src_sub,nowpicW,nowpicH);
+									YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
 								}
 								else if(now_pic_format==MVDECT_CN)//移动检测
 								{
 									//拷贝gray数据
-									memcpy(transformed_src_sub,transformed_src_main,nowpicW*nowpicH*1);
+									memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*1);
 								}
 								else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 								{
-									memcpy(transformed_src_sub,transformed_src_main,nowpicW*nowpicH*2);
+									memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
 								}
 							}
 						}
