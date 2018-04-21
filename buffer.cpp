@@ -264,11 +264,11 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 
 void init_buffer()
 {
-	queue_dis = (Alg_Obj *)alg_buf_init();
-	alg_obj_init(queue_dis);
+	queue_main_sub = (Alg_Obj *)alg_buf_init();
+	alg_obj_init(queue_main_sub);
 }
 
 void destroy_buffer()
 {
-	alg_buf_destroy(queue_dis);
+	alg_buf_destroy(queue_main_sub);
 }

@@ -36,7 +36,7 @@ void BaseVCap::SavePic(const char* name)
 	cvSaveImage(name,src);
 }
 
-void SmallVCap::Capture(char* ptr,int mainORsub)
+void SmallVCap::Capture(char* ptr)
 {
 	get_buffer((unsigned char*)ptr, m_chId);
 //	printf("capture:%d\n",m_chId);

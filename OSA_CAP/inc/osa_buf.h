@@ -7,7 +7,10 @@
 #include <osa_que.h>
 #include <osa_mutex.h>
 
-#define OSA_BUF_NUM_MAX       (16*4)
+#if !defined OSA_BUF_NUM_MAX
+#define OSA_BUF_NUM_MAX (26*4)
+#endif
+
 
 #define OSA_BUF_ID_INVALID    (-1)
 

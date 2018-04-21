@@ -37,18 +37,14 @@ extern Alg_Obj * queue_main_sub;
 using namespace std;
 using namespace cv::ocl;
 static bool Once_buffer=true;
-int m_bufId[8]={0};
+int m_bufId[QUE_CHID_COUNT]={0};
 extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
 //Mat SDI_frame,VGA_frame;
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam hdv4lcap1(1,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam hdv4lcap2(2,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam hdv4lcap3(3,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam hdv4lcap4(4,SDI_WIDTH,SDI_HEIGHT);
-static HDv4l_cam hdv4lcap5(5,SDI_WIDTH,SDI_HEIGHT);
+
 HDv4l_cam_Producer hdCamProducer;
 
 
@@ -69,7 +65,7 @@ unsigned char * vga_data=NULL;
 extern MvDetect mv_detect;
 HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_MMAP/*IO_METHOD_MMAP*/),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
-force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId)
+force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 {
 		imgformat 	= V4L2_PIX_FMT_YUYV;
 		sprintf(dev_name, "/dev/video%d",devId);
@@ -896,8 +892,6 @@ bool HDv4l_cam::getEmpty(Alg_Obj * p_queue,unsigned char** pBGRBuf, int chId)
 {
 	int status=0;
 	bool ret = true;
-	chId  =0;//Id*4+chId;
-
 	while(1)
 	{
 		status = OSA_bufGetEmpty(&p_queue->bufHndl[chId],&m_bufId[chId],0);
@@ -952,17 +946,14 @@ void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
 
 //-------------------HDv4l_cam_Producer methods----------------------
 
-static HDv4l_cam * pHDv4l_cap[MAX_CC]={
-		NULL,
-		&hdv4lcap1,
-		&hdv4lcap2,
-		&hdv4lcap3,
-		&hdv4lcap4,
-		&hdv4lcap5
-};
-
+static HDv4l_cam * pHDv4l_cap[MAX_CC]={ 0};
 HDv4l_cam *HDv4l_cam_Producer::Get_pHDv4l_cap(int idx)
 {
+	 assert(idx != 0);
+	if(pHDv4l_cap[idx] == NULL){
+		pHDv4l_cap[idx] = new HDv4l_cam(idx,SDI_WIDTH,SDI_HEIGHT);
+	}
+    assert(pHDv4l_cap[idx] != NULL);
 	return pHDv4l_cap[idx];
 }
 

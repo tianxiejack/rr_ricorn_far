@@ -111,7 +111,7 @@ public:
 	~SmallVCap(){free(m_buffer);};
 	bool Open(){return true;};
 	void Close(){};
-	void Capture(char* ptr,int mainORsub=MAIN);
+	void Capture(char* ptr);
 	void CaptureFish(char* ptr);
 	void SavePic(const char* name);
 	void saveOverLap();

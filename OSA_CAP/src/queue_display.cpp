@@ -13,7 +13,7 @@ void * alg_buf_init(void)
 		return NULL;
 	}
 
-	alg_handle->channalnum = NUMCHANAL;
+	alg_handle->channalnum = LINK_CHANL_MAX;
 	/*   video resource */
 	for(i=0; i<alg_handle->channalnum; i++)
 	{

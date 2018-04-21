@@ -195,7 +195,7 @@ enum{
 
 #define VGA_DEV_chId 20
 #define SDI_DEV_chId  16
-#if USE_BMPCAP
+#if DGSTREAM_CAP
 #define SCREEN_W 1024
 #define SCREEN_H 768
 #else
