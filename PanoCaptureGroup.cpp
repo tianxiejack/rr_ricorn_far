@@ -17,10 +17,10 @@ void  PanoCaptureGroup::CreateProducers()
 		ProduceOnce=false;
 		int dev_id=FPGA_FOUR_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(HDv4l_cam_Producer::Get_pHDv4l_cap(dev_id)),dev_id);
+			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
 		dev_id=FPGA_SIX_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(HDv4l_cam_Producer::Get_pHDv4l_cap(dev_id)),dev_id);
+			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
 	}
 };
 

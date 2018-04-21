@@ -199,10 +199,6 @@ private:
 };
 
 
-class HDv4l_cam_Producer{
-public:
-	static HDv4l_cam *Get_pHDv4l_cap(int idx);
-};
 
 #endif
 #endif /* V4L2CAMERA_H_ */

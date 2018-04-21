@@ -11,15 +11,19 @@ void  ChosenCaptureGroup::CreateProducers()
 {
 		int dev_id=MAIN_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(HDv4l_cam_Producer::Get_pHDv4l_cap(dev_id)),dev_id);
+			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>( new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
+		 dev_id=SUB_CN;
+			if(pHDAsyncVCap[dev_id]==NULL)
+				pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>( new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
 };
 
 void  ChosenCaptureGroup::OpenProducers()
 {
-	int dev_id=FPGA_FOUR_CN;
+	int dev_id=MAIN_CN;
 	 pHDAsyncVCap[dev_id]->Open();
-	 dev_id=FPGA_SIX_CN;
+	 dev_id=SUB_CN;
 	 pHDAsyncVCap[dev_id]->Open();
+
 }
 
 ChosenCaptureGroup::~ChosenCaptureGroup()

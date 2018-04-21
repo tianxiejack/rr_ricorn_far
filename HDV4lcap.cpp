@@ -45,7 +45,6 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
-HDv4l_cam_Producer hdCamProducer;
 
 
 
@@ -180,9 +179,10 @@ bool HDv4l_cam::Open()
 		FPGA6_bgr_data_main=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
 		FPGA4_bgr_data_sub=(unsigned char *)malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*2);
 		FPGA4_bgr_data_main=(unsigned char *)malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*2);
+		 start_queue(queue_main_sub);
 		Once=false;
 	}
-	 start_queue(queue_main_sub);
+
 	ret = open_device();
 	if(ret < 0)
 		return false;
@@ -944,16 +944,4 @@ void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
 	getEmpty(p_queue,&FPGA4_bgr_data_sub, SUB_FPGA_FOUR);
 }
 
-//-------------------HDv4l_cam_Producer methods----------------------
-
-static HDv4l_cam * pHDv4l_cap[MAX_CC]={ 0};
-HDv4l_cam *HDv4l_cam_Producer::Get_pHDv4l_cap(int idx)
-{
-	 assert(idx != 0);
-	if(pHDv4l_cap[idx] == NULL){
-		pHDv4l_cap[idx] = new HDv4l_cam(idx,SDI_WIDTH,SDI_HEIGHT);
-	}
-    assert(pHDv4l_cap[idx] != NULL);
-	return pHDv4l_cap[idx];
-}
 
