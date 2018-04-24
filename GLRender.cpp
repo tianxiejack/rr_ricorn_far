@@ -751,7 +751,7 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 
 static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
 {
-	env.GetChosenCaptureGroup()->captureCam(ptr,index);
+	env.GetChosenCaptureGroup()->captureCam(ptr,index-MAGICAL_NUM);
 }
 //Fish calibrated
 static void captureCamFish(GLubyte *ptr, int index,GLEnv &env)

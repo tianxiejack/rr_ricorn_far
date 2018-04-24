@@ -163,23 +163,7 @@ bool HDv4l_cam::Open()
 	static bool Once=true;
 	if(Once)
 	{
-		for(int i=1;i<6;i++)
-		{
-		//	sdi_data_main[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
-	//		sdi_data_sub[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*2);
-		}
-		for(int i=0;i<10;i++)
-		{
-			GRAY_data_sub[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*1);
-			GRAY_data_main[i]=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*1);
-		}
-		select_bgr_data_sub=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
-		select_bgr_data_main=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
-		FPGA6_bgr_data_sub=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
-		FPGA6_bgr_data_main=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
-		FPGA4_bgr_data_sub=(unsigned char *)malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*2);
-		FPGA4_bgr_data_main=(unsigned char *)malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*2);
-		 start_queue(queue_main_sub);
+		 start_queue();
 		Once=false;
 	}
 
@@ -448,11 +432,12 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					default:
 						break;
 					}
+#if 1
 					if(chid[MAIN]!=-1) //车长
 					{
-						if(Data2Queue(queue_main_sub,*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
+						if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
 						{
-							if(getEmpty(queue_main_sub,&*transformed_src_main, chid[MAIN]))
+							if(getEmpty(&*transformed_src_main, chid[MAIN]))
 							{
 								if(now_pic_format==MVDECT_CN)//移动检测
 								{
@@ -467,9 +452,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					}
 					if(chid[SUB]!=-1)//驾驶员
 					{
-						if(Data2Queue(queue_main_sub,*transformed_src_sub,nowpicW,nowpicH,chid[MAIN]))
+						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{
-							if(getEmpty(queue_main_sub,&*transformed_src_sub, chid[MAIN]))
+							if(getEmpty(&*transformed_src_sub, chid[SUB]))
 							{
 								if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 								{
@@ -488,7 +473,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						}
 					}
 
-
+#endif
 #if 0
 					OSA_semWait(&sem[now_pic_format],OSA_TIMEOUT_FOREVER);
 							currentWR[now_pic_format]=1;
@@ -888,21 +873,21 @@ void HDAsyncVCap4::initLock()
 }
 
 
-bool HDv4l_cam::getEmpty(Alg_Obj * p_queue,unsigned char** pBGRBuf, int chId)
+bool HDv4l_cam::getEmpty(unsigned char** pYuvBuf, int chId)
 {
 	int status=0;
 	bool ret = true;
 	while(1)
 	{
-		status = OSA_bufGetEmpty(&p_queue->bufHndl[chId],&m_bufId[chId],0);
+		status = OSA_bufGetEmpty(&queue_main_sub->bufHndl[chId],&m_bufId[chId],0);
 		if(status == 0)
 		{
-			*pBGRBuf = (unsigned char*)p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].virtAddr;
+			*pYuvBuf = (unsigned char*)queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].virtAddr;
 			break;
 		}else{
-			if(!OSA_bufGetFull(&p_queue->bufHndl[chId],&m_bufId[chId],OSA_TIMEOUT_FOREVER))
+			if(!OSA_bufGetFull(&queue_main_sub->bufHndl[chId],&m_bufId[chId],OSA_TIMEOUT_FOREVER))
 			{
-				if(!OSA_bufPutEmpty(&p_queue->bufHndl[chId],m_bufId[chId]))
+				if(!OSA_bufPutEmpty(&queue_main_sub->bufHndl[chId],m_bufId[chId]))
 				{
 					;
 				}
@@ -912,36 +897,36 @@ bool HDv4l_cam::getEmpty(Alg_Obj * p_queue,unsigned char** pBGRBuf, int chId)
 	 return ret;
 }
 
-bool HDv4l_cam::Data2Queue(Alg_Obj * p_queue,unsigned char *pYuvBuf,int width,int height,int chId)
+bool HDv4l_cam::Data2Queue(unsigned char *pYuvBuf,int width,int height,int chId)
 {
 	int status;
 
-	chId = 0;
-	if(chId>=1)//if(chId >= CAM_COUNT+1)
+//	chId = 0;
+	if(chId>=QUE_CHID_COUNT)//if(chId >= CAM_COUNT+1)
 		return false;
-	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].width=width;
-	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].height=height;
-	p_queue->bufHndl[chId].bufInfo[m_bufId[chId]].strid=width;
+	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].width=width;
+	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].height=height;
+	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].strid=width;
 
-	OSA_bufPutFull(&p_queue->bufHndl[chId],m_bufId[chId]);
+	OSA_bufPutFull(&queue_main_sub->bufHndl[chId],m_bufId[chId]);
 	return true;
 }
 
-void  HDv4l_cam::start_queue(Alg_Obj * p_queue)
+void  HDv4l_cam::start_queue()
 {
 	int num=SUB_1-MAIN_1;
 	int j=0;
 	for (int i = MAIN_1; i < MAIN_1+CAM_COUNT; i++) {
 		j=i+num;
-		getEmpty(p_queue,&GRAY_data_main[i], i);
-		getEmpty(p_queue,&GRAY_data_sub[j], j);
+		getEmpty(&GRAY_data_main[i-MAIN_1], i);
+		getEmpty(&GRAY_data_sub[i-MAIN_1], j);
 	}
-	getEmpty(p_queue,&select_bgr_data_main,MAIN_ONE_OF_TEN);
-	getEmpty(p_queue,&select_bgr_data_sub,SUB_ONE_OF_TEN );
-	getEmpty(p_queue,&FPGA6_bgr_data_main,MAIN_FPGA_SIX);
-	getEmpty(p_queue,&FPGA6_bgr_data_sub, SUB_FPGA_SIX);
-	getEmpty(p_queue,&FPGA4_bgr_data_main,MAIN_FPGA_FOUR);
-	getEmpty(p_queue,&FPGA4_bgr_data_sub, SUB_FPGA_FOUR);
+	getEmpty(&select_bgr_data_main,MAIN_ONE_OF_TEN);
+	getEmpty(&select_bgr_data_sub,SUB_ONE_OF_TEN );
+	getEmpty(&FPGA6_bgr_data_main,MAIN_FPGA_SIX);
+	getEmpty(&FPGA6_bgr_data_sub, SUB_FPGA_SIX);
+	getEmpty(&FPGA4_bgr_data_main,MAIN_FPGA_FOUR);
+	getEmpty(&FPGA4_bgr_data_sub, SUB_FPGA_FOUR);
 }
 
 

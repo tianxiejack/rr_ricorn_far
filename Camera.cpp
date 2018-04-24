@@ -186,6 +186,8 @@ void save_yuyv_pic2(void *pic,int idx)
 }
 
 
+
+
 void HDVCap::Capture(char* ptr){
 	int BGR_CC=3;
 	static bool once=true;
@@ -201,8 +203,10 @@ void HDVCap::Capture(char* ptr){
 			}
 			else if(i==FPGA_FOUR_CN)//采集的时候大，但是已经经过了转换 //4
 			{
-				temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
-				temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+			//	temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+			//	temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+			temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
+			temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
 			}
 			else//普通1920*1080数据  6
 			{
@@ -217,20 +221,32 @@ void HDVCap::Capture(char* ptr){
 					{
 					case MAIN_FPGA_FOUR:
 						m_chId[MAIN]=FPGA_FOUR_CN;
+						nowpicW=1280;
+						nowpicH=1080;
 						break;
 					case MAIN_ONE_OF_TEN:
+						nowpicW=1920;
+						nowpicH=1080;
 						m_chId[MAIN]=MAIN_CN;
 						break;
 					case MAIN_FPGA_SIX:
+						nowpicW=1920;
+						nowpicH=1080;
 						m_chId[MAIN]=FPGA_SIX_CN;
 						break;
 			    case SUB_FPGA_FOUR:
+					nowpicW=1280;
+					nowpicH=1080;
 			    	m_chId[SUB]=FPGA_FOUR_CN;
 					break;
 					case SUB_ONE_OF_TEN:
+						nowpicW=1920;
+						nowpicH=1080;
 						m_chId[SUB]=SUB_CN;
 						break;
 					case SUB_FPGA_SIX:
+						nowpicW=1920;
+						nowpicH=1080;
 						m_chId[SUB]=FPGA_SIX_CN;
 						break;
 					default:
@@ -239,14 +255,24 @@ void HDVCap::Capture(char* ptr){
 						assert(false);
 						break;
 					}
-
-					if(m_qid>=MAIN_FPGA_FOUR && m_qid<=MAIN_FPGA_SIX)
+#if 1
+					if(m_qid==MAIN_FPGA_FOUR || m_qid==MAIN_FPGA_SIX)
 					{
 						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
 						memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
 					}
 
-					else if(m_qid>=SUB_FPGA_FOUR && m_qid<=SUB_FPGA_SIX)
+					else if(m_qid==SUB_FPGA_FOUR || m_qid==SUB_FPGA_SIX)
+					{
+						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
+						memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
+					}
+					else if(m_qid==MAIN_ONE_OF_TEN)
+					{
+						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
+						memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
+					}
+					else if(m_qid==SUB_FPGA_FOUR || m_qid==SUB_FPGA_SIX)
 					{
 						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
 						memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
@@ -256,6 +282,7 @@ void HDVCap::Capture(char* ptr){
 						printf("input main or sub is out of limit!\n");
 						assert(false);
 					}
+#endif
 }
 
 
