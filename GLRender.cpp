@@ -59,7 +59,7 @@
 
 extern GLEnv env1;
 extern GLEnv env2;
-
+bool enable_hance=true;
 
 bool isTracking=false;
 
@@ -8494,17 +8494,20 @@ GLEnv & env=env1;
 							break;
 			}
 			case '(':
-				foresightPos.SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
+				 enable_hance=true;
+			//	foresightPos.SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
 					break;
 			case ')':
-				foresightPos.SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
+				 enable_hance=false;
+		//		foresightPos.SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
 				break;
 			case '?':
 			{
-				int Vanw,Vanh;
-				Vanw=glutGet(GLUT_WINDOW_WIDTH);
-				Vanh=glutGet(GLUT_WINDOW_HEIGHT);
-				cout<<"W===="<<Vanw<<"H===="<<Vanh<<endl;
+
+			//	int Vanw,Vanh;
+			//	Vanw=glutGet(GLUT_WINDOW_WIDTH);
+			//	Vanh=glutGet(GLUT_WINDOW_HEIGHT);
+			//	cout<<"W===="<<Vanw<<"H===="<<Vanh<<endl;
 			}
 				break;
 

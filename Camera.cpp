@@ -18,6 +18,10 @@
 #include "StlGlDefines.h"
 #include "FishCalib.h"
 #include<sys/time.h>
+#include <cuda.h>
+#include <cuda_gl_interop.h>
+#include <cuda_runtime_api.h>
+#include <omp.h>
 #define MEMCPY memcpy
 
 
@@ -25,6 +29,35 @@ using namespace std;
 using namespace cv;
 unsigned char * temp_data_main[MAX_CC];
 unsigned char * temp_data_sub[MAX_CC];
+extern bool enable_hance;
+#if ENABLE_ENHANCE_FUNCTION
+extern void cuHistEnh(cv::Mat src, cv::Mat dst);
+
+extern void cuClahe(cv::Mat src, cv::Mat dst, unsigned int uiNrX = 8, unsigned int uiNrY = 8, float fCliplimit = 2.5, int procType = 0);
+
+extern void cuUnhazed(cv::Mat src, cv::Mat dst);
+
+extern "C" int rgbResize_(
+	unsigned char *src, unsigned char *dst,
+	int srcw, int srch, int dstw, int dsth );
+
+extern "C" int uyvy2bgr_(
+	unsigned char *dst, const unsigned char *src,
+	int width, int height, cudaStream_t stream);
+
+extern "C" int yuyv2bgr_ext_(
+	unsigned char *dst, const unsigned char *src, unsigned char *gray,
+	int width, int height, cudaStream_t stream);
+
+extern "C" int yuyv2bgr_(
+	unsigned char *dst, const unsigned char *src,
+	int width, int height, cudaStream_t stream);
+
+
+#endif
+
+
+
 
 BaseVCap::~BaseVCap()
 {
@@ -192,6 +225,47 @@ void my_save_rgb(char *filename,void *pic,int w,int h)
 	imwrite(filename,Pic);
 }
 
+void HDVCap::YUYVEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h)
+{
+#if 0
+	static unsigned char * gpu_yuyv;
+			static unsigned char * gpu_rgb;
+			static unsigned char * gpu_enh;
+
+			static bool once =true;
+			static cudaStream_t m_cuStream[2];
+			if(once)
+			{
+				cudaMalloc((void **)&gpu_yuyv,w*h*2);
+				cudaMalloc((void **)&gpu_rgb,w*h*3);
+				cudaMalloc((void **)&gpu_enh,(w)*(h)*3);
+
+				for(int i=0; i<2; i++){
+					cudaStreamCreate(&m_cuStream[i]);
+				}
+				once=false;
+			}
+			cudaMemcpy(gpu_yuyv,temp_data,w*h*2,cudaMemcpyHostToDevice);
+#if ENABLE_ENHANCE_FUNCTION
+			yuyv2bgr_(gpu_rgb,gpu_yuyv,w,h,m_cuStream[0]);
+
+			Mat dst1(h,w,CV_8UC3,gpu_enh);
+			Mat src1(h,w,CV_8UC3,gpu_rgb);
+			cuClahe( src1,dst1, 4,4,4.5,0);
+
+			cudaMemcpy(ptr,gpu_enh,w*h*3,cudaMemcpyDeviceToHost);
+#endif
+#endif
+}
+void HDVCap::YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h)
+{
+#if 0
+	Mat rgbmat(h,w,CV_8UC3,dst);
+	Mat yuyvmat(h,w,CV_8UC2,src);
+	cvtColor(yuyvmat,rgbmat,CV_YUV2BGR_YUYV);
+#endif
+}
+
 void HDVCap::Capture(char* ptr){
 
 	int t[10]={0};
@@ -267,32 +341,84 @@ void HDVCap::Capture(char* ptr){
 						assert(false);
 						break;
 					}
-
 #if 1
 					if(m_qid==MAIN_FPGA_FOUR || m_qid==MAIN_FPGA_SIX)
 					{
 						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
-						memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
+						if(enable_hance)
+						{
+					#if ENABLE_ENHANCE_FUNCTION
+						YUYVEnhance((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+					#else
+						YUYV2RGB((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+					#endif
+						}
+						else
+						{
+							YUYV2RGB((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+						}
+				//		memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
 					}
 
 					else if(m_qid==SUB_FPGA_FOUR || m_qid==SUB_FPGA_SIX)
 					{
 						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
-						memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
+						if(enable_hance)
+						{
+					#if ENABLE_ENHANCE_FUNCTION
+						YUYVEnhance((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+					#else
+						YUYV2RGB((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+					#endif
+						}
+						else
+						{
+							YUYV2RGB((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+						}
+			//			memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
 					}
 					else if(m_qid==MAIN_ONE_OF_TEN)
 					{
-						get_buffer((unsigned char *)ptr,m_qid);
+						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
+						if(enable_hance)
+								{
+						#if ENABLE_ENHANCE_FUNCTION
+							YUYVEnhance((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+						#else
+							YUYV2RGB((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+						#endif
+								}
+							else
+								{
+									YUYV2RGB((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
+								}
 					}
+			//				get_buffer((unsigned char *)ptr,m_qid);
 					else if(m_qid==SUB_ONE_OF_TEN)
 					{
-						get_buffer((unsigned char *)ptr,m_qid);
+						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
+						if(enable_hance)
+								{
+						#if ENABLE_ENHANCE_FUNCTION
+							YUYVEnhance((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+						#else
+							YUYV2RGB((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+						#endif
+							}
+							else
+							{
+								YUYV2RGB((unsigned char *)ptr,temp_data_sub[m_chId[SUB]],nowpicW,nowpicH);
+							}
+			//			get_buffer((unsigned char *)ptr,m_qid);
 					}
 					else
 					{
 						printf("input main or sub is out of limit!\n");
 						assert(false);
 					}
+
+
+
 
 
 #endif

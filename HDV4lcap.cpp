@@ -461,20 +461,22 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					}
 #if 1
 
-					gettimeofday(&startT[8],0);
+		//			gettimeofday(&startT[8],0);
 					if(chid[MAIN]!=-1) //车长
 					{
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
-							gettimeofday(&startT[0],0);
+					//		gettimeofday(&startT[0],0);
+
 							YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
-							gettimeofday(&startT[1],0);
+				//			gettimeofday(&startT[1],0);
 						}
 						else //４副　６副　　车长１０选一
 						{
-							gettimeofday(&startT[2],0);
-							YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
-							gettimeofday(&startT[3],0);
+				//			gettimeofday(&startT[2],0);
+							memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+				//			YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
+				//			gettimeofday(&startT[3],0);
 						}
 
 						if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
@@ -488,18 +490,21 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 						{
-							gettimeofday(&startT[4],0);
-							YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
-							gettimeofday(&startT[5],0);
+							memcpy(*transformed_src_sub,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+
+			//				gettimeofday(&startT[4],0);
+			//				YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
+			//				gettimeofday(&startT[5],0);
 						}
 						else if(now_pic_format==MVDECT_CN)//移动检测
 						{
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 						{
-							gettimeofday(&startT[6],0);
-							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*3);
-							gettimeofday(&startT[7],0);
+							memcpy(*transformed_src_sub,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+				//			gettimeofday(&startT[6],0);
+				//			memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*3);
+				//			gettimeofday(&startT[7],0);
 						}
 						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{
@@ -508,8 +513,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							}
 						}
 					}
-					gettimeofday(&startT[9],0);
-					t[0]=((startT[1].tv_sec-startT[0].tv_sec)*1000000+(startT[1].tv_usec-startT[0].tv_usec))/1000.0;
+		//			gettimeofday(&startT[9],0);
+/*				t[0]=((startT[1].tv_sec-startT[0].tv_sec)*1000000+(startT[1].tv_usec-startT[0].tv_usec))/1000.0;
 					t[1]=((startT[3].tv_sec-startT[2].tv_sec)*1000000+(startT[3].tv_usec-startT[2].tv_usec))/1000.0;
 					t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
 					t[3]=((startT[7].tv_sec-startT[6].tv_sec)*1000000+(startT[7].tv_usec-startT[6].tv_usec))/1000.0;
@@ -520,7 +525,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							printf("t3=%d ms      \n",t[3]);
 							int tt=t[0]+t[1]+t[2]+t[3];
 							printf("tMEM=%d ms      \n",tt);
-							printf("tWHOLE=%d ms      \n",t[4]);
+							printf("tWHOLE=%d ms      \n",t[4]);*/
 
 #endif
 #if 0
