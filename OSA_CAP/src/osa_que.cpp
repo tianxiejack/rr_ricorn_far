@@ -48,7 +48,7 @@ int OSA_queDelete(OSA_QueHndl *hndl)
 
 
 
-int OSA_quePut(OSA_QueHndl *hndl, Int32 value, Uint32 timeout)
+int OSA_quePut(OSA_QueHndl *hndl, Int32 value, Uint32 timeout,OSA_QueHndl *hndl2)
 {
   int status = OSA_EFAIL;
 
@@ -59,6 +59,8 @@ int OSA_quePut(OSA_QueHndl *hndl, Int32 value, Uint32 timeout)
       hndl->queue[hndl->curWr] = value;
       hndl->curWr = (hndl->curWr+1)%hndl->len;
       hndl->count++;
+  //    if(hndl==hndl2)
+//	  printf("putfull count=%d,  %d   p_hndl=%x\n", hndl->count,pthread_self(),hndl);
       status = OSA_SOK;
       pthread_cond_signal(&hndl->condRd);
       break;
@@ -76,7 +78,7 @@ int OSA_quePut(OSA_QueHndl *hndl, Int32 value, Uint32 timeout)
 }
 
 
-int OSA_queGet(OSA_QueHndl *hndl, Int32 *value, Uint32 timeout)
+int OSA_queGet(OSA_QueHndl *hndl, Int32 *value, Uint32 timeout,OSA_QueHndl *hndl2)
 {
   int status = OSA_EFAIL;
   
@@ -91,7 +93,9 @@ int OSA_queGet(OSA_QueHndl *hndl, Int32 *value, Uint32 timeout)
       
       hndl->curRd = (hndl->curRd+1)%hndl->len;
       hndl->count--;
-      status = OSA_SOK;
+  //    if(hndl==hndl2)
+  //  	  printf("get full count=%d, %d      p_hndl=%x\n    ", hndl->count,pthread_self(),hndl);
+         status = OSA_SOK;
       pthread_cond_signal(&hndl->condWr);
       break;
     } else {

@@ -122,16 +122,6 @@ enum
 
 	SUB_FPGA_FOUR,
 	SUB_ONE_OF_TEN,
-	SUB_1,
-	SUB_2,
-	SUB_3,
-	SUB_4,
-	SUB_5,
-	SUB_6,
-	SUB_7,
-	SUB_8,
-	SUB_9,
-	SUB_10,
 	SUB_FPGA_SIX,
 
 	QUE_CHID_COUNT

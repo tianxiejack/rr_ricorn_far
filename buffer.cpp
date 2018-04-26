@@ -207,8 +207,8 @@ void get_buffer(unsigned char* ptr, int chId)
 	unsigned char * bufdata;
 	int state;
 	int cnt=0;
-    for(;;){
-		state=OSA_bufGetFull(&alg_handle->bufHndl[chId],&bufId,OSA_TIMEOUT_FOREVER);
+	    for(;;){
+	    	state=OSA_bufGetFull(&alg_handle->bufHndl[chId],&bufId,OSA_TIMEOUT_FOREVER);
 		if(state != 0)
 			return;
 		if(OSA_queIsEmpty(&alg_handle->bufHndl[chId].fullQue))
@@ -219,6 +219,9 @@ void get_buffer(unsigned char* ptr, int chId)
 			OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 		}
 	}
+
+
+
 //    if(cnt >= 2)
 //	    printf("chId:%d,cnt:%d\n",chId,cnt);
 
@@ -227,7 +230,7 @@ void get_buffer(unsigned char* ptr, int chId)
 	height  = alg_handle->bufHndl[chId].bufInfo[bufId].height;
 
 //    yuv2UYVx(bufdata, ptr, width, height,chId);
-	memcpy(ptr,bufdata,SDI_WIDTH*SDI_HEIGHT*2);
+	memcpy(ptr,bufdata,SDI_WIDTH*SDI_HEIGHT*3);
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
 void get_bufferyuv(unsigned char* ptr, int chId)

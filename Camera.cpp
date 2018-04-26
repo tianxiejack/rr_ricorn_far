@@ -186,9 +186,18 @@ void save_yuyv_pic2(void *pic,int idx)
 }
 
 
-
+void my_save_rgb(char *filename,void *pic,int w,int h)
+{
+	Mat Pic(h,w,CV_8UC3,pic);
+	imwrite(filename,Pic);
+}
 
 void HDVCap::Capture(char* ptr){
+
+	int t[10]={0};
+	 timeval startT[20]={0};
+
+
 	int BGR_CC=3;
 	static bool once=true;
 	int chid[2]={-1,-1};
@@ -216,7 +225,10 @@ void HDVCap::Capture(char* ptr){
 		}
 		once=false;
 	}
+
 					int 	m_chId[2]={-1,-1};
+					static int array[6]={0};
+
 					switch(m_qid)//现在是qid　而不是chid
 					{
 					case MAIN_FPGA_FOUR:
@@ -255,6 +267,7 @@ void HDVCap::Capture(char* ptr){
 						assert(false);
 						break;
 					}
+
 #if 1
 					if(m_qid==MAIN_FPGA_FOUR || m_qid==MAIN_FPGA_SIX)
 					{
@@ -269,19 +282,90 @@ void HDVCap::Capture(char* ptr){
 					}
 					else if(m_qid==MAIN_ONE_OF_TEN)
 					{
-						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
-						memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
+						get_buffer((unsigned char *)ptr,m_qid);
 					}
-					else if(m_qid==SUB_FPGA_FOUR || m_qid==SUB_FPGA_SIX)
+					else if(m_qid==SUB_ONE_OF_TEN)
 					{
-						get_buffer((unsigned char *)temp_data_sub[m_chId[SUB]],m_qid);
-						memcpy(ptr,temp_data_sub[m_chId[SUB]],nowpicW*nowpicH*BGR_CC);
+						get_buffer((unsigned char *)ptr,m_qid);
 					}
 					else
 					{
 						printf("input main or sub is out of limit!\n");
 						assert(false);
 					}
+
+
+#endif
+
+#if 0
+					switch(m_qid)//现在是qid　而不是chid
+									{
+									case MAIN_FPGA_FOUR:
+										m_chId[MAIN]=FPGA_FOUR_CN;
+										nowpicW=1280;
+										nowpicH=1080;
+										array[0]++;
+										if(array[0]==10)
+										{
+											my_save_rgb("./dada/MAIN_4.bmp",ptr,nowpicW,nowpicH);
+										}
+										break;
+									case MAIN_ONE_OF_TEN:
+										nowpicW=1920;
+										nowpicH=1080;
+										m_chId[MAIN]=MAIN_CN;
+										array[1]++;
+															if(array[1]==10)
+															{
+																my_save_rgb("./dada/MAIN_1of10.bmp",ptr,nowpicW,nowpicH);
+															}
+										break;
+									case MAIN_FPGA_SIX:
+										nowpicW=1920;
+										nowpicH=1080;
+										m_chId[MAIN]=FPGA_SIX_CN;
+										array[2]++;
+															if(array[2]==10)
+															{
+																my_save_rgb("./dada/MAIN_6.bmp",ptr,nowpicW,nowpicH);
+															}
+										break;
+							    case SUB_FPGA_FOUR:
+									nowpicW=1280;
+									nowpicH=1080;
+							    	m_chId[SUB]=FPGA_FOUR_CN;
+							    	array[3]++;
+							    						if(array[3]==10)
+							    						{
+							    							my_save_rgb("./dada/SUB_4.bmp",ptr,nowpicW,nowpicH);
+							    						}
+									break;
+									case SUB_ONE_OF_TEN:
+										nowpicW=1920;
+										nowpicH=1080;
+										m_chId[SUB]=SUB_CN;
+										array[4]++;
+															if(array[4]==10)
+															{
+																my_save_rgb("./my_save_rgb/SUB_1of10.bmp",ptr,nowpicW,nowpicH);
+															}
+										break;
+									case SUB_FPGA_SIX:
+										nowpicW=1920;
+										nowpicH=1080;
+										m_chId[SUB]=FPGA_SIX_CN;
+										array[5]++;
+															if(array[5]==10)
+															{
+																my_save_rgb("./dada/SUB_6.bmp",ptr,nowpicW,nowpicH);
+															}
+										break;
+									default:
+										printf("m_qid=%d\n",m_qid);
+										printf("m_qid is not used!!\n");
+										assert(false);
+										break;
+									}
 #endif
 }
 

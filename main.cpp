@@ -81,6 +81,7 @@ int main(int argc, char** argv)
 			BMPMiscGroup::GetInstance(),
 			BMPMiscGroup::GetInstance());
 #else
+
 	env1.init(PanoCaptureGroup::GetMainInstance(),
 			ChosenCaptureGroup::GetMainInstance(),
 		BMPMiscGroup::GetInstance());

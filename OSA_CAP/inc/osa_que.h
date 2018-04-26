@@ -22,8 +22,8 @@ typedef struct {
 
 int OSA_queCreate(OSA_QueHndl *hndl, Uint32 maxLen);
 int OSA_queDelete(OSA_QueHndl *hndl);
-int OSA_quePut(OSA_QueHndl *hndl, Int32  value, Uint32 timeout);
-int OSA_queGet(OSA_QueHndl *hndl, Int32 *value, Uint32 timeout);
+int OSA_quePut(OSA_QueHndl *hndl, Int32  value, Uint32 timeout,OSA_QueHndl *hndl2);
+int OSA_queGet(OSA_QueHndl *hndl, Int32 *value, Uint32 timeout,OSA_QueHndl *hndl2);
 int OSA_quePeek(OSA_QueHndl *hndl, Int32 *value);
 Uint32 OSA_queGetQueuedCount(OSA_QueHndl *hndl);
 Bool OSA_queIsEmpty(OSA_QueHndl *hndl);

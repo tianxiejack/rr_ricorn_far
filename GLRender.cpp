@@ -618,8 +618,8 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_ALL_VIEW_MODE),
-		SecondDisplayMode(SECOND_ALL_VIEW_MODE),
+		fboMode(FBO_CHOSEN_VIEW_MODE),
+		SecondDisplayMode(SECOND_CHOSEN_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
 		send_follow_angle_enable(false),p_CompassBillBoard(NULL),p_LineofRuler(NULL),refresh_ruler(true),
@@ -751,7 +751,11 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 
 static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
 {
-	env.GetChosenCaptureGroup()->captureCam(ptr,index-MAGICAL_NUM);
+#	if USE_BMPCAP
+#else
+	index-=MAGICAL_NUM;
+#endif
+	env.GetChosenCaptureGroup()->captureCam(ptr,index);
 }
 //Fish calibrated
 static void captureCamFish(GLubyte *ptr, int index,GLEnv &env)
@@ -5683,6 +5687,10 @@ void Render::RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool
 
 void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
+
+
+
+
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
@@ -5698,8 +5706,6 @@ void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, b
 		DrawChosenVideo(m_env,needSendData);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
-
-
 
 
 void PrintGLText(GLint x, GLint y, const char *string)

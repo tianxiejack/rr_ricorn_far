@@ -51,7 +51,7 @@ int OSA_bufCreate(OSA_BufHndl *hndl, OSA_BufCreate *bufInit)
     hndl->bufInfo[i].timestamp = 0;
     hndl->bufInfo[i].physAddr = bufInit->bufPhysAddr[i];
     hndl->bufInfo[i].virtAddr = bufInit->bufVirtAddr[i];
-    OSA_quePut(&hndl->emptyQue, i, OSA_TIMEOUT_FOREVER);
+    OSA_quePut(&hndl->emptyQue, i, OSA_TIMEOUT_FOREVER,&hndl->fullQue);
   }
 
   return status;
@@ -64,7 +64,7 @@ int OSA_bufGetEmpty(OSA_BufHndl *hndl, int *bufId, Uint32 timeout)
   if(hndl==NULL || bufId==NULL)
     return OSA_EFAIL;
 
-  status = OSA_queGet(&hndl->emptyQue, bufId, timeout);
+  status = OSA_queGet(&hndl->emptyQue, bufId, timeout,&hndl->fullQue);
 
   if(status!=OSA_SOK) {
     *bufId = OSA_BUF_ID_INVALID;
@@ -83,7 +83,7 @@ int OSA_bufPutFull (OSA_BufHndl *hndl, int bufId)
   if(bufId >= hndl->numBuf || bufId < 0)
     return OSA_EFAIL;
 
-  status = OSA_quePut(&hndl->fullQue, bufId, OSA_TIMEOUT_FOREVER);
+  status = OSA_quePut(&hndl->fullQue, bufId, OSA_TIMEOUT_FOREVER,&hndl->fullQue);
 
   return status;
 }
@@ -95,7 +95,7 @@ int OSA_bufGetFull(OSA_BufHndl *hndl, int *bufId, Uint32 timeout)
   if(hndl==NULL || bufId==NULL)
     return OSA_EFAIL;
 
-  status = OSA_queGet(&hndl->fullQue, bufId, timeout);
+  status = OSA_queGet(&hndl->fullQue, bufId, timeout,&hndl->fullQue);
 
   if(status!=OSA_SOK) {
     *bufId = OSA_BUF_ID_INVALID;
@@ -114,7 +114,7 @@ int OSA_bufPutEmpty(OSA_BufHndl *hndl, int bufId)
   if(bufId >= hndl->numBuf || bufId < 0)
     return OSA_EFAIL;
 
-  status = OSA_quePut(&hndl->emptyQue, bufId, OSA_TIMEOUT_FOREVER);
+  status = OSA_quePut(&hndl->emptyQue, bufId, OSA_TIMEOUT_FOREVER,&hndl->fullQue);
 
   return status;
 }

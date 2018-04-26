@@ -14,6 +14,9 @@ void InitBowlDS()
 
 void Render::RenderSceneDS()
 {
+	int t[10]={0};
+	static timeval startT[20]={0};
+
 	GLEnv &env=env2;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	switch(SecondDisplayMode)
@@ -347,7 +350,7 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	switch(key)
 		{
-			case  'N':
+			case'N':
 			{
 				SECOND_DISPLAY nextMode=SECOND_DISPLAY(((int)SecondDisplayMode+1)%SECOND_TOTAL_MODE_COUNT);
 				SecondDisplayMode = nextMode;
@@ -477,7 +480,7 @@ void RenderMain::ReSizeGLSceneDS(int Width, int Height)
 void RenderMain::DrawGLSceneDS()
 {
 		render.DrawGLSceneDS();
-//	render.DrawGLScene();
+		glutPostRedisplay();
 }
 void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 {
@@ -525,7 +528,6 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 	//	glewInit();
 
 			glutDisplayFunc(DrawGLSceneDS); /* Register the function to do all our OpenGL drawing. */
-			glutIdleFunc(DrawIdle); /* Even if there are no events, redraw our gl scene. */
 			glutReshapeFunc(ReSizeGLSceneDS); /* Register the function called when our window is resized. */
 			glutKeyboardFunc(keyPressedDS); /* Register the function called when the keyboard is pressed. */
 	//		glutSpecialFunc(specialkeyPressed); /* Register the special key function */

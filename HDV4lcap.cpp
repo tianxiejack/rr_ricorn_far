@@ -55,7 +55,6 @@ unsigned char * FPGA6_bgr_data_sub=NULL;
 unsigned char * FPGA6_bgr_data_main=NULL;
 unsigned char * FPGA4_bgr_data_sub=NULL;
 unsigned char * FPGA4_bgr_data_main=NULL;
-unsigned char * GRAY_data_sub[CAM_COUNT];
 unsigned char * GRAY_data_main[CAM_COUNT];
 
 unsigned char * vga_data=NULL;
@@ -108,20 +107,27 @@ void YUYV2UYVx(unsigned char *ptr,unsigned char *Yuyv, int ImgWidth, int ImgHeig
 
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
+	int t[10]={0};
+ timeval startT[20]={0};
 	bool enhance=false;
 	if(w==MAX_SCREEN_WIDTH)//６副图
 	{
+		gettimeofday(&startT[4],0);
 		Mat Src(h,w,CV_8UC2,src);
 		Mat Dst(h,w,CV_8UC3,dst);
 		cvtColor(Src,Dst,CV_YUV2BGR_YUYV);
+		gettimeofday(&startT[5],0);
+
 	}
 	else if (w==FPGA_SCREEN_WIDTH) //4副先进行切割
 	{
+		gettimeofday(&startT[6],0);
 		Mat Src(SDI_HEIGHT,SDI_WIDTH,CV_8UC2,src);
 		Rect rect(0,0,w,h);
 		Mat Roi=Src(rect);
 		Mat Dst(h,w,CV_8UC3,dst);
 		cvtColor(Roi,Dst,CV_YUV2BGR_YUYV);
+		gettimeofday(&startT[7],0);
 		//如果w=1280 h=1080,则进行截取
 		//否则直接转换
 	}
@@ -134,15 +140,17 @@ void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 	{
 //todo
 	}
+	t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
+	t[3]=((startT[7].tv_sec-startT[6].tv_sec)*1000000+(startT[7].tv_usec-startT[6].tv_usec))/1000.0;
+				printf("***********deltatimet[5]-t[4] =%d us      \n",t[2]);
+				printf("***********deltatimet[7]-t[6] =%d us    \n",t[3]);
 }
 
 void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
 {
-	for(int j = 0;j<h*w;j++)
-	{
-			dst[j] = src[2*j +1];
-	}
-	return ;
+	Mat Src(h,w,CV_8UC2,src);
+	Mat Dst(h,w,CV_8UC1,dst);
+	cvtColor(Src,Dst,CV_YUV2GRAY_YVYU);
 }
 
 void save_SDIyuyv_pic(void *pic)
@@ -352,20 +360,41 @@ void yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
 
 int HDv4l_cam::GetNowPicIdx()
 {
-	int picIdx=-1;
+	int picIdx=0;
 	//todo
 	return picIdx;
 }
 int HDv4l_cam::ChangeIdx2chid(int idx)
 {//0~9
-	int picidx=(GetNowPicIdx()+2+idx*13);
+	int picidx=(GetNowPicIdx()+2);
 	return picidx;
 }
 
-
+void save_yuyv(char *filename,void *pic,int w,int h)
+{
+	FILE * fp;
+	char buf[30];
+	fp=fopen(filename,"w");
+	fwrite(pic,w*h*2,1,fp);
+	fclose(fp);
+}
+void save_rgb(char *filename,void *pic,int w,int h)
+{
+	Mat Pic(h,w,CV_8UC3,pic);
+	imwrite(filename,Pic);
+}
+void save_gray(char *filename,void *pic,int w,int h)
+{
+	Mat Pic(h,w,CV_8UC1,pic);
+	imwrite(filename,Pic);
+}
 
 int HDv4l_cam::read_frame(int now_pic_format)
 {
+	int t[10]={0};
+ timeval startT[20]={0};
+
+
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -418,10 +447,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						break;
 					case MVDECT_CN:
 						chid[MAIN]=ChangeIdx2chid(MAIN);
-						chid[SUB]=ChangeIdx2chid(SUB);
 						nowGrayidx=GetNowPicIdx();
 						transformed_src_main=&GRAY_data_main[nowGrayidx];
-						transformed_src_sub=&GRAY_data_sub[nowGrayidx];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -433,45 +460,67 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						break;
 					}
 #if 1
+
+					gettimeofday(&startT[8],0);
 					if(chid[MAIN]!=-1) //车长
 					{
+						if(now_pic_format==MVDECT_CN)//移动检测
+						{
+							gettimeofday(&startT[0],0);
+							YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
+							gettimeofday(&startT[1],0);
+						}
+						else //４副　６副　　车长１０选一
+						{
+							gettimeofday(&startT[2],0);
+							YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
+							gettimeofday(&startT[3],0);
+						}
+
 						if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
 						{
 							if(getEmpty(&*transformed_src_main, chid[MAIN]))
 							{
-								if(now_pic_format==MVDECT_CN)//移动检测
-								{
-									YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
-								}
-								else //４副　６副　　车长１０选一
-								{
-									YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
-								}
 							}
 						}
 					}
 					if(chid[SUB]!=-1)//驾驶员
 					{
+						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
+						{
+							gettimeofday(&startT[4],0);
+							YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
+							gettimeofday(&startT[5],0);
+						}
+						else if(now_pic_format==MVDECT_CN)//移动检测
+						{
+						}
+						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
+						{
+							gettimeofday(&startT[6],0);
+							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*3);
+							gettimeofday(&startT[7],0);
+						}
 						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{
 							if(getEmpty(&*transformed_src_sub, chid[SUB]))
 							{
-								if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
-								{
-									YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
-								}
-								else if(now_pic_format==MVDECT_CN)//移动检测
-								{
-									//拷贝gray数据
-									memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*1);
-								}
-								else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
-								{
-									memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
-								}
 							}
 						}
 					}
+					gettimeofday(&startT[9],0);
+					t[0]=((startT[1].tv_sec-startT[0].tv_sec)*1000000+(startT[1].tv_usec-startT[0].tv_usec))/1000.0;
+					t[1]=((startT[3].tv_sec-startT[2].tv_sec)*1000000+(startT[3].tv_usec-startT[2].tv_usec))/1000.0;
+					t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
+					t[3]=((startT[7].tv_sec-startT[6].tv_sec)*1000000+(startT[7].tv_usec-startT[6].tv_usec))/1000.0;
+					t[4]=((startT[9].tv_sec-startT[8].tv_sec)*1000000+(startT[9].tv_usec-startT[8].tv_usec))/1000.0;
+							printf("t0 =%d ms    \n",t[0]);
+							printf("t1=%d ms     \n",t[1]);
+							printf(" t2=%d ms      \n",t[2]);
+							printf("t3=%d ms      \n",t[3]);
+							int tt=t[0]+t[1]+t[2]+t[3];
+							printf("tMEM=%d ms      \n",tt);
+							printf("tWHOLE=%d ms      \n",t[4]);
 
 #endif
 #if 0
@@ -755,6 +804,7 @@ void HDv4l_cam::mainloop(int now_pic_format)
 			fprintf(stderr, "select timeout\n");
 			exit(EXIT_FAILURE);
 		}
+
 		if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
 			return;
 }
@@ -907,19 +957,15 @@ bool HDv4l_cam::Data2Queue(unsigned char *pYuvBuf,int width,int height,int chId)
 	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].width=width;
 	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].height=height;
 	queue_main_sub->bufHndl[chId].bufInfo[m_bufId[chId]].strid=width;
-
 	OSA_bufPutFull(&queue_main_sub->bufHndl[chId],m_bufId[chId]);
 	return true;
 }
 
 void  HDv4l_cam::start_queue()
 {
-	int num=SUB_1-MAIN_1;
 	int j=0;
 	for (int i = MAIN_1; i < MAIN_1+CAM_COUNT; i++) {
-		j=i+num;
 		getEmpty(&GRAY_data_main[i-MAIN_1], i);
-		getEmpty(&GRAY_data_sub[i-MAIN_1], j);
 	}
 	getEmpty(&select_bgr_data_main,MAIN_ONE_OF_TEN);
 	getEmpty(&select_bgr_data_sub,SUB_ONE_OF_TEN );

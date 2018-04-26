@@ -44,7 +44,7 @@ public:
 	void captureUSB(GLubyte *ptr);
 	void captureCSI(GLubyte *ptr);
 	static void DrawGLScene();
-	static void DrawIdle();
+	static void DrawIdleDS();
 	static void ReSizeGLScene(int Width, int Height);
 
 	static void keyPressed(unsigned char key, int x, int y);
