@@ -5,8 +5,9 @@
 #include "thread.h"
 #include "recvwheeldata.h"
 #include"SelfCheckThread.h"
-#include"Zodiac_Message.h"
-#include"Zodiac_GPIO_Message.h"
+#if USE_CAP_SPI
+#include "Cap_Spi_Message.h"
+#endif
 
 
 
@@ -72,6 +73,9 @@ int main(int argc, char** argv)
 	Parayml param;
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
+#if USE_CAP_SPI
+	InitIPCModule();
+#endif
 
 #if USE_BMPCAP
 	env1.init(BMPPanoGroup::GetInstance(),

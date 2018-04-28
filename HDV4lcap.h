@@ -140,8 +140,10 @@ public:
 	bool bRun;
 //	char *get_split_buffer_ch(){return split_buffer_ch;};
 private:
+	void YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight);
 	void YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h);
 	void YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h);
+	void RectFromPixels(unsigned char *src);
 	int GetNowPicIdx();
 	int ChangeIdx2chid(int idx);
 	void start_queue();
@@ -158,7 +160,6 @@ private:
 	void stop_capturing(void);
 	int  read_frame(int now_pic_format);
 	void errno_exit(const char *s);
-
 //	int  alloc_split_buffer(void);  //shou ji shuju
 //	void process_image(const void *p, int size);
 //	void parse_line_header(int header, int channels, unsigned char *p_src);

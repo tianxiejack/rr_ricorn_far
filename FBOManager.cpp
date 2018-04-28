@@ -453,7 +453,7 @@ bool FBOManager::Init()
 
         // check FBO status
         printFramebufferInfo(fboId);
-        bool status = checkFramebufferStatus(fboId);
+        bool status =true;// checkFramebufferStatus(fboId);
         if(!status)
             fboUsed = false;
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -537,7 +537,7 @@ void FBOManager::DrawTex2Front()
 				glActiveTexture(GL_TEXTURE31);
 				glBindTexture(GL_TEXTURE_2D, textureId);
 				 render.getShaderManager()->UseStockShader(GLT_SHADER_ORI,env.GettransformPipeline()->GetModelViewProjectionMatrix(),31);
-				env.Getp_shadowBatch()->Draw();
+				 env.Getp_shadowBatch()->Draw();
 				glBindTexture(GL_TEXTURE_2D, 0);
 				env.GetmodelViewMatrix()->PopMatrix();
 			env.GetmodelViewMatrix()->PopMatrix();

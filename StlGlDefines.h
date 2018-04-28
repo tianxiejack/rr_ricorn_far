@@ -221,6 +221,10 @@ enum{
 	SUB_EXT_0,
 	SUB_EXT_COUNT
 };
+enum{
+	MVDECT_CAM_0,
+	MVDECT_CAM_COUNT
+};
 
 enum{
 	EXT_CAM_0,

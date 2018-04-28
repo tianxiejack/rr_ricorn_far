@@ -468,6 +468,9 @@ private:
 
 	void RenderVGAView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+
+	void ChangeMainChosenCamidx(char idx);
+	void ChangeSubChosenCamidx(char idx);
 	void RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
 	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);

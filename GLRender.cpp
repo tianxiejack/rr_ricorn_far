@@ -56,17 +56,21 @@
 #endif
 #include "gst_capture.h"
 #include"GLEnv.h"
+#if USE_CAP_SPI
+#include"Cap_Spi_Message.h"
+#endif
+
 
 extern GLEnv env1;
 extern GLEnv env2;
-bool enable_hance=true;
+bool enable_hance=false;
 
 bool isTracking=false;
 
 PanoCamOnForeSight  panocamonforesight;
 TelCamOnForeSight	     telcamonforesight;
 
-Process_Zodiac_Message  zodiac_msg;
+//Process_Zodiac_Message  zodiac_msg;
 extern AlarmTarget mainAlarmTarget;
 extern unsigned char *sdi_data;
 extern unsigned char *vga_data;
@@ -842,8 +846,14 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 {
 	GLEnv & env=env1;
 	GLubyte *pBytes;
+#if USE_CPU
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
 	GLenum format= GL_BGR;
+#else
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
+	GLenum format= GL_BGRA;
+#endif
+
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -1053,7 +1063,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,1920, 1080, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -2310,8 +2320,6 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 
 void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData)
 {
-	if(1)
-	{
 		int idx = GetCurrentChosenVideoId();
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
@@ -2323,10 +2331,13 @@ void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData)
 			else{
 				glBindTexture(GL_TEXTURE_2D, GL_ChosenTextures[idx]);
 			}
+#if USE_CPU
 			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);// VGA texture start from 15
+#else
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);// VGA texture start from 15
+#endif
 			m_env.Getp_shadowBatch()->Draw();
 		m_env.GetmodelViewMatrix()->PopMatrix();
-	}
 }
 
 
@@ -2442,10 +2453,11 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 						SEND_TEXTURE_TO_PETAL(i,m_env);
 			}
 			for(int i = 0; i < CAM_COUNT; i++){
-	#if USE_GAIN
+	#if USE_CPU
 					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 	 #else
-				shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				(*m_env.GetPanel_Petal(i)).Draw();
 				USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
@@ -2462,12 +2474,13 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 				{
 					if(p_petalNum[i]!=-1)
 					{
-	#if USE_GAIN
+	#if USE_CPU
 						{
 							shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
 	#else
-				shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 			//	m_env.Getp_Panel_Petal_OverLap()->Draw();
 				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
@@ -5685,12 +5698,22 @@ void Render::RenderSDIView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
+void Render::ChangeMainChosenCamidx(char idx)
+{
+#if USE_CAP_SPI
+	WriteMessage(MSG_TYPE_YUAN_CHEZHANG,idx );//0~9
+#endif
+}
+void Render::ChangeSubChosenCamidx(char idx)
+{
+#if USE_CAP_SPI
+	WriteMessage(MSG_TYPE_YUAN_JIASHI, idx);//0~9
+#endif
+}
+
+
 void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
 {
-
-
-
-
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
@@ -5967,6 +5990,8 @@ void Render::sendBack()
 }
 void Render::SetdisplayMode( )
 {
+#if 0
+
 	switch(zodiac_msg.GetdispalyMode())
 		{
 			case RECV_VGA_WHITE_MODE :
@@ -6064,6 +6089,7 @@ void Render::SetdisplayMode( )
 					break;
 			}
 		}
+#endif
 }
 
 
@@ -10641,7 +10667,7 @@ void Render::PrepareAlarmAera(GLEnv &m_env,int x,int y,int w,int h)
 		InitAlarmArea(set_pos,TYPE_MOVE);
 		Once=false;
 	}
-	if(zodiac_msg.GetdispalyMode()==RECV_ENABLE_TRACK)
+//	if(zodiac_msg.GetdispalyMode()==RECV_ENABLE_TRACK)
 	{
 	static timeval starttime,startalarm_time,read_pic_time,send_pic_time,write_pic_time,draw_target_time;
 	gettimeofday(&starttime,0);
@@ -11531,8 +11557,11 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		}
 		break;
 	}
+#if USE_CPU
 	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
-
+#else
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
+#endif
 	switch(type)
 	{
 	case RULER_45:

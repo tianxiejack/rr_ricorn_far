@@ -6,7 +6,7 @@
  */
 #ifndef ZODIAC_MESSAGE_H
 #define ZODIAC_MESSAGE_H
-
+#if 0
 typedef struct set_mode {
 	unsigned char display_mode[2];/*显示模式：01--19*/
 	unsigned char save;/*存储：1/0：1保存 0不存*/
@@ -84,5 +84,5 @@ void IPC_Destroy(void);
 #ifdef __cplusplus
 }
 #endif
-
+#endif
 #endif /* ZODIAC_MESSAGE1_H_ */

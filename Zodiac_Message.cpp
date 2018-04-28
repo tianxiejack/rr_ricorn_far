@@ -22,7 +22,7 @@
 #include "Serial_port.h"
 
 #define FTOK_PATH "/home/ubuntu"
-
+#if 0
 int ret_value;
 int ipc_port = 125;
 key_t ipc_key;
@@ -141,7 +141,7 @@ void *ipc_recv(void* arg) {
 	}
 }
 /*消息队列模块：包括初始化和开接收线程*/
-void InitIPCModule() {
+void Zodiac_InitIPCModule() {
 	pthread_t thread;
 	int ret, err;
 	char port[] = "/dev/ttyTHS2";
@@ -286,3 +286,4 @@ void IPC_Destroy(void) {
 	msgctl(ipc_qid, IPC_RMID, 0); //删除消息队列
 	UART0_Close(fd);
 }
+#endif

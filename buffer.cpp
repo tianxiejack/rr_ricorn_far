@@ -230,7 +230,16 @@ void get_buffer(unsigned char* ptr, int chId)
 	height  = alg_handle->bufHndl[chId].bufInfo[bufId].height;
 
 //    yuv2UYVx(bufdata, ptr, width, height,chId);
-	memcpy(ptr,bufdata,SDI_WIDTH*SDI_HEIGHT*2);
+	int w=SDI_WIDTH;
+	if(chId==MAIN_FPGA_FOUR ||chId==SUB_FPGA_FOUR)
+	{
+		w=FPGA_SCREEN_WIDTH;
+	}
+#if USE_CPU
+	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
+#else
+	memcpy(ptr,bufdata,w*SDI_HEIGHT*2);
+#endif
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
 void get_bufferyuv(unsigned char* ptr, int chId)

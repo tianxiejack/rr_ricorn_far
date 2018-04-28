@@ -227,7 +227,7 @@ void my_save_rgb(char *filename,void *pic,int w,int h)
 
 void HDVCap::YUYVEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h)
 {
-#if 0
+#if 1
 	static unsigned char * gpu_yuyv;
 			static unsigned char * gpu_rgb;
 			static unsigned char * gpu_enh;
@@ -259,15 +259,23 @@ void HDVCap::YUYVEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h
 }
 void HDVCap::YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h)
 {
-#if 0
+#if 1
+	int t[10]={0};
+ timeval startT[20]={0};
+	gettimeofday(&startT[4],0);
+	//memcpy(dst,src,w*h*2);
 	Mat rgbmat(h,w,CV_8UC3,dst);
 	Mat yuyvmat(h,w,CV_8UC2,src);
 	cvtColor(yuyvmat,rgbmat,CV_YUV2BGR_YUYV);
+	gettimeofday(&startT[5],0);
+			t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
+			printf("deltatimet[5]-t[4] =%d ms   \n",t[2]);
 #endif
 }
 
 void HDVCap::Capture(char* ptr){
-
+	get_buffer((unsigned char *)ptr,m_qid);
+#if 0
 	int t[10]={0};
 	 timeval startT[20]={0};
 
@@ -286,10 +294,10 @@ void HDVCap::Capture(char* ptr){
 			}
 			else if(i==FPGA_FOUR_CN)//采集的时候大，但是已经经过了转换 //4
 			{
-			//	temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
-			//	temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
-			temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
-			temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
+				temp_data_main[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+				temp_data_sub[i]=(unsigned char * )malloc(FPGA_SCREEN_WIDTH*FPGA_SCREEN_HEIGHT*BGR_CC);
+			//temp_data_main[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
+			//temp_data_sub[i]=(unsigned char * )malloc(SDI_WIDTH*SDI_HEIGHT*BGR_CC);
 			}
 			else//普通1920*1080数据  6
 			{
@@ -341,10 +349,33 @@ void HDVCap::Capture(char* ptr){
 						assert(false);
 						break;
 					}
-#if 1
 					if(m_qid==MAIN_FPGA_FOUR || m_qid==MAIN_FPGA_SIX)
 					{
+
+					}
+					else if(m_qid==SUB_FPGA_FOUR || m_qid==SUB_FPGA_SIX)
+					{
+
+					}
+					else if(m_qid==MAIN_ONE_OF_TEN)
+					{
+
+					}
+					else if(m_qid==SUB_ONE_OF_TEN)
+					{
+
+					}
+					else
+					{
+						printf("input main or sub is out of limit!\n");
+						assert(false);
+					}
+#if 0
+					if(m_qid==MAIN_FPGA_FOUR || m_qid==MAIN_FPGA_SIX)
+					{
+
 						get_buffer((unsigned char *)temp_data_main[m_chId[MAIN]],m_qid);
+
 						if(enable_hance)
 						{
 					#if ENABLE_ENHANCE_FUNCTION
@@ -357,6 +388,7 @@ void HDVCap::Capture(char* ptr){
 						{
 							YUYV2RGB((unsigned char *)ptr,temp_data_main[m_chId[MAIN]],nowpicW,nowpicH);
 						}
+
 				//		memcpy(ptr,temp_data_main[m_chId[MAIN]],nowpicW*nowpicH*BGR_CC);
 					}
 
@@ -416,7 +448,7 @@ void HDVCap::Capture(char* ptr){
 						printf("input main or sub is out of limit!\n");
 						assert(false);
 					}
-
+#endif
 
 
 
@@ -493,6 +525,7 @@ void HDVCap::Capture(char* ptr){
 										break;
 									}
 #endif
+
 }
 
 
@@ -680,25 +713,28 @@ bool BMPVcap::Open()
 	else{
 		Mat ycrcb;
 		Mat im=cvarrToMat(pic);
-	//	cvtColor( im, ycrcb, CV_RGB2YCrCb );
+#if USE_CPU
 		cvtColor( im,yuv_alpha,CV_RGB2BGR); //RGB->RGB
 		memcpy(yuv_alpha.data,im.data,im.rows*im.cols*3);
-/*
-		Vec3b pix;
-		Vec4b pix_alpha;
-		for (int r = 0; r < ycrcb.rows; r++)
-		{
-			for (int c = 0; c < ycrcb.cols; c++)
-			{
-				pix = ycrcb.at<Vec3b>(r,c);
-				pix_alpha.val[0]=pix.val[1];
-				pix_alpha.val[1]=pix.val[0];
-				pix_alpha.val[2]=pix.val[2];
-				pix_alpha.val[3]=pix.val[0];
-				yuv_alpha.at<Vec4b>(r,c) = pix_alpha;
-			}
-		}
-		*/
+#else
+				cvtColor( im, ycrcb, CV_RGB2YCrCb );
+				cvtColor( im,yuv_alpha,CV_RGB2RGBA);
+				memcpy(yuv_alpha.data,im.data,im.rows*im.cols*3);
+				Vec3b pix;
+				Vec4b pix_alpha;
+				for (int r = 0; r < ycrcb.rows; r++)
+				{
+					for (int c = 0; c < ycrcb.cols; c++)
+					{
+						pix = ycrcb.at<Vec3b>(r,c);
+						pix_alpha.val[0]=pix.val[1];
+						pix_alpha.val[1]=pix.val[0];
+						pix_alpha.val[2]=pix.val[2];
+						pix_alpha.val[3]=pix.val[0];
+						yuv_alpha.at<Vec4b>(r,c) = pix_alpha;
+					}
+				}
+#endif
 		cout<<"BMPVCap Open "<<pFileName<<" OK."<<endl;
 		ret = true;
 	}

@@ -40,8 +40,13 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 //#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
 	GLEnv &env=env2;
 	GLubyte *pBytes;
+#if USE_CPU
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
 	GLenum format= GL_BGR;
+#else
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
+	GLenum format= GL_BGRA;
+#endif
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -247,7 +252,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,nWidth, nHeight, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,1920, 1080, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 

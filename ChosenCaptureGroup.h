@@ -6,6 +6,7 @@ class ChosenCaptureGroup:public HDCaptureGroup
 public:
 	static ChosenCaptureGroup * GetMainInstance();
 	static ChosenCaptureGroup * GetSubInstance();
+	static ChosenCaptureGroup * GetMvDetectInstance();
 		~ChosenCaptureGroup();
 	virtual void CreateProducers();
 	virtual void OpenProducers();
@@ -15,6 +16,7 @@ private:
 	ChosenCaptureGroup(const ChosenCaptureGroup&){};
 	static ChosenCaptureGroup MainChosenGroup;
 	static ChosenCaptureGroup SubChosenGroup;
+	static ChosenCaptureGroup MvDetectGroup;
 };
 #endif
 
