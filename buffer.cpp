@@ -269,7 +269,7 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 	width   = alg_handle->bufHndl[chId].bufInfo[bufId].width;
 	height  = alg_handle->bufHndl[chId].bufInfo[bufId].height;
 
-	memcpy(ptr,bufdata,PANO_TEXTURE_WIDTH*PANO_TEXTURE_HEIGHT*3);
+	memcpy(ptr,bufdata,PANO_TEXTURE_WIDTH*PANO_TEXTURE_HEIGHT*4);
 //    yuv2UYVx(bufdata, ptr, width, height,chId);
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }

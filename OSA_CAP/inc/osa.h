@@ -18,7 +18,7 @@
 #endif
 
 #if !defined OSA_BUFFER_CC
-#define OSA_BUFFER_CC 2
+#define OSA_BUFFER_CC 4
 #endif
 
 

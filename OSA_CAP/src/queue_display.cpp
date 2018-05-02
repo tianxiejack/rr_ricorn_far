@@ -20,11 +20,7 @@ void * alg_buf_init(void)
 		alg_handle->bufCreate[i].numBuf=NUMCHANAL;
 		for(j=0;j<alg_handle->bufCreate[i].numBuf;j++)
 		{
-#if USE_CPU
-			alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(OSA_BUFFER_WIDTH*OSA_BUFFER_HEIGHT*3);
-#else
 			alg_handle->bufCreate[i].bufVirtAddr[j]=OSA_memAlloc(OSA_BUFFER_WIDTH*OSA_BUFFER_HEIGHT*OSA_BUFFER_CC);
-#endif
 			OSA_assert(alg_handle->bufCreate[i].bufVirtAddr[j]!=NULL);
 		}
 		OSA_bufCreate(&alg_handle->bufHndl[i],&alg_handle->bufCreate[i]);

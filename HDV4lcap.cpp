@@ -210,9 +210,11 @@ void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 
 void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
 {
-	Mat Src(h,w,CV_8UC2,src);
-	Mat Dst(h,w,CV_8UC1,dst);
-	cvtColor(Src,Dst,CV_YUV2GRAY_YVYU);
+	for(int i=0;i<w*h;i++)
+	{
+    *(dst++) =*(src++) ;
+    src++;
+	}
 }
 
 void save_SDIyuyv_pic(void *pic,int w,int h)
@@ -531,20 +533,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 							if(now_pic_format!=MAIN_CN)
 							{
-#if USE_CPU
-								YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
-#else
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-
-	#endif
 							}
 							else
 							{
-#if USE_CPU
-								YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
-#else
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-#endif
 								//todo //４副　６副
 							}
 								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
@@ -560,11 +553,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 						{
-#if USE_CPU
-							YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
-#else
 							YUYV2UYVx(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-#endif
 						//	static int   a=0;
 					//		a++;
 					//		if(a==20)
