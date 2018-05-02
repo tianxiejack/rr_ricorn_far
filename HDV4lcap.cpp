@@ -122,9 +122,11 @@ void HDv4l_cam::RectFromPixels(unsigned char *src)
 
 void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
-#if 0
+#if 1
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
+		printf("cap_error_1280?\n");
+		assert(false);
 			RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换

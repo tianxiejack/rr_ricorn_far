@@ -16,8 +16,8 @@ void  PanoCaptureGroup::CreateProducers()
 	{
 		ProduceOnce=false;
 		int dev_id=FPGA_FOUR_CN;
-		if(pHDAsyncVCap[dev_id]==NULL)
-			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
+//		if(pHDAsyncVCap[dev_id]==NULL)
+//			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
 		dev_id=FPGA_SIX_CN;
 		if(pHDAsyncVCap[dev_id]==NULL)
 			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>(new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
@@ -28,7 +28,7 @@ void  PanoCaptureGroup::CreateProducers()
 void  PanoCaptureGroup::OpenProducers()
 {
 	int dev_id=FPGA_FOUR_CN;
-	 pHDAsyncVCap[dev_id]->Open();
+//	 pHDAsyncVCap[dev_id]->Open();
 	 dev_id=FPGA_SIX_CN;
 	 pHDAsyncVCap[dev_id]->Open();
 }
@@ -47,8 +47,8 @@ PanoCaptureGroup::~PanoCaptureGroup()
 
 PanoCaptureGroup * PanoCaptureGroup::GetMainInstance()
 {
-	int queueid[2]={MAIN_FPGA_FOUR,MAIN_FPGA_SIX};
-	int count=2;
+	int queueid[1]={MAIN_FPGA_SIX};
+	int count=1;
 	static bool once =true;
 	if(once){
 		MainPanoGroup.init(queueid,count);
@@ -59,8 +59,8 @@ PanoCaptureGroup * PanoCaptureGroup::GetMainInstance()
 
 PanoCaptureGroup * PanoCaptureGroup::GetSubInstance()
 {
-	int queueid[2]={SUB_FPGA_FOUR,SUB_FPGA_SIX};
-	int count=2;
+	int queueid[1]={SUB_FPGA_SIX};
+	int count=1;
 	static bool once =true;
 	if(once){
 		SubPanoGroup.init(queueid,count);

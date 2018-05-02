@@ -2449,7 +2449,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 		if(p_petalNum==NULL)
 		{
 				glActiveTexture(GL_TextureIDs[0]);
-				for(int i = 0; i < 2; i++){
+				for(int i = 0; i < 1; i++){
 						SEND_TEXTURE_TO_PETAL(i,m_env);
 			}
 			for(int i = 0; i < CAM_COUNT; i++){
@@ -2467,7 +2467,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 		else
 		{
 			glActiveTexture(GL_TextureIDs[0]);
-			for(int i = 0; i < 2; i++){
+			for(int i = 0; i < 1; i++){
 				    SEND_TEXTURE_TO_PETAL(i,m_env);
 		}
 		for(int i=0;i<CAM_COUNT;i++)
