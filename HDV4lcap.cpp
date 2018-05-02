@@ -22,7 +22,9 @@
 #include "buffer.h"
 #include"StlGlDefines.h"
 #include <osa_sem.h>
+#if ARM_NEON_ENABLE
 #include"yuv2rgb.h"
+#endif
 #if TRACK_MODE
 #include "VideoProcessTrack.hpp"
 #endif
