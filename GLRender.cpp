@@ -4234,6 +4234,8 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			memset(petal1,-1,sizeof(petal1));
 			int petal2[CAM_COUNT];
 			memset(petal2,-1,sizeof(petal2));
+			int petal3[CAM_COUNT];
+			memset(petal3,-1,sizeof(petal2));
 			int petaltest[12]={0,1,2,3,4,-1,-1,-1,-1,-1,-1,-1};
 		glViewport(x,y,w,h);
 		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
@@ -4338,22 +4340,22 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 
 #else
-				petal1[1]=1;
-				petal1[2]=2;
-				petal1[3]=3;
+//	petal3[1]=1;
+	petal3[2]=2;
+	petal3[3]=3;
 
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,false,petal1,mainOrsub);
+				DrawPanel(m_env,false,petal3,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
-				m_env.GetmodelViewMatrix()->PushMatrix();
-				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
-				DrawPanel(m_env,false,petal1,mainOrsub);
-				m_env.GetmodelViewMatrix()->PopMatrix();
-				m_env.GetmodelViewMatrix()->PushMatrix();
-				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
-				DrawPanel(m_env,false,petal1,mainOrsub);
-				m_env.GetmodelViewMatrix()->PopMatrix();
+		//		m_env.GetmodelViewMatrix()->PushMatrix();
+	//			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
+	//			DrawPanel(m_env,false,petal3,mainOrsub);
+	//			m_env.GetmodelViewMatrix()->PopMatrix();
+	//			m_env.GetmodelViewMatrix()->PushMatrix();
+	//			m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
+	//			DrawPanel(m_env,false,petal3,mainOrsub);
+	//			m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
 		{

@@ -22,14 +22,19 @@ void Render::RenderSceneDS()
 	switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
-	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
-	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
-	RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,SUB);
-	RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
-	RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
+		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*809.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
+		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
+		RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*538.0/1080,SUB);
+
+//	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+//	RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,SUB);
+	//RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
+	//RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
-		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
+		RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
+	//	RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
 	default :
 		break;
