@@ -531,11 +531,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
 #else
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-								static int a=0;
-								if(nowpicW==1920)
-									a++;
-								if(a==30)
-									save_SDIyuyv_pic(*transformed_src_main,nowpicW,nowpicH);
+
 	#endif
 							}
 							else
@@ -544,7 +540,6 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_main,nowpicW,nowpicH);
 #else
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-
 #endif
 								//todo //４副　６副
 							}
