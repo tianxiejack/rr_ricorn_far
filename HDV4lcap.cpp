@@ -28,7 +28,7 @@
 #if TRACK_MODE
 #include "VideoProcessTrack.hpp"
 #endif
-
+#include <malloc.h>
 #include"MvDetect.hpp"
 
 extern Alg_Obj * queue_main_sub;
@@ -64,7 +64,7 @@ unsigned char * vga_data=NULL;
 
 
 extern MvDetect mv_detect;
-HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_MMAP/*IO_METHOD_MMAP*/),imgwidth(width),
+HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_USERPTR/*IO_METHOD_MMAP*/),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
 force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 {
@@ -785,6 +785,9 @@ void HDv4l_cam::init_userp(unsigned int buffer_size)
 {
 	struct v4l2_requestbuffers req;
 	cudaError_t ret = cudaSuccess;
+	unsigned int page_size;
+		page_size=getpagesize();
+		buffer_size=(buffer_size+page_size-1)&~(page_size-1);
 	CLEAR(req);
 
 	req.count  = bufferCount;//  different
@@ -815,7 +818,7 @@ void HDv4l_cam::init_userp(unsigned int buffer_size)
 	for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
 		buffers[n_buffers].length = buffer_size;
 		if(memType == MEMORY_NORMAL)
-			buffers[n_buffers].start = malloc(buffer_size);
+			buffers[n_buffers].start =		buffers[n_buffers].start = memalign(page_size,buffer_size);
 	else // MEMORY_LOCKED
 			 ret = cudaHostAlloc(&buffers[n_buffers].start, buffer_size, cudaHostAllocDefault);
 			assert(ret == cudaSuccess);
