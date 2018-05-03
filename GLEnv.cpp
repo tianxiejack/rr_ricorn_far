@@ -9,10 +9,11 @@ GLenum iniformat=GL_BGRA;
 GLenum internalFormat=GL_RGBA8;
 static int iniCC=4;
 #endif
-GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc):
+GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup * p_MvDetect,CaptureGroup *p_misc):
 m_panoCaptureGroup(p_pano),
 m_chosenCaptureGroup(p_chosen),
 m_miscCaptureGroup(p_misc),
+m_MvDetectCaptureGroup(p_MvDetect),
 PBOMgr(PBOSender(CAM_COUNT,PANO_TEXTURE_WIDTH,PANO_TEXTURE_HEIGHT,iniCC,iniformat,0.6,0.4)),
 FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,iniformat,internalFormat)),
 PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,iniCC,iniformat)),
@@ -103,10 +104,11 @@ void GLEnv::Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr)
 	mp_FboPboFacade=new PBO_FBO_Facade(FBOMgr,PBORcr);
 }
 
-void GLEnv::init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc)
+void GLEnv::init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_MvDetect,CaptureGroup *p_misc)
 {
 	m_panoCaptureGroup=p_pano;
 	m_chosenCaptureGroup=p_chosen;
 	m_miscCaptureGroup=p_misc;
+	m_MvDetectCaptureGroup=p_MvDetect;
 }
 
