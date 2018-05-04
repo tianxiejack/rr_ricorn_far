@@ -622,7 +622,7 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_CHOSEN_VIEW_MODE),
+		fboMode(FBO_ALL_VIEW_MODE),
 		SecondDisplayMode(SECOND_CHOSEN_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -5080,8 +5080,8 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(-36.5,0.0,0.0);
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -5283,6 +5283,8 @@ else
 		p_ForeSightFacade->Draw(render.getRulerAngle()->Load());
 	}
 */
+p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
@@ -5354,8 +5356,8 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(7.5,0.0,0.0);
 }
 
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
@@ -5490,11 +5492,11 @@ else if(displayMode==ALL_VIEW_MODE
 		petal4[0]=0;
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-		DrawPanel(m_env,needSendData,petal3,mainOrsub);
+		DrawPanel(m_env,needSendData,petal4,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->PushMatrix();
 	//	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
-		DrawPanel(m_env,false,petal4,mainOrsub);
+		DrawPanel(m_env,false,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
@@ -5531,6 +5533,8 @@ else
 		p_ForeSightFacade->Draw(render.getRulerAngle()->Load());
 	}
 	*/
+//p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
+//		p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}

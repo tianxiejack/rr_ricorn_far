@@ -572,7 +572,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 						{
-							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
+					//		memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
 						//	memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*3);
 						//	memcpy(*transformed_src_sub,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
 						}

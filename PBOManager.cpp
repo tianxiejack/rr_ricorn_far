@@ -332,7 +332,7 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 	nowPboId=nextIndex;
 			if(pPixelBuffer[nextIndex])
 	{
-				OSA_semSignal(pSemPBO);
+		OSA_semSignal(pSemPBO);
 		static bool once=true;
 		if(once)
 		{
