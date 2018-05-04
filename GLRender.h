@@ -432,7 +432,7 @@ private:
 
 
 
-	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mianORsub=MAIN,bool needSendData=false);
+	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mianORsub=MAIN,bool needSendData=true);
 	void RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
 	void RenderMyLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,bool needSendData=true);
 

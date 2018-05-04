@@ -23,17 +23,17 @@ void Render::FBOdraw()
 		}
 	//	gettimeofday(&startT[4],0);
 
-		if(g_windowHeight==768)
+		 if(g_windowHeight==768)
 		{
-			RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN,0,0,0,0,true);
-			RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,false);
-			RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
+			RenderRightPanoView(env,0,g_windowHeight*653.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,0,0,0,0,needSendData);
+			RenderLeftPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,needSendData);
+			RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024, g_windowHeight*538/768,MAIN);
 		}
 		 else
 			{
-			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
+			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,needSendData);
 		//	gettimeofday(&startT[5],0);
-			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
+			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,needSendData);
 		//	gettimeofday(&startT[6],0);
 			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 	//		gettimeofday(&startT[7],0);
@@ -52,6 +52,7 @@ void Render::FBOdraw()
 		break;
 	default:
 				break;
+
 	}
 #endif
 }

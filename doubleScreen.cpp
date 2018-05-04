@@ -2,6 +2,7 @@
 #include "GLRender.h"
 #include "common.h"
 #include "GLEnv.h"
+#include"Thread_Priority.h"
 extern Render render;
 Common comSecondSC;
 extern float forward_data;
@@ -14,6 +15,12 @@ void InitBowlDS()
 
 void Render::RenderSceneDS()
 {
+	static bool setpriorityOnce=true;
+	if(setpriorityOnce)
+	{
+		setCurrentThreadHighPriority(THREAD_L_S_RENDER);
+		setpriorityOnce=false;
+	}
 	int t[10]={0};
 	static timeval startT[20]={0};
 
@@ -22,13 +29,15 @@ void Render::RenderSceneDS()
 	switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
-		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*116.0/1080.0,SUB);
-		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*811.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
-		RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
-	//	RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0);
-	//	RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0);
-	//	RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0);
+		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*809.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
+		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
+		RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*538.0/1080,SUB);
 
+//	RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,SUB);
+//	RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,SUB);
+	//RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
+	//RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);

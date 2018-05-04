@@ -61,21 +61,9 @@ PBOSender::~PBOSender()
 
 bool PBOSender::Init()
 {
-	bool pboSupported = false;
     // get OpenGL info
-    glInfo glInfo;
-    glInfo.getInfo();
-	 if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
-	    {
-	        pboSupported = true;
-	        std::cout << "Video card supports GL_ARB_pixel_buffer_object." << std::endl;
-	    }
-	    else
-	    {
-	        pboSupported = false;
-	        std::cout << "Video card does NOT support GL_ARB_pixel_buffer_object." << std::endl;
-	    }
-	 if(pboSupported)
+
+	 if(1)
 	    {
 	        // create 2 pixel buffer objects, you need to delete them when program exits.
 	        // glBufferDataARB with NULL pointer reserves only memory space.
@@ -86,7 +74,7 @@ bool PBOSender::Init()
 		}
 	        glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 	    }
-	 return pboSupported;
+	 return true;
 }
 
 void PBOSender::sendDataNoPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, GLuint idx)
@@ -130,8 +118,7 @@ void PBOSender::sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, 
 
 #if WHOLE_PIC
 if(idx==0)//10路拼接中2*3
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
-	//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else if(idx==1)//10路拼接中2*2
 	glTexSubImage2D(GL_TEXTURE_2D, 0, width*m_ratio_1, 0, width*m_ratio_2, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else
@@ -183,8 +170,7 @@ else if(idx==1)
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
 if(idx==0)
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, pixel_format, GL_UNSIGNED_BYTE, 0);
-//	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width*m_ratio_1, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else if(idx==1)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, width*m_ratio_1, 0, width*m_ratio_2, height, pixel_format, GL_UNSIGNED_BYTE, 0);
 else
@@ -238,22 +224,7 @@ bool PBOReceiver::Init()
 	{
 		printf("OSA_semCreate failed\n");
 	}
-
-	bool pboSupported = false;
-    // get OpenGL info
-    glInfo glInfo;
-    glInfo.getInfo();
-	 if(glInfo.isExtensionSupported("GL_ARB_pixel_buffer_object"))
-	    {
-	        pboSupported = true;
-	        std::cout << "Video card supports GL_ARB_pixel_buffer_object." << std::endl;
-	    }
-	    else
-	    {
-	        pboSupported = false;
-	        std::cout << "Video card does NOT support GL_ARB_pixel_buffer_object." << std::endl;
-	    }
-	 if(pboSupported)
+	 if(1)
 	    {
 	        // create 2 pixel buffer objects, you need to delete them when program exits.
 	        // glBufferDataARB with NULL pointer reserves only memory space.
@@ -266,7 +237,7 @@ bool PBOReceiver::Init()
 	       	 }
 	       			        glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 	    }
-	 return pboSupported;
+	 return true;
 }
 
 void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
@@ -332,7 +303,7 @@ void PBOReceiver::getDataPBO(int startX,int startY,int w,int h, GLuint idx)
 	nowPboId=nextIndex;
 			if(pPixelBuffer[nextIndex])
 	{
-		OSA_semSignal(pSemPBO);
+				OSA_semSignal(pSemPBO);
 		static bool once=true;
 		if(once)
 		{

@@ -29,6 +29,8 @@
 #include "VideoProcessTrack.hpp"
 #endif
 #include <malloc.h>
+#include <omp.h>
+#include"Thread_Priority.h"
 #include"MvDetect.hpp"
 
 extern Alg_Obj * queue_main_sub;
@@ -119,34 +121,49 @@ void HDv4l_cam::RectFromPixels(unsigned char *src)
 	}
 }
 
+void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
+{
+	for(int j =0;j<ImgHeight;j++)
+		{
+			for(int i=0;i<ImgWidth*2/4;i++)
+			{
+				*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4);
+				*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+1);
+				*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+3);
+				*(dst+j*ImgWidth*4+i*8+3)=0;
 
+				*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+2);
+				*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+1);
+				*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+3);
+				*(dst+j*ImgWidth*4+i*8+7)=0;
+			}
+		}
+}
 void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
-#if 1
+#if 0
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
-		printf("cap_error_1280?\n");
-		assert(false);
 			RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换
 		}
 #endif
-	for(int j =0;j<ImgHeight;j++)
-	{
-		for(int i=0;i<ImgWidth*2/4;i++)
-		{
-			*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4);
-			*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+1);
-			*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+3);
-			*(dst+j*ImgWidth*4+i*8+3)=0;
-
-			*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+2);
-			*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+1);
-			*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+3);
-			*(dst+j*ImgWidth*4+i*8+7)=0;
-		}
-	}
+	YUVquar(dst,src,ImgWidth,ImgHeight);
+#if 0
+	int t[10]={0};
+ timeval startT[20]={0};
+	gettimeofday(&startT[4],0);
+	ImgHeight/=4;
+#pragma omp parallel for
+for(int i=0;i<4;i++)
+{
+	YUVquar(dst+4*i*ImgWidth*ImgHeight,src+2*i*ImgWidth*ImgHeight,ImgWidth,ImgHeight);
+}
+	gettimeofday(&startT[5],0);
+			t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
+			printf("YUYV->UYVX=%d ms    \n",t[2]);
+#endif
 }
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
@@ -531,11 +548,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
-							YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
+					//		YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
 						}
 						else //４副　６副　　车长１０选一
 						{
-							if(now_pic_format!=MAIN_CN)
+							if(now_pic_format==MAIN_CN)
 							{
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							}
@@ -557,24 +574,14 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 						{
-							YUYV2UYVx(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-						//	static int   a=0;
-					//		a++;
-					//		if(a==20)
-					//		{
-					//			save_SDIyuyv_pic(buffers[buf.index].start);
-					//		}
-							//	YUYV2RGB((unsigned char *)buffers[buf.index].start,*transformed_src_sub,nowpicW,nowpicH);
-					//		memcpy(*transformed_src_sub,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+					//		YUYV2UYVx(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 						}
 						else if(now_pic_format==MVDECT_CN)//移动检测
 						{
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 						{
-					//		memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
-						//	memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*3);
-						//	memcpy(*transformed_src_sub,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
 						}
 						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{
@@ -786,8 +793,8 @@ void HDv4l_cam::init_userp(unsigned int buffer_size)
 	struct v4l2_requestbuffers req;
 	cudaError_t ret = cudaSuccess;
 	unsigned int page_size;
-		page_size=getpagesize();
-		buffer_size=(buffer_size+page_size-1)&~(page_size-1);
+	page_size=getpagesize();
+	buffer_size=(buffer_size+page_size-1)&~(page_size-1);
 	CLEAR(req);
 
 	req.count  = bufferCount;//  different
@@ -818,7 +825,7 @@ void HDv4l_cam::init_userp(unsigned int buffer_size)
 	for (n_buffers = 0; n_buffers < req.count; ++n_buffers) {
 		buffers[n_buffers].length = buffer_size;
 		if(memType == MEMORY_NORMAL)
-			buffers[n_buffers].start =		buffers[n_buffers].start = memalign(page_size,buffer_size);
+			buffers[n_buffers].start = memalign(page_size,buffer_size);
 	else // MEMORY_LOCKED
 			 ret = cudaHostAlloc(&buffers[n_buffers].start, buffer_size, cudaHostAllocDefault);
 			assert(ret == cudaSuccess);
@@ -842,7 +849,34 @@ void HDv4l_cam::close_device(void)
 
 void HDv4l_cam::mainloop(int now_pic_format)
 {
+	static int setpriorityOnce[MAX_CC]={0};
+	if(!setpriorityOnce[now_pic_format])
+	{
+		int l=0;
+		switch(now_pic_format)
+		{
+		case FPGA_FOUR_CN :
+			l=THREAD_L_4;
+			break;
+		case	 SUB_CN :
+			l=THREAD_L_S_1;
+						break;
+		case	MAIN_CN :
+			l=THREAD_L_M_1;
+						break;
+		case	 MVDECT_CN	:
+			l=THREAD_L_MVDECT;
+						break;
+		case	 FPGA_SIX_CN :
+			l=THREAD_L_6;
+						break;
+		default:
+			assert(false);
 
+		}
+		setCurrentThreadHighPriority(l);
+		setpriorityOnce[now_pic_format]=1;
+	}
 	fd_set fds;
 	struct timeval tv;
 	int ret;
@@ -867,9 +901,8 @@ void HDv4l_cam::mainloop(int now_pic_format)
 			fprintf(stderr, "select timeout\n");
 			exit(EXIT_FAILURE);
 		}
-
-		if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
-			return;
+			if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
+				return;
 }
 
 

@@ -12,6 +12,7 @@
 #include "PBOManager.h"
 #include <osa_sem.h>
 #include "gst_capture.h"
+#include"Thread_Priority.h"
 using namespace cv;
 extern Render render;
 extern GLEnv env1,env2;
@@ -28,6 +29,7 @@ void *pbo_process_thread(void *arg)
 {
 	GLEnv &env=env1;
 	static bool once4=true;
+	setCurrentThreadHighPriority(THREAD_L_GST);
 #if USE_CPU
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #else
