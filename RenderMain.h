@@ -43,8 +43,9 @@ public:
 	void initGlut(int argc, char **argv, int startx=100, int starty=100);
 	void captureUSB(GLubyte *ptr);
 	void captureCSI(GLubyte *ptr);
+	static void DrawIdle(){glutPostRedisplay();};
 	static void DrawGLScene();
-	static void DrawIdleDS();
+	static void DrawIdleDS(){glutPostRedisplay();};
 	static void ReSizeGLScene(int Width, int Height);
 
 	static void keyPressed(unsigned char key, int x, int y);

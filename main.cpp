@@ -87,10 +87,10 @@ int main(int argc, char** argv)
 #else
 
 	env1.init(PanoCaptureGroup::GetMainInstance(),
-			ChosenCaptureGroup::GetMainInstance(),
+			BMPMiscGroup::GetInstance(),//ChosenCaptureGroup::GetMainInstance(),
 		BMPMiscGroup::GetInstance());
 	env2.init(PanoCaptureGroup::GetSubInstance(),
-		ChosenCaptureGroup::GetSubInstance(),
+			BMPMiscGroup::GetInstance(),//ChosenCaptureGroup::GetSubInstance(),
 		BMPMiscGroup::GetInstance());
 #endif
 

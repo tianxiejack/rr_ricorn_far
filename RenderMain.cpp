@@ -93,6 +93,7 @@ void RenderMain::initGlut(int argc, char **argv,int startx,int starty)
 
 
 	glutDisplayFunc(DrawGLScene); /* Register the function to do all our OpenGL drawing. */
+	glutIdleFunc(DrawIdle); /* Even if there are no events, redraw our gl scene. */
 	glutReshapeFunc(ReSizeGLScene); /* Register the function called when our window is resized. */
 	glutKeyboardFunc(keyPressed); /* Register the function called when the keyboard is pressed. */
 	glutSpecialFunc(specialkeyPressed); /* Register the special key function */

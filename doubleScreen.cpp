@@ -395,64 +395,6 @@ void Render::GetFPSDS()
 }
 void Render::DrawGLSceneDS()
 {
-#if 0
-	{
-	    // Color values
-	    static GLfloat vFloorColor[] = { 1.0f, 1.0f, 1.0f, 1.0f};
-	    static GLfloat vTorusColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
-	    static GLfloat vSphereColor[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-
-	    // Time Based animation
-		static CStopWatch	rotTimer;
-		float yRot = rotTimer.GetElapsedSeconds() * 60.0f*1.5;
-
-		// Clear the color and depth buffers
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-	    // Save the current modelview matrix (the identity matrix)
-		modelViewMatrix2.PushMatrix();
-
-	    M3DMatrix44f mCamera;
-	    cameraFrame2.GetCameraMatrix(mCamera);
-	    modelViewMatrix2.PushMatrix(mCamera);
-
-		// Draw the ground
-		shaderManager2.UseStockShader(GLT_SHADER_FLAT,
-									 transformPipeline2.GetModelViewProjectionMatrix(),
-									 vFloorColor);
-		floorBatch2.Draw();
-
-	    // Draw the spinning Torus
-	    modelViewMatrix2.Translate(0.0f, 0.0f, -2.5f*2);
-
-	    // Save the Translation
-	    modelViewMatrix2.PushMatrix();
-
-	        // Apply a rotation and draw the torus
-	        modelViewMatrix2.Rotate(yRot, 0.0f, 1.0f, 0.0f);
-	        shaderManager2.UseStockShader(GLT_SHADER_FLAT, transformPipeline2.GetModelViewProjectionMatrix(),
-	                                vTorusColor);
-	        torusBatch2.Draw();
-	    modelViewMatrix2.PopMatrix(); // "Erase" the Rotation from before
-
-	    // Apply another rotation, followed by a translation, then draw the sphere
-	    modelViewMatrix2.Rotate(yRot * -2.0f, 0.0f, 1.0f, 0.0f);
-	    modelViewMatrix2.Translate(0.8f, 0.0f, 0.0f);
-	    shaderManager2.UseStockShader(GLT_SHADER_FLAT, transformPipeline2.GetModelViewProjectionMatrix(),
-	                                     vSphereColor);
-	    sphereBatch2.Draw();
-
-		// Restore the previous modleview matrix (the identity matrix)
-		modelViewMatrix2.PopMatrix();
-	    modelViewMatrix2.PopMatrix();
-	    // Do the buffer Swap
-	    glutSwapBuffers();
-
-	    // Tell GLUT to do it again
-	    glutPostRedisplay();
-	    }
-#else
 	char arg1[128],arg2[128];
 		RenderSceneDS();
 		glutSwapBuffers();
@@ -472,7 +414,6 @@ void Render::DrawGLSceneDS()
 		{
 			glutSetWindowTitle(arg1);
 		}
-#endif
 }
 
 void Render::ReSizeGLSceneDS(int Width, int Height)
@@ -497,7 +438,6 @@ void RenderMain::ReSizeGLSceneDS(int Width, int Height)
 void RenderMain::DrawGLSceneDS()
 {
 		render.DrawGLSceneDS();
-		glutPostRedisplay();
 }
 void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 {
@@ -545,6 +485,7 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 	//	glewInit();
 
 			glutDisplayFunc(DrawGLSceneDS); /* Register the function to do all our OpenGL drawing. */
+			glutIdleFunc(DrawIdleDS);
 			glutReshapeFunc(ReSizeGLSceneDS); /* Register the function called when our window is resized. */
 			glutKeyboardFunc(keyPressedDS); /* Register the function called when the keyboard is pressed. */
 	//		glutSpecialFunc(specialkeyPressed); /* Register the special key function */
