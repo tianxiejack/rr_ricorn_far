@@ -987,8 +987,6 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 
 		pthread_t th_rec;
 	   	int arg_rec = 10;
-
-		//mp_FboPboFacade=new PBO_FBO_Facade(FBOmgr,PBORcr);
 	 	env.Set_FboPboFacade(*(env.Getp_FBOmgr()),*(env.Getp_PBORcr()));
 	   	mPresetCamGroup.LoadCameras();
 		// Load up CAM_COUNT textures
@@ -4340,14 +4338,23 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 
 #else
-//	petal3[1]=1;
+	petal3[1]=1;
 	petal3[2]=2;
 	petal3[3]=3;
 
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,false,petal3,mainOrsub);
+			//	DrawPanel(m_env,false,petal3,mainOrsub);
+				DrawPanel(m_env,false,NULL,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
+				m_env.GetmodelViewMatrix()->PushMatrix();
+							m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0); //1
+							DrawPanel(m_env,false,NULL,mainOrsub);
+							m_env.GetmodelViewMatrix()->PopMatrix();
+							m_env.GetmodelViewMatrix()->PushMatrix();
+										m_env.GetmodelViewMatrix()->Translate(-2*PanoLen,0.0,0.0); //1
+										DrawPanel(m_env,false,NULL,mainOrsub);
+										m_env.GetmodelViewMatrix()->PopMatrix();
 		//		m_env.GetmodelViewMatrix()->PushMatrix();
 	//			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
 	//			DrawPanel(m_env,false,petal3,mainOrsub);
@@ -5081,7 +5088,7 @@ else if(displayMode==ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(-17.6,0.0,0.0);//-36.5
+	m_env.GetmodelViewMatrix()->Translate(-17.6,0.0,-0.1);//-36.5
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -5089,7 +5096,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
 if(RulerAngle<180.0)
 	{
-	m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+		m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
 	}
  if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
@@ -5370,7 +5377,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
-	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
+	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.1);
 }
 
  if(displayMode==ALL_VIEW_MODE
@@ -5396,8 +5403,8 @@ else
 			DrawPanel(m_env,true,NULL,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
-//p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
-//p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
+p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
@@ -7017,7 +7024,7 @@ void  Render::GenerateOnetimeView()
 		once = false;
 			panocamonforesight.getOneTimeCam().RotateLocalX(-PI/2);
 		panocamonforesight.getOneTimeCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+		panocamonforesight.getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0+1/20.0));
 		panocamonforesight.getOneTimeCam().MoveRight(-inidelta);
 		panocamonforesight.getOneTimeCam().MoveForward(-0.16*leftandrightdis/2);
 			panocamonforesight.getOneTimeCam().GetOrigin(OnetimeCamView);
@@ -7043,7 +7050,7 @@ void  Render::GenerateOnetimeView2()
 		once = false;
 		panocamonforesight.getOneTimeCam2().RotateLocalX(-PI/2);
 		panocamonforesight.getOneTimeCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+		panocamonforesight.getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0+1/20.0));
 			panocamonforesight.getOneTimeCam2().MoveRight(-inidelta);
 			panocamonforesight.getOneTimeCam2().MoveForward(0.16*leftandrightdis/2);
 			panocamonforesight.getOneTimeCam2().RotateLocalY(-PI);
@@ -8033,13 +8040,21 @@ GLEnv & env=env1;
 			break;
 
 			case '!':
-				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
-										||displayMode==PREVIEW_MODE)
+				if(fboMode==	FBO_ALL_VIEW_MODE)
 				{
 							p_ForeSightFacade->MoveLeft(-PanoLen*100.0);
-							pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
+							foresightPos.ShowPosX();
+					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
 					//		printf("POS_angle=%f\n",pano_pos2angle);
 				}
+				else	if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+													||displayMode==PREVIEW_MODE)
+				{
+							p_ForeSightFacade->MoveLeft(-PanoLen*100.0);
+					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
+				//			printf("POS_angle=%f\n",pano_pos2angle);
+				}
+
 				else if(displayMode==TELESCOPE_FRONT_MODE
 										||displayMode==TELESCOPE_RIGHT_MODE
 										||displayMode==TELESCOPE_BACK_MODE
@@ -8112,7 +8127,11 @@ GLEnv & env=env1;
 									pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
 						//			printf("POS_angle=%f\n",pano_pos2angle);
 							}
-
+				if(fboMode==	FBO_ALL_VIEW_MODE)
+				{
+					p_ForeSightFacade->MoveRight(PanoLen*100.0);
+					foresightPos.ShowPosX();
+				}
 							else if(displayMode==TELESCOPE_FRONT_MODE
 													||displayMode==TELESCOPE_RIGHT_MODE
 													||displayMode==TELESCOPE_BACK_MODE
@@ -8389,12 +8408,12 @@ GLEnv & env=env1;
 							break;
 			}
 			case '(':
-				 enable_hance=true;
-			//	foresightPos.SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
+			//	 enable_hance=true;
+				foresightPos.SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
 					break;
 			case ')':
-				 enable_hance=false;
-		//		foresightPos.SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
+			//	 enable_hance=false;
+				foresightPos.SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
 				break;
 			case '?':
 			{
