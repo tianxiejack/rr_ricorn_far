@@ -31,7 +31,7 @@ float tel_lastfourposX=0.0;
 float tel_four_lastposY=0.0;
 float tel_four_camPosY=0.0;
 
-	ForeSight_decorator::	ForeSight_decorator(GLMatrixStack &modelViewMat,
+	ForeSight_decorator::	ForeSight_decorator(GLBatch *p_batch,GLMatrixStack &modelViewMat,
 			GLMatrixStack	&projectionMat,
 			GLShaderManager* mgr,
 		//	InterfaceForeSight * interfaceForesight,
@@ -43,14 +43,15 @@ float tel_four_camPosY=0.0;
  	m_pShaderManager(mgr),
  	modelViewMatrix(modelViewMat),
  	projectionMatrix(projectionMat),
+ 	mp_myBatch(p_batch),
  //	p_core(interfaceForesight),
  	m_core(core),
  	limitX(recvlimitX),
  	limitY(recvlimitY)
  {
-		myBatch.Begin(GL_LINES, i);
-		myBatch.CopyVertexData3f(p_vTrack);
-		myBatch.End();
+		mp_myBatch->Begin(GL_LINES, i);
+		mp_myBatch->CopyVertexData3f(p_vTrack);
+		mp_myBatch->End();
  }
 
  void ForeSight_decorator::DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle)
@@ -119,7 +120,7 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 	GLGeometryTransform * pTransformPipeline = (GLGeometryTransform *)getDefaultTransformPipeline(m_env);
 	modelViewMatrix.PushMatrix();
 	m_pShaderManager->UseStockShader(GLT_SHADER_FLAT,  pTransformPipeline->GetModelViewProjectionMatrix(), vBlue);
-	myBatch.Draw();
+	mp_myBatch->Draw();
 	modelViewMatrix.PopMatrix();
  }
 

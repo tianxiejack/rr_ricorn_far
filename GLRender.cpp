@@ -2877,25 +2877,25 @@ void Render::InitForesightGroupTrack(GLEnv &m_env)
 	 }
 
 	 	  p_ForeSightFacade =new ForeSightFacade(
-	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
-	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
-	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
+	 			  new ForeSight_decorator(m_env.GetForesightBatch(0),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
+	 					  new ForeSight_decorator(m_env.GetForesightBatch(1),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
+	 							  new ForeSight_decorator(m_env.GetForesightBatch(2),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 	 									  new PseudoForeSight_core()),pcindex,pano_cross,pano_length*100.0,pano_height/5.7)),pirindex,pano_inner_rect,pano_length*102.0,pano_height/11.5)),
 	 					  	  	  	  porindex,pano_outer_rect,pano_length*100.0,pano_height*0)
 	 	  	  	  	  	  	  	  	  	  ,foresightPos,&panocamonforesight);
 		  assert(p_ForeSightFacade);
 
 		  p_ForeSightFacade2 =new ForeSightFacade(
-		 	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
-		 	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
-		 	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
+		 	 			  new ForeSight_decorator(m_env.GetForesightBatch(3),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
+		 	 					  new ForeSight_decorator(m_env.GetForesightBatch(4),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
+		 	 							  new ForeSight_decorator(m_env.GetForesightBatch(5),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 	 									  new PseudoForeSight_core()),tcindex,tel_cross,pano_length/TELXLIMIT,pano_height/5.7)) ,tirindex,tel_inner_rect,pano_length/TELXLIMIT-((1.0/14.0-1.0/15.75)*pano_length),pano_height/8.0)),
 		 	 					  	  	  	  	  torindex,tel_outer_rect,(pano_length/TELXLIMIT-(1/14.0-1/25.0)*pano_length),pano_height/12.0)
 		  	  	  	  	  	  	  	  	  	  	  	  ,  foresightPos  ,&telcamonforesight);   //14.0  15.75   25
 		 		  assert(p_ForeSightFacade2);
 
 		 			  p_ForeSightFacade_Track=new ForeSightFacade(
-		 					 		 														new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
+		 					 		 														new ForeSight_decorator(m_env.GetForesightBatch(6),*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_core()),trackindex,track_cross,g_windowWidth*1434.0/1920.0/2.0*100.0,g_windowHeight/2.0*100.0),
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	foresightPos,
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_cam());

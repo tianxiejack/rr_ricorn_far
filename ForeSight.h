@@ -27,7 +27,7 @@ public:
 class ForeSight_decorator:public BaseForeSight
 {
 public:
-	ForeSight_decorator(GLMatrixStack &modelViewMat,
+	ForeSight_decorator(GLBatch *p_batch,GLMatrixStack &modelViewMat,
 			GLMatrixStack	&projectionMat,
 			GLShaderManager* mgr,
 			auto_ptr<BaseForeSight> core,
@@ -42,7 +42,7 @@ private:
 	void Draw(GLEnv &m_env);
 	float limitX;
 	float limitY;
-	GLBatch myBatch;
+	GLBatch *mp_myBatch;
 	GLShaderManager * 	m_pShaderManager;
 	GLMatrixStack &		modelViewMatrix;
 	GLMatrixStack &		projectionMatrix;

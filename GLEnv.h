@@ -39,6 +39,8 @@ public:
 	GLBatch *Getdegreescale45Batch(){return &degreescale45Batch;};
 	GLBatch *Getdegreescale90Batch(){return &degreescale90Batch;};
 	GLBatch *Getdegreescale180Batch(){return &degreescale180Batch;};
+	GLBatch *GetForesightBatch(int idx){return &ForesightBatch[idx];};
+
 private:
 	CaptureGroup * m_panoCaptureGroup;
 	CaptureGroup * m_chosenCaptureGroup;
@@ -55,6 +57,7 @@ private:
 	GLBatch degreescale45Batch; //the degree scale (45-0-45)
 	GLBatch degreescale90Batch; //the degree scale (90-0-90)
 	GLBatch degreescale180Batch; //the degree scale (180-0-180)
+	GLBatch ForesightBatch[7];
 	PBOReceiver PBORcr;
 	PBOSender PBOMgr;
 	PBOSender PBOExtMgr;
