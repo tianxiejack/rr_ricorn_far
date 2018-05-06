@@ -244,18 +244,6 @@ public:
 			if(pForeSight){
 				delete pForeSight;}
 	};
-	void	SetPInterfaceForeSight(PInterfaceForeSight pif)
-	{
-		pInterfaceForeSight=pif;
-	};
-	void SetForeSightPos(ForeSightPos &pos)
-	{
-		foreSightPos=pos;
-	};
-	void SetPInterfaceCamonForeSight(PInterfaceCamonForeSight pcam)
-	{
-		pcamonForeSight=pcam;
-	};
 	void MoveUp(float Ylimit); //在按键事件时调用
 	void MoveDown(float Ylimit);
 	bool MoveLeft(float Xlimit);

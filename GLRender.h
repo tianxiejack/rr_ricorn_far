@@ -621,7 +621,9 @@ public:
 					 void ReadPanoFloatDataFromFile(char * filename);
 					 void WritePanoFloatDataFromFile(char * filename,float * panofloatdata);
 					 Calibrate * getRulerAngle(){return p_LineofRuler;};
-
+						ForeSightFacade * GetpWholeFacade(){return p_ForeSightFacade;};
+						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
+						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
 						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
 						GLFrame	*getVGACameraFrame(){return &VGACameraFrame;};
 						GLFrame	*getRender2FrontCameraFrame(){return &Render2FrontCameraFrame;};
@@ -656,7 +658,11 @@ private:
 	GLBatch triangleBatch;
 	GLBatch AlarmAreaBatch;
 	GLBatch AlarmLineBatch;
+	ForeSightFacade * p_ForeSightFacade;
+	ForeSightFacade * p_ForeSightFacade2;
 
+	ForeSightFacade * p_ForeSightFacade_Track;
+	ForeSightFacade * p_ForeSightFacade_Dector;
 
 
 	BaseAlarmObject * p_dataofalarmarea;

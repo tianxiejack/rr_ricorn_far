@@ -530,7 +530,7 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 
 	void PanoCamOnForeSight::pano_CamMoveUp()
 	{
-			float limit=pano_height/11.5;
+			float limit=pano_height/(11.5-5.7+1.0);
 			float PosY=foresightPos.GetForeSightPosY();
 			if(PosY<-limit)
 			{
@@ -544,13 +544,15 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 			moveY=PosY-pano_two_lastposY;
 	//		camPosY+=moveY;
 			pano_two_lastposY=PosY;
+			getOneTimeCam().MoveUp(moveY);
+			getOneTimeCam2().MoveUp(moveY);
 			getTwoTimesCam().MoveUp(moveY);
 			getTwoTimesCam2().MoveUp(moveY);
 	}
 
 	void PanoCamOnForeSight::pano_CamMoveDown()
 	{
-		float limit=-pano_height/11.5;
+		float limit=-pano_height/(11.5-5.7+1.0);
 		float PosY=foresightPos.GetForeSightPosY();
 		if(PosY>-limit)
 		{
@@ -564,6 +566,8 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 		moveY=PosY-pano_two_lastposY;
 //		camPosY+=moveY;
 		pano_two_lastposY=PosY;
+		getOneTimeCam().MoveUp(moveY);
+		getOneTimeCam2().MoveUp(moveY);
 		TwotimesViewCameraFrame.MoveUp(moveY);
 		TwotimesViewCameraFrame2.MoveUp(moveY);
 	}
