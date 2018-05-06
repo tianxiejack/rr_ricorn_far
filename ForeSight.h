@@ -27,7 +27,7 @@ public:
 class ForeSight_decorator:public BaseForeSight
 {
 public:
-	ForeSight_decorator(GLBatch *p_batch,GLMatrixStack &modelViewMat,
+	ForeSight_decorator(GLMatrixStack &modelViewMat,
 			GLMatrixStack	&projectionMat,
 			GLShaderManager* mgr,
 			auto_ptr<BaseForeSight> core,
@@ -42,7 +42,7 @@ private:
 	void Draw(GLEnv &m_env);
 	float limitX;
 	float limitY;
-	GLBatch *mp_myBatch;
+	GLBatch myBatch;
 	GLShaderManager * 	m_pShaderManager;
 	GLMatrixStack &		modelViewMatrix;
 	GLMatrixStack &		projectionMatrix;
@@ -243,6 +243,18 @@ public:
 			BaseForeSight *pForeSight = dynamic_cast<BaseForeSight*>(pInterfaceForeSight);
 			if(pForeSight){
 				delete pForeSight;}
+	};
+	void	SetPInterfaceForeSight(PInterfaceForeSight pif)
+	{
+		pInterfaceForeSight=pif;
+	};
+	void SetForeSightPos(ForeSightPos &pos)
+	{
+		foreSightPos=pos;
+	};
+	void SetPInterfaceCamonForeSight(PInterfaceCamonForeSight pcam)
+	{
+		pcamonForeSight=pcam;
 	};
 	void MoveUp(float Ylimit); //在按键事件时调用
 	void MoveDown(float Ylimit);

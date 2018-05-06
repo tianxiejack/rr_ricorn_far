@@ -8,11 +8,15 @@
 #include"PBOManager.h"
 #include"PBO_FBO_Facade.h"
 #include"CaptureGroup.h"
+#include"ForeSight.h"
 class GLEnv
 {
 public:
 	GLEnv(CaptureGroup *p_pano=NULL,CaptureGroup *p_chosen=NULL,CaptureGroup *p_misc=NULL);
-	~GLEnv(){};
+	~GLEnv(){
+	delete p_ForeSightFacade;
+	delete p_ForeSightFacade2;
+	delete p_ForeSightFacade_Track;};
 	void init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_mvdetect,CaptureGroup *p_misc);
 	GLMatrixStack *GetmodelViewMatrix();
 	GLMatrixStack	*GetprojectionMatrix();
@@ -39,7 +43,28 @@ public:
 	GLBatch *Getdegreescale45Batch(){return &degreescale45Batch;};
 	GLBatch *Getdegreescale90Batch(){return &degreescale90Batch;};
 	GLBatch *Getdegreescale180Batch(){return &degreescale180Batch;};
-	GLBatch *GetForesightBatch(int idx){return &ForesightBatch[idx];};
+
+	ForeSightFacade * Getp_ForeSightFacade(){return p_ForeSightFacade;};
+		ForeSightFacade * Getp_ForeSightFacade2(){return p_ForeSightFacade2;};
+		ForeSightFacade * Getp_ForeSightFacade_Track(){return p_ForeSightFacade_Track;};
+void SetForeSightFacade(PInterfaceForeSight p_IF,ForeSightPos &pos ,PInterfaceCamonForeSight  p_cam)
+{
+	p_ForeSightFacade->SetPInterfaceCamonForeSight(p_cam);
+	p_ForeSightFacade->SetPInterfaceForeSight(p_IF);
+	p_ForeSightFacade->SetForeSightPos(pos);
+};
+void SetForeSightFacade2(PInterfaceForeSight p_IF,ForeSightPos &pos ,PInterfaceCamonForeSight  p_cam)
+{
+	p_ForeSightFacade2->SetForeSightPos(pos);
+	p_ForeSightFacade2->SetPInterfaceCamonForeSight(p_cam);
+	p_ForeSightFacade2->SetPInterfaceForeSight(p_IF);
+};
+void SetForeSightFacade_Track(PInterfaceForeSight p_IF,ForeSightPos &pos ,PInterfaceCamonForeSight  p_cam)
+{
+	p_ForeSightFacade_Track->SetForeSightPos(pos);
+	p_ForeSightFacade_Track->SetPInterfaceCamonForeSight(p_cam);
+	p_ForeSightFacade_Track->SetPInterfaceForeSight(p_IF);
+};
 
 private:
 	CaptureGroup * m_panoCaptureGroup;
@@ -57,7 +82,6 @@ private:
 	GLBatch degreescale45Batch; //the degree scale (45-0-45)
 	GLBatch degreescale90Batch; //the degree scale (90-0-90)
 	GLBatch degreescale180Batch; //the degree scale (180-0-180)
-	GLBatch ForesightBatch[7];
 	PBOReceiver PBORcr;
 	PBOSender PBOMgr;
 	PBOSender PBOExtMgr;
@@ -66,5 +90,9 @@ private:
 	PBOSender PBOChosenMgr;
 	FBOManager FBOmgr;
 	pPBO_FBO_Facade mp_FboPboFacade;
+
+	ForeSightFacade * p_ForeSightFacade;
+	ForeSightFacade * p_ForeSightFacade2;
+	ForeSightFacade * p_ForeSightFacade_Track;
 };
 #endif
