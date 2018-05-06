@@ -2,7 +2,7 @@
 #include"HDV4lcap.h"
 ChosenCaptureGroup ChosenCaptureGroup::MainChosenGroup(SDI_WIDTH,SDI_HEIGHT,3,MAIN_EXT_COUNT);
 ChosenCaptureGroup ChosenCaptureGroup::SubChosenGroup(SDI_WIDTH,SDI_HEIGHT,3,SUB_EXT_COUNT);
-//ChosenCaptureGroup ChosenCaptureGroup::MvDetectGroup(SDI_WIDTH,SDI_HEIGHT,3,MVDECT_CAM_COUNT);
+ChosenCaptureGroup ChosenCaptureGroup::MvDetectGroup(SDI_WIDTH,SDI_HEIGHT,3,MVDECT_CAM_COUNT);
 static HDAsyncVCap4* pHDAsyncVCap[MAX_CC]={0};
 ChosenCaptureGroup::ChosenCaptureGroup(unsigned int w,unsigned int h,int NCHAN,unsigned int capCount):
 		HDCaptureGroup(w,h,NCHAN,capCount)
@@ -16,9 +16,9 @@ void  ChosenCaptureGroup::CreateProducers()
 		 dev_id=SUB_CN;
 			if(pHDAsyncVCap[dev_id]==NULL)
 				pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>( new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
-	//	dev_id=MVDECT_CN;
-//			if(pHDAsyncVCap[dev_id]==NULL)
-	//			pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>( new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
+		dev_id=MVDECT_CN;
+			if(pHDAsyncVCap[dev_id]==NULL)
+				pHDAsyncVCap[dev_id] = new HDAsyncVCap4(auto_ptr<BaseVCap>( new HDv4l_cam(dev_id,SDI_WIDTH,SDI_HEIGHT)),dev_id);
 
 };
 
@@ -28,8 +28,8 @@ void  ChosenCaptureGroup::OpenProducers()
 	 pHDAsyncVCap[dev_id]->Open();
 	 dev_id=SUB_CN;
 	 pHDAsyncVCap[dev_id]->Open();
-//	 dev_id=MVDECT_CN;
-//	 	 pHDAsyncVCap[dev_id]->Open();
+	 dev_id=MVDECT_CN;
+	 	 pHDAsyncVCap[dev_id]->Open();
 
 }
 
@@ -58,10 +58,10 @@ ChosenCaptureGroup * ChosenCaptureGroup::GetMvDetectInstance()
 	int count=10;
 	static bool once =true;
 	if(once){
-	//	MvDetectGroup.init(queueid,count);
-	//	once =false;
+		MvDetectGroup.init(queueid,count);
+		once =false;
 	}
-//	return &MvDetectGroup;
+	return &MvDetectGroup;
 }
 ChosenCaptureGroup * ChosenCaptureGroup::GetMainInstance()
 {

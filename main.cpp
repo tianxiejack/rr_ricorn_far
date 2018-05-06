@@ -80,17 +80,21 @@ int main(int argc, char** argv)
 #if USE_BMPCAP
 	env1.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
+			NULL,
 			BMPMiscGroup::GetInstance());
 	env2.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
+			NULL,
 			BMPMiscGroup::GetInstance());
 #else
 
 	env1.init(PanoCaptureGroup::GetMainInstance(),
-			BMPMiscGroup::GetInstance(),//ChosenCaptureGroup::GetMainInstance(),
+			ChosenCaptureGroup::GetMainInstance(),
+			ChosenCaptureGroup::GetMvDetectInstance(),
 		BMPMiscGroup::GetInstance());
 	env2.init(PanoCaptureGroup::GetSubInstance(),
-			BMPMiscGroup::GetInstance(),//ChosenCaptureGroup::GetSubInstance(),
+			ChosenCaptureGroup::GetSubInstance(),
+			NULL,
 		BMPMiscGroup::GetInstance());
 #endif
 

@@ -622,7 +622,7 @@ Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_CHOSEN_VIEW_MODE),
+		fboMode(FBO_ALL_VIEW_MODE),
 		SecondDisplayMode(SECOND_CHOSEN_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -5080,8 +5080,8 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(9.50,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(-17.6,0.0,0.0);//-36.5
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -5212,14 +5212,18 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-		for(int i=5;i<10;i++)
+		for(int i=0;i<5;i++)
 		{
 			petal2[i]=i;
 		}
+		petal1[0]=0;
 		m_env.GetmodelViewMatrix()->PushMatrix();
-		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 		DrawPanel(m_env,false,petal2,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+			DrawPanel(m_env,false,petal1,mainOrsub);
+			m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
 {
@@ -5283,6 +5287,8 @@ else
 		p_ForeSightFacade->Draw(render.getRulerAngle()->Load());
 	}
 */
+p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
@@ -5344,18 +5350,12 @@ if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
 	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
 }
-else if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
-{
-//	m_env.GetmodelViewMatrix()->Scale(4.0,1.0,3.3*UP_DOWN_SCALE);
-	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
-}
 else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(2.50,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(-2.2,0.0,0.0);
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
+	m_env.GetmodelViewMatrix()->Translate(26.2,0.0,0.0);//7.5
 }
 
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
@@ -5364,12 +5364,8 @@ else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 }
 
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
-if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
-{
-	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
-	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
-}
-else if(displayMode==ALL_VIEW_MODE
+
+ if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
@@ -5377,124 +5373,16 @@ else if(displayMode==ALL_VIEW_MODE
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.6);
 }
 
-if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
-{
-	if(RulerAngle>=0&&RulerAngle<15)
-	{
-		for(int i=6;i<12;i++)
-			petal1[i]=i;
-		petal2[0]=0;
-		petal1[0]=0;
-	}
-	else if(RulerAngle>=15&&RulerAngle<45)
-		{
-			for(int i=5;i<12;i++)
-				petal1[i]=i;
-		}
-	else if(RulerAngle>=45&&RulerAngle<75)
-		{
-			for(int i=4;i<11;i++)
-				petal1[i]=i;
-		}
-	else if(RulerAngle>=75&&RulerAngle<105)
-		{
-			for(int i=3;i<10;i++)
-				petal1[i]=i;
-		}
-	else if(RulerAngle>=105&&RulerAngle<135)
-		{
-			for(int i=2;i<9;i++)
-				petal1[i]=i;
-		}
-	else if(RulerAngle>=135&&RulerAngle<165)
-			{
-				for(int i=1;i<8;i++)
-					petal1[i]=i;
-			}
-
-	else if(RulerAngle>=165&&RulerAngle<180)
-			{
-				for(int i=0;i<7;i++)
-					petal1[i]=i;
-				petal2[0]=0;
-				petal2[11]=11;
-			}
-
-	else if(RulerAngle>=180&&RulerAngle<195)
-				{
-					for(int i=0;i<7;i++)
-						petal1[i]=i;
-					petal2[0]=0;
-					petal2[11]=11;
-				}
-	else if(RulerAngle>=195&&RulerAngle<225)
-				{
-					for(int i=0;i<6;i++)
-						petal1[i]=i;
-					petal2[0]=0;
-					for(int j=11;j<12;j++)
-						petal2[j]=j;
-			}
-	else if(RulerAngle>=225&&RulerAngle<255)
-				{
-					for(int i=0;i<5;i++)
-						petal1[i]=i;
-					petal2[0]=0;
-					for(int j=10;j<12;j++)
-						petal2[j]=j;
-				}
-	else if(RulerAngle>=255&&RulerAngle<285)
-					{
-						for(int i=0;i<4;i++)
-							petal1[i]=i;
-						petal2[0]=0;
-						for(int j=9;j<12;j++)
-							petal2[j]=j;
-					}
-	else if(RulerAngle>=285&&RulerAngle<315)
-					{
-						for(int i=0;i<3;i++)
-							petal1[i]=i;
-						petal2[0]=0;
-						for(int j=8;j<12;j++)
-							petal2[j]=j;
-					}
-	else if(RulerAngle>=315&&RulerAngle<345)
-					{
-						for(int i=0;i<2;i++)
-							petal1[i]=i;
-						petal2[0]=0;
-							for(int j=7;j<12;j++)
-								petal2[j]=j;
-					}
-	else if(RulerAngle>=345)
-					{
-						for(int i=0;i<1;i++)
-							petal1[i]=i;
-						petal2[0]=0;
-							for(int j=6;j<12;j++)
-								petal2[j]=j;
-					}
-
-//DrawPanel(true,petal2);
-	DrawPanel(m_env,true,NULL,mainOrsub);
-}
-else if(displayMode==ALL_VIEW_MODE
+ if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 	||fboMode==FBO_ALL_VIEW_MODE)
 {
-	for(int i=0;i<5;i++)
+	for(int i=5;i<10;i++)
 		{
 			petal3[i]=i;
 		}
-		petal4[0]=0;
 		m_env.GetmodelViewMatrix()->PushMatrix();
-		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 		DrawPanel(m_env,needSendData,petal3,mainOrsub);
-		m_env.GetmodelViewMatrix()->PopMatrix();
-		m_env.GetmodelViewMatrix()->PushMatrix();
-	//	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);
-		DrawPanel(m_env,false,petal4,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 else
@@ -5508,29 +5396,8 @@ else
 			DrawPanel(m_env,true,NULL,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
-/*
-	m_env.GetmodelViewMatrix()->PushMatrix();
-	if(RulerAngle<180.0)
-	{
-		m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
-	}
-	else
-	{
-		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-	}
-	if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
-	{
-		DrawPanel(false,petal1);
-	}
-	else
-	DrawPanel(false,NULL);
-	m_env.GetmodelViewMatrix()->PopMatrix();
-	if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
-	{
-		p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
-		p_ForeSightFacade->Draw(render.getRulerAngle()->Load());
-	}
-	*/
+//p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
+//p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
