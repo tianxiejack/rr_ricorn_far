@@ -233,7 +233,7 @@ void get_buffer(unsigned char* ptr, int chId)
 	int w=SDI_WIDTH;
 	if(chId==MAIN_FPGA_FOUR ||chId==SUB_FPGA_FOUR)
 	{
-		w=FPGA_SCREEN_WIDTH;
+	//	w=FPGA_SCREEN_WIDTH;
 	}
 #if USE_CPU
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);

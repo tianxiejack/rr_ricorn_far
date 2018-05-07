@@ -4346,8 +4346,9 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
 			//	DrawPanel(m_env,false,petal3,mainOrsub);
-				DrawPanel(m_env,false,NULL,mainOrsub);
+				DrawPanel(m_env,false,petal3,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
+#if 0
 				m_env.GetmodelViewMatrix()->PushMatrix();
 							m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0); //1
 							DrawPanel(m_env,false,NULL,mainOrsub);
@@ -4356,6 +4357,7 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 										m_env.GetmodelViewMatrix()->Translate(-2*PanoLen,0.0,0.0); //1
 										DrawPanel(m_env,false,NULL,mainOrsub);
 										m_env.GetmodelViewMatrix()->PopMatrix();
+#endif
 		//		m_env.GetmodelViewMatrix()->PushMatrix();
 	//			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
 	//			DrawPanel(m_env,false,petal3,mainOrsub);

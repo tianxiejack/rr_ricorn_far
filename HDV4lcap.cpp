@@ -548,7 +548,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
-					//		YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
+							YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
 						}
 						else //４副　６副　　车长１０选一
 						{
