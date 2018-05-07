@@ -47,7 +47,7 @@ PanoCaptureGroup::~PanoCaptureGroup()
 
 PanoCaptureGroup * PanoCaptureGroup::GetMainInstance()
 {
-	int queueid[2]={MAIN_FPGA_FOUR,MAIN_FPGA_SIX};
+	int queueid[2]={MAIN_FPGA_SIX,MAIN_FPGA_FOUR};
 	int count=2;
 	static bool once =true;
 	if(once){
@@ -59,7 +59,7 @@ PanoCaptureGroup * PanoCaptureGroup::GetMainInstance()
 
 PanoCaptureGroup * PanoCaptureGroup::GetSubInstance()
 {
-	int queueid[2]={SUB_FPGA_FOUR,SUB_FPGA_SIX};
+	int queueid[2]={SUB_FPGA_SIX,SUB_FPGA_FOUR};
 	int count=2;
 	static bool once =true;
 	if(once){

@@ -120,6 +120,13 @@ void HDv4l_cam::RectFromPixels(unsigned char *src)
 		}
 	}
 }
+void save_SDIyuyv_pic(void *pic,int w,int h)
+{
+	FILE * fp;
+	fp=fopen("./Van_save_YUV.yuv","w");
+	fwrite(pic,w*h*2,1,fp);
+	fclose(fp);
+}
 
 void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
@@ -141,15 +148,35 @@ void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int
 }
 void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
-#if 0
+#if 1
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
 			RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换
 		}
+#if 0
+	if(ImgWidth==FPGA_SCREEN_WIDTH)
+		{
+		static int a=0;
+			if(a++==50)
+			{
+				save_SDIyuyv_pic(src,ImgWidth,ImgHeight);
+			}
+		}
+#endif
 #endif
 	YUVquar(dst,src,ImgWidth,ImgHeight);
+#if 0
+	unsigned char pp[1280*1080*4];
+	if(ImgWidth==FPGA_SCREEN_WIDTH)
+	{
+		for(int i=0;i<1280*1080*4;i++)
+			pp[i]=i;
+		memcpy(dst,pp,1280*1080*4);
+	}
+
+#endif
 #if 0
 	int t[10]={0};
  timeval startT[20]={0};
@@ -238,13 +265,6 @@ void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
 	}
 }
 
-void save_SDIyuyv_pic(void *pic,int w,int h)
-{
-	FILE * fp;
-	fp=fopen("./Van_save_YUV.yuv","w");
-	fwrite(pic,w*h*2,1,fp);
-	fclose(fp);
-}
 
 bool HDv4l_cam::Open()
 {
@@ -581,7 +601,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 						{
-							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*2);
+							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*4);
 						}
 						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{
