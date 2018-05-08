@@ -657,7 +657,7 @@ void Render::readPixleFile(const char* file, int index)
 //-------------------------GL-related function---------------
 Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		g_nonFullwindowWidth(0),g_nonFullwindowHeight(0),bRotTimerStart(FALSE),
-		bControlViewCamera(FALSE),displayMode(ALL_VIEW_MODE),pVehicle(NULL),
+		bControlViewCamera(FALSE),displayMode(EMPTY_MODE),pVehicle(NULL),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
@@ -1762,7 +1762,6 @@ DRAW:
 		//		printf("\ni:%d,index:%d,x:%f,y:%f\n",x,index,Point[index].x,Point[index].y);
 			}
 		}
-
 		alpha_dir=1-alpha_dir;
 		tri_dir=1-tri_dir;
 	}

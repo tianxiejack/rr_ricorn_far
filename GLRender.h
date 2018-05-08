@@ -54,8 +54,8 @@
 using namespace std;
 
 class RenderMain;
-static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
-static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
+static const int ALPHA_MASK_HEIGHT= (DEFAULT_IMAGE_HEIGHT/2);
+static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16/5);
 /* A general OpenGL initialization function. */
 /* Called once from main() */
 /*set up render scene*/
@@ -147,7 +147,7 @@ private:
 			PAL1_WHITE_SMALL_VIEW_MODE,
 			PAL2_HOT_BIG_VIEW_MODE,
 			PAL2_HOT_SMALL_VIEW_MODE,
-
+			EMPTY_MODE,
 	//	PREVIEW_MODE,	//allow use to browse the whole scene using a mouse
 
 
