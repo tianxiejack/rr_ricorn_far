@@ -536,11 +536,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 					case FPGA_FOUR_CN:
 						chid[MAIN]=MAIN_FPGA_FOUR;
-						chid[SUB]=SUB_FPGA_FOUR;
+				//		chid[SUB]=SUB_FPGA_FOUR;
 						nowpicW=FPGA_SCREEN_WIDTH;
 						nowpicH=FPGA_SCREEN_HEIGHT;
 						transformed_src_main=&FPGA4_bgr_data_main;
-						transformed_src_sub=&FPGA4_bgr_data_sub;
+			//			transformed_src_sub=&FPGA4_bgr_data_sub;
 						break;
 					case SUB_CN:
 						chid[SUB]=SUB_ONE_OF_TEN;
@@ -557,9 +557,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
-						chid[SUB]=SUB_FPGA_SIX;
+		//				chid[SUB]=SUB_FPGA_SIX;
 						transformed_src_main=&FPGA6_bgr_data_main;
-						transformed_src_sub=&FPGA6_bgr_data_sub;
+		//				transformed_src_sub=&FPGA6_bgr_data_sub;
 						break;
 					default:
 						break;
@@ -601,7 +601,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
 						{
-							memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*4);
+					//		memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*4);
 						}
 						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
 						{

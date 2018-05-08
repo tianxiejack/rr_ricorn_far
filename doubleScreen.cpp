@@ -24,17 +24,16 @@ void Render::RenderSceneDS()
 	int t[10]={0};
 	static timeval startT[20]={0};
 
-	GLEnv &env=env2;
+	//GLEnv &env=env2;
+	GLEnv &env=env1;
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
-		RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*116.0/1080.0,SUB);
-		RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*811.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
-		RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
-	//	RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0);
-	//	RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0);
-	//	RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0);
+		env.Getp_FboPboFacade()->Render2Front(SUB);
+	//	RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*116.0/1080.0,SUB,0,0,0,0,false);
+	//	RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*811.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
+	//	RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
 
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
@@ -448,7 +447,7 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 	//	glutInit (&argc, argv);
 		glutCreateSubWindow(2,0,0,500,200);
 		glutInitWindowPosition(1921,0);
-		glutInitWindowSize(1000, 700);
+		glutInitWindowSize(500, 500);
 
 		glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
