@@ -2333,7 +2333,7 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
 #else
-#define USE_TEXTURE_ON_PETAL_OVERLAP(i)        {\
+#define USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
                                                    m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),(i)%CAM_COUNT,\
                                                    (i+1)%CAM_COUNT,ALPHA_TEXTURE_IDX0+alpha[i],i);\
@@ -5063,8 +5063,8 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(-17.6,0.0,-0.1);//-36.5
+	m_env.GetmodelViewMatrix()->Scale(5.5,1.0,3.3);//6.0
+	m_env.GetmodelViewMatrix()->Translate(-14.6,0.0,-0.1);//-17.6
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -5361,8 +5361,8 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,3.3);
-	m_env.GetmodelViewMatrix()->Translate(26.2,0.0,0.0);//7.5
+	m_env.GetmodelViewMatrix()->Scale(5.5,1.0,3.3);//6.0
+	m_env.GetmodelViewMatrix()->Translate(28,0.0,0.0);//26.2
 }
 
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)

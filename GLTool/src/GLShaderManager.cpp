@@ -455,7 +455,6 @@ static const char *szTextureBlendingFP =
 					"uniform sampler2D textureUnit0;"
 					"uniform sampler2D textureUnit1;"
 					"uniform sampler2D textureUnit2;"
-#if 0
 					"const mat4 colorMatrix = mat4(1, 1, 1, 0,"
 					"0, -0.344, 1.773, 0,"
                  				" 1.403, -0.714, 0, 0,"
@@ -464,12 +463,6 @@ static const char *szTextureBlendingFP =
                   				" 0, 1, 0, 0,"
                   				" 0, 0, 1, 0,"
                   				" 0, -0.5, -0.5, 1);"
-#else
-		"const mat4 colorMatrix = mat4(1, 0, 0, 0,"
-							"0, 1, 0, 0,"
-							" 0, 0, 1, 0,"
-							"0, 0, 0, 1);"
-#endif
 					"void main(void) "
 					"{ vec4 t0 = texture2D(textureUnit0, vTex0.st);"
 					"  vec4 t0Out = clamp(colorMatrix* vec4(t0.g,"
