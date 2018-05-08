@@ -620,6 +620,9 @@ public:
 					 float * GetPanoFloatData(){return PanoFloatData;};
 					 void ReadPanoFloatDataFromFile(char * filename);
 					 void WritePanoFloatDataFromFile(char * filename,float * panofloatdata);
+		 			void ReadRotateAngleDataFromFile(char * filename);
+					void WriteRotateAngleDataToFile(char * filename,float * rotateangledata);
+
 					 Calibrate * getRulerAngle(){return p_LineofRuler;};
 						ForeSightFacade * GetpWholeFacade(){return p_ForeSightFacade;};
 						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
@@ -821,6 +824,8 @@ private:
 	float channel_right_scale[CAM_COUNT];
 
 	float move_hor[CAM_COUNT];
+
+	float rotate_angle[CAM_COUNT];
 
 	OitVehicle *pPano;
 
