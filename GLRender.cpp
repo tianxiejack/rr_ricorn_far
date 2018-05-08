@@ -1734,135 +1734,7 @@ if( overLapRegion::GetoverLapRegion()->beExist())
 		Petal_OverLap[petal_idx]->End();
     }
 }
-#if 0
-void Render::InitPanel()
-{
-	if ((!common.isUpdate()) && (!common.isIdleDraw()))
-		return;
 
-	common.setUpdate(GL_NO);
-	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	/* Clear The Screen And The Depth Buffer*/
-	calcCommonZone();
-
-	cv::Point2f Point[3], Point1[3], Point2[3];
-	cv::Point2f Alpha[3];
-	vector<cv::Point3f> list;
-	GLBatch *pBatch = &Panel_Petal[0];
-
-	int poly_count = PanelLoader.Getpoly_count();
-	bool AppOverlap = false, App = false;
-	int direction=0, count=0;
-	bool AppDirection[CAM_COUNT]={false};
-
-	int extra_count=0;
-	for(int petal_idx = 0; petal_idx < CAM_COUNT; petal_idx++){
-		if(petal_idx==CAM_0)
-		{
-			extra_count=PER_CIRCLE;
-		}
-		else
-		{
-			extra_count=0;;
-		}
-		Panel_Petal[petal_idx].Begin(GL_TRIANGLES/* */,(poly_count+extra_count)*2*3,1);// each petal has 1 texture unit
-		Panel_Petal_OverLap[petal_idx]->Begin(GL_TRIANGLES,1*(poly_count+extra_count)*2*3,3);// petal_overLap has 3 textures, left, right and alpha mask
-	}
-	float triangle_array[6][3]={{0.0, 0.0, 0.0},{0.0, 1.0, 0.0},{0.0,1.0,1.0},
-			{0.0, 0.0, 0.0},{0.0, 1.0, 1.0},{0.0,0.0,1.0}};
-	static int tri_dir=0;
-
-	int temp_data=0,temp_data2=0;
-	int even_data=0;
-	int y=0;
-
-	cv::Point2f set_alpha[6];
-	static int alpha_dir=0;
-
-	float temp_length=0.99;
-	float x_data[6]={  temp_length,  1-temp_length,  1-temp_length,  temp_length,  1-temp_length,  temp_length};
-	float y_data[6]={1-temp_length,1-temp_length,   temp_length,     temp_length,     temp_length,   1-temp_length};
-
-	for(y=0;y<6;y++)
-	{
-		set_alpha[y].x=x_data[y];
-		set_alpha[y].y=y_data[y];
-	}
-//printf("\npoly %f,%f\n",(poly_count/2-poly_count*1.2/8),(poly_count/2+poly_count*1.2/8+2));
-	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
-	{
-/*		if(x>=(poly_count/2-poly_count*1.2/8)&&(x<(poly_count/2+poly_count*1.2/8)))
-		{
-			continue;
-		}
-*/
-		if(x>=(poly_count*7/40) && (x<poly_count*33/40))  //poly_count/512==40
-		{
-				continue;
-		}
-		panel_fillDataList(&list, x);
-
-		checkDirection(AppDirection, x);
-
-		direction = INVALID_DIRECTION;
-		AppOverlap = IsOverlay(AppDirection,&direction);
-
-		if(direction==INVALID_DIRECTION)//out of show range ,the point is invalid
-		{
-			continue;
-		}
-
-		AppOverlap=false;
-
-		setOverlapArea(x,direction,AppOverlap);
-
-		if(AppOverlap)
-		{
-			App = false;
-			pBatch = Panel_Petal_OverLap[direction%CAM_COUNT];
-
-			count = getOverlapIndex(direction);
-			generateAlphaList(Alpha, 1.0/BLEND_OFFSET,1.0*x/PER_CIRCLE, count);
-			getOverLapPointsValue(direction, x, Point1, Point2);
-		}else if(!pixleList[direction].empty())
-		{
-			App = true;
-			pBatch = &Panel_Petal[direction%CAM_COUNT];
-			getPointsValue(direction,x,Point);
-		}else
-		{
-			printf("sth was wrong here x:%d!!\n",x);
-			continue;
-		}
-DRAW:
-
-		pBatch->Normal3f(list[0].x,list[0].y,list[0].z);
-		int index=0;
-
-		for (index=0; index<3; index++)
-		{
-			if(AppOverlap)
-			{
-				pBatch->MultiTexCoord2f(0, Point1[index].x/DEFAULT_IMAGE_WIDTH,  Point1[index].y/DEFAULT_IMAGE_HEIGHT);
-				pBatch->MultiTexCoord2f(1, Point2[index].x/DEFAULT_IMAGE_WIDTH,  Point2[index].y/DEFAULT_IMAGE_HEIGHT);
-				pBatch->MultiTexCoord2f(2, /*1 -*/ set_alpha[alpha_dir*3+index].x, set_alpha[alpha_dir*3+index].y);
-			}else if(App)
-			{
-					pBatch->MultiTexCoord2f(0, Point[index].x/DEFAULT_IMAGE_WIDTH,  Point[index].y/DEFAULT_IMAGE_HEIGHT);
-
-			}
-			pBatch->Vertex3f(list[index+1].x, list[index+1].y, list[index+1].z);
-		}
-		alpha_dir=1-alpha_dir;
-		tri_dir=1-tri_dir;
-	}
-	// end petals
-    for(int petal_idx = 0; petal_idx < CAM_COUNT; petal_idx ++){
-		Panel_Petal[petal_idx].End();
-		Panel_Petal_OverLap[petal_idx]->End();
-    }
-}
-
-#endif
 
 void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 {
@@ -1876,7 +1748,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	/* Clear The Screen And The Depth Buffer*/
 	calcCommonZone();
 
-	cv::Point2f Point[3], Point1[3], Point2[3],PointZero[3];
+	cv::Point2f Point[3], Point1[3], Point2[3],PointZero[3],Point_temp;
 	cv::Point2f Alpha[3];
 	vector<cv::Point3f> list;
 	GLBatch *pBatch = m_env.GetPanel_Petal(0);
@@ -1907,13 +1779,6 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				m_env.Getp_Panel_Petal_OverLap(petal_idx)->Begin(GL_TRIANGLES,1*(poly_count+extra_count)*2*3,3);// petal_overLap has 3 textures, left, right and alpha mask
 			}
 	}
-
-	float triangle_array[6][3]={{0.0, 0.0, 0.0},{0.0, 1.0, 0.0},{0.0,1.0,1.0},
-			{0.0, 0.0, 0.0},{0.0, 1.0, 1.0},{0.0,0.0,1.0}};
-	static int tri_dir=0;
-
-	int temp_data=0,temp_data2=0;
-	int even_data=0;
 	int y=0;
 
 	cv::Point2f set_alpha[6];
@@ -1934,25 +1799,26 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 		set_alpha[y].y=y_data[y];
 	}
 
-	getPointsValue(0,0,PointZero);
+
 	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
 	{
 		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
 		{
-	//		continue;
+
 		}
 		if(x>=(poly_count*7/40) && (x<poly_count*33/40))  //poly_count/512==40
 			{
-	//				continue;
+
 			}
 
-		panel_fillDataList(&list, x,idx);
+		panel_fillDataList(&list, x,idx); //将STL文件值导入到list中
 
 
-
+		//每个x在cam_count上，true则对于在该相机上，false则不在
 		checkDirection(AppDirection, x);
 
 		direction = INVALID_DIRECTION;
+		//如果有两个true,即表明同时在两个相机上都存在，即为重合区
 		AppOverlap = IsOverlay(AppDirection,&direction);
 
 		if(direction==INVALID_DIRECTION)//out of show range ,the point is invalid
@@ -1962,7 +1828,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 		AppOverlap=false;
 
-		setOverlapArea(x,direction,AppOverlap);
+		setOverlapArea(x,direction,AppOverlap);//设置重合区
 
 		math_scale_pos(direction,x,scale_count,thechannel_max_count);
 
@@ -1977,58 +1843,89 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 			{
 				for(int k=0;k<3;k++)
 				{
-#if WHOLE_PIC
-			Point[k].x = Point[k].x*FPGA_SCARE_X;
-			Point[k].y = Point[k].y/NUM_OF_H;
-			int dir=direction%CAM_COUNT;
-	switch(dir)
-	{
-	case 0:
-		dir=4;
-		break;
-	case 1:
-		dir=0;
-				break;
-	case 2:
-		dir=1;
-				break;
-	case 3:
-		dir=9;
-				break;
-	case 4:
-		dir=5;
-				break;
-	case 5:
-		dir=6;
-				break;
-	case 6:
-		dir=2;
-				break;
-	case 7:
-		dir=3;
-				break;
-	case 8:
-		dir=7;
-				break;
-	case 9:
-		dir=8;
-				break;
-	default :
-		break;
-	}
-#if 0
-			if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
+			int dir=(direction)%CAM_COUNT;  //point1图０左边，point2图１右边
+			if(direction==0)
 			{
-		//		dir-=3;
+				Point1[k].x = Point1[k].x/1920.0*640.0+0%CAM_COUNT*640.0;
+				Point1[k].y = Point1[k].y/1080.0*540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+1%CAM_COUNT*640.0;
+				Point2[k].y = Point2[k].y/1080.0*540.0;
 			}
-			else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
+			else if(direction==1)
+				{
+					Point1[k].x = Point1[k].x/1920.0*640.0+1%CAM_COUNT*640.0;
+					Point1[k].y = Point1[k].y/1080.0*540.0;
+
+					Point2[k].x = Point2[k].x/1920.0*640.0+2%CAM_COUNT*640.0;
+					Point2[k].y = Point2[k].y/1080.0*540.0;
+				}
+			else if(direction==2)
 			{
-		//		dir+=2;
+				Point1[k].x = Point1[k].x/1920.0*640.0+2%CAM_COUNT*640.0;
+				Point1[k].y = Point1[k].y/1080.0*540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+0%CAM_COUNT*640.0;
+				Point2[k].y = Point2[k].y/1080.0*540.0*2;
 			}
-#endif
-			Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W))+100;
-			Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
-			#endif
+			else if(direction==3)
+		{
+			Point1[k].x = Point1[k].x/1920.0*640.0+0*640.0;
+			Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
+
+			Point2[k].x = Point2[k].x/1920.0*640.0+1*640.0; //３左边
+			Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0; //
+		}
+			else if(direction==4)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+1*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+2*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0;
+			}
+			else if(direction==5)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+2*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+3*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0;
+			}
+
+			else if(direction==6)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+3*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+4*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0;
+			}
+			else if(direction==7)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+4*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+3*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0;
+			}
+			else if(direction==8)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+3*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+4*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0;
+			}
+			else if(direction==9)
+			{
+				Point1[k].x = Point1[k].x/1920.0*640.0+4*640.0;
+				Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
+
+				Point2[k].x = Point2[k].x/1920.0*640.0+(0)*640.0;
+				Point2[k].y = Point2[k].y/1080.0*1*540.0;
+			}
+
 				}
 			}
 		}else if(!pixleList[direction].empty())
@@ -2040,61 +1937,32 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 			{
 				for(int k=0;k<3;k++)
 				{
+
 					Point[k].x=Point[k].x+move_hor[direction];
 					Point[k].y=(Point[k].y-base_y_scale)*(channel_right_scale[direction]+(channel_left_scale[direction]-channel_right_scale[direction])*scale_count/thechannel_max_count)+base_y_scale+PanoFloatData[direction];
 
-					#if WHOLE_PIC
-					Point[k].x = Point[k].x*FPGA_SCARE_X;
-					Point[k].y = Point[k].y/NUM_OF_H;
-					int dir=direction%CAM_COUNT;
-			switch(dir)
-			{
-			case 0:
-				dir=4;
-				break;
-			case 1:
-				dir=0;
-						break;
-			case 2:
-				dir=1;
-						break;
-			case 3:
-				dir=9;
-						break;
-			case 4:
-				dir=5;
-						break;
-			case 5:
-				dir=6;
-						break;
-			case 6:
-				dir=2;
-						break;
-			case 7:
-				dir=3;
-						break;
-			case 8:
-				dir=7;
-						break;
-			case 9:
-				dir=8;
-						break;
-			default :
-				break;
-			}
-#if 0
-					if(direction%CAM_COUNT<8 &&direction%CAM_COUNT>5)
+					if(direction>=0&&direction<=2)
 					{
-				//		dir-=3;
+						Point[k].x = Point[k].x/1920.0*640.0+direction%CAM_COUNT*640.0;
+						Point[k].y = Point[k].y/1080.0*540.0;
 					}
-					else if(direction%CAM_COUNT<6&&direction%CAM_COUNT>2)
-					{
-				//		dir+=2;
-					}
-#endif
-					Point[k].x = Point[k].x +  ( (dir%PARTITIONS1) %NUM_OF_W  * ( (float)PANO_TEXTURE_WIDTH /NUM_OF_W))+100;
-					Point[k].y = Point[k].y + ( (int)((dir%PARTITIONS1) /NUM_OF_W) * ((float)PANO_TEXTURE_HEIGHT /NUM_OF_H) ) ;
-					#endif
+
+								else if(direction>=3&&direction<=5)
+							{
+								Point[k].x = Point[k].x/1920.0*640.0+(direction-3)*640.0;
+								Point[k].y = Point[k].y/1080.0*1*540.+540.0;
+							}
+
+								else if(direction>=6&&direction<=7)
+								{
+									Point[k].x = Point[k].x/1920.0*640.0+(direction-3)*640.0;
+									Point[k].y = Point[k].y/1080.0*1*540.0;
+								}
+								else if(direction>=8&&direction<=9)
+								{
+									Point[k].x = Point[k].x/1920.0*640.0+(direction-5)*640.0;
+									Point[k].y = Point[k].y/1080.0*1*540.0+540.0;
+								}
 				}
 			}
 		}else
@@ -2134,13 +2002,11 @@ DRAW:
 				pBatch->MultiTexCoord2f(2, /*1 -*/ set_alpha[alpha_dir*3+index].x, set_alpha[alpha_dir*3+index].y);
 			}else if(App)
 			{
-					pBatch->MultiTexCoord2f(0, Point[index].x/DEFAULT_IMAGE_WIDTH,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
-				//	pBatch->MultiTexCoord2f(0, Point[index].x/1920,  ((Point[index].y)/DEFAULT_IMAGE_HEIGHT));
-			}
+					pBatch->MultiTexCoord2f(0, Point[index].x/(float)DEFAULT_IMAGE_WIDTH,  ((Point[index].y)/(float)DEFAULT_IMAGE_HEIGHT));
+		}
 			pBatch->Vertex3f(list[index+1].x, list[index+1].y, list[index+1].z);
 		}
 		alpha_dir=1-alpha_dir;
-		tri_dir=1-tri_dir;
 	}
 	// end petals
     for(int petal_idx = 0; petal_idx < CAM_COUNT; petal_idx ++){
@@ -11790,11 +11656,15 @@ if(deltatime>1000000)
 
 void math_scale_pos(int direction,int count,int & scale_count,int & this_channel_max_count)
 {
+	//微调使用
 	int y=0;
-	int set_corner_angle[CAM_COUNT*2];//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
+	int set_corner_angle[CAM_COUNT*2]={24,25,76,77,128,129,180,181,232,233,284,285,336,337,386,387,436,437,486,487};
+	//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
+
 //TODO 单相机融合区对应位置
 	int temp_count=0;
 	temp_count=count%512;
+/*
 	for(y=0;y<CAM_COUNT;y++)
 	{
 		set_corner_angle[2*y]=256*SET_POINT_SCALE/(CAM_COUNT*2)+256*y*SET_POINT_SCALE/(CAM_COUNT);
@@ -11804,7 +11674,7 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 		}
 		set_corner_angle[2*y+1]=set_corner_angle[2*y]+1;
 	}
-
+*/
 	if(direction>0)
 	{
 		scale_count=temp_count-set_corner_angle[2*(direction-1)];
