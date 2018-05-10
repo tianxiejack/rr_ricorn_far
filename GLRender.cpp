@@ -593,7 +593,7 @@ void Render::WriteRotateAngleDataToFile(char * filename,float * rotateangledata)
 
 
 
-
+static void set10camsOverlapArea(int count,int & direction,bool &AppOverlap);
 static void setOverlapArea(int count,int & direction,bool &AppOverlap);
 static void math_scale_pos(int direction,int count,int & scale_count,int & this_channel_max_count);
 bool stop_scan=false;
@@ -1898,7 +1898,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	}
 
 
-	for(int x = 0 ; x <35/*poly_count */; x++)//loop through all vertex in triangles
+	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
 	{
 		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
 		{
@@ -1911,7 +1911,6 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 		panel_fillDataList(&list, x,idx); //将STL文件值导入到list中
 
-		getPointsValue(1,34,Point_temp);
 
 		//每个x在cam_count上，true则对于在该相机上，false则不在
 		checkDirection(AppDirection, x);
@@ -1927,8 +1926,8 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 		AppOverlap=false;
 
-		setOverlapArea(x,direction,AppOverlap);//设置重合区
-
+	//	setOverlapArea(x,direction,AppOverlap);//设置重合区
+		 set10camsOverlapArea(x,direction,AppOverlap);
 		math_scale_pos(direction,x,scale_count,thechannel_max_count);
 
 		if(AppOverlap)
@@ -1942,6 +1941,8 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 			{
 				for(int k=0;k<3;k++)
 				{
+
+#if 1
 			int dir=(direction)%CAM_COUNT;  //point1图０左边，point2图１右边
 			if(direction==0)
 			{
@@ -1965,7 +1966,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				Point1[k].y = Point1[k].y/1080.0*540.0;
 
 				Point2[k].x = Point2[k].x/1920.0*640.0+0%CAM_COUNT*640.0;//?
-				Point2[k].y = Point2[k].y/1080.0*540.0*2.0;//?
+				Point2[k].y = Point2[k].y/1080.0*540.0+540;//?
 			}
 			else if(direction==3)
 		{
@@ -2024,6 +2025,14 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				Point2[k].x = Point2[k].x/1920.0*640.0+(0)*640.0;
 				Point2[k].y = Point2[k].y/1080.0*1*540.0;
 			}
+			/*
+			Point_temp[k].x=Point1[k].x;
+			Point_temp[k].y=Point1[k].y;
+			Point1[k].x=Point2[k].x;
+			Point1[k].y=Point2[k].y;
+			Point2[k].x=Point_temp[k].x;
+			Point2[k].y=Point_temp[k].y;*/
+#endif
 					//Point1[k].x=Point1[k].x+move_hor[(direction)%CAM_COUNT];
 					//Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
 					//Point1[k]=RotatePoint( Point1[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
@@ -2046,6 +2055,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				{
 				//	Point[k].x=Point[k].x/1980.0;
 				//	Point[k].y=;
+#if 1
 					if(direction>=0&&direction<=2)
 					{
 						Point[k].x = Point[k].x/1920.0*640.0+direction%CAM_COUNT*640.0;
@@ -2071,7 +2081,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 					Point[k].x=Point[k].x+move_hor[direction];
 					Point[k].y=(Point[k].y-base_y_scale)*(channel_right_scale[direction]+(channel_left_scale[direction]-channel_right_scale[direction])*scale_count/thechannel_max_count)+base_y_scale+PanoFloatData[direction];
 					Point[k]=RotatePoint( Point[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
-
+#endif
 				}
 			}
 		}else
@@ -2432,7 +2442,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
-				(*m_env.GetPanel_Petal(i)).Draw();
+				 (*m_env.GetPanel_Petal(i)).Draw();
 				USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
 				m_env.Getp_Panel_Petal_OverLap(i)->Draw();
 			}
@@ -2455,7 +2465,6 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
-			//	m_env.Getp_Panel_Petal_OverLap()->Draw();
 				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
 				{
 					USE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
@@ -3690,7 +3699,14 @@ void Render::RenderSingleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,in
 	//m_env.GetmodelViewMatrix()->PopMatrix();
 
 
-
+	int array[10]={-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	for(int i=1;i<2;i++)
+		{
+	//	array[i]=i;
+		}
+	array[0]=0;
+	array[3]=3;
+	array[2]=2;
 	DrawPanel(m_env,true,NULL,mainOrsub);
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		if(RulerAngle<180.0)
@@ -11634,6 +11650,129 @@ void * getDefaultTransformPipeline(GLEnv &m_env)
 	//GLEnv &m_env =env1;
 	return m_env.GettransformPipeline();
 //	return render.getTransformPipeline();
+}
+
+void set10camsOverlapArea(int count,int & direction,bool &AppOverlap)
+{
+	int coutOfeachCam=48;//480/10
+	int halfOfcam0=4;//24;//48/2, cus petal 0 is cut and put at each side of the panel;
+	int overlapcount=2;
+	int temp_x=count%480;
+	int array[10]={0};
+	int delta=50;
+	if(temp_x<delta)
+			{
+				direction=0;
+			}
+			else if(temp_x<delta+2)
+			{
+				direction=0;
+				AppOverlap=true;
+			}
+			else if(temp_x<delta+48)
+			{
+				direction=1;
+			}
+			else if(temp_x<delta+48+2)
+			{
+				direction=1;
+				AppOverlap=true;
+			}
+			else if(temp_x<delta+48*2)
+				{
+					direction=2;
+				}
+				else if(temp_x<delta+48*2+2)
+				{
+					direction=2;
+					AppOverlap=true;
+				}
+				else if(temp_x<delta+48*3)
+					{
+						direction=3;
+					}
+					else if(temp_x<delta+48*3+2)
+					{
+						direction=3;
+						AppOverlap=true;
+					}
+					else if(temp_x<delta+48*4)
+						{
+							direction=4;
+						}
+						else if(temp_x<delta+48*4+2)
+						{
+							direction=4;
+							AppOverlap=true;
+						}
+						else if(temp_x<delta+48*5)
+							{
+								direction=5;
+							}
+							else if(temp_x<delta+48*5+2)
+							{
+								direction=5;
+								AppOverlap=true;
+							}
+
+							else if(temp_x<delta+48*6)
+								{
+									direction=6;
+								}
+								else if(temp_x<delta+48*6+2)
+								{
+									direction=6;
+									AppOverlap=true;
+								}
+								else if(temp_x<delta+48*7)
+									{
+										direction=7;
+									}
+									else if(temp_x<delta+48*7+2)
+									{
+										direction=7;
+										AppOverlap=true;
+									}
+									else if(temp_x<delta+48*8)
+										{
+											direction=8;
+										}
+										else if(temp_x<delta+48*8+2)
+										{
+											direction=8;
+											AppOverlap=true;
+										}
+										else if(temp_x<delta+48*9)
+											{
+												direction=9;
+											}
+											else if(temp_x<delta+48*9+2)
+											{
+												direction=9;
+												AppOverlap=true;
+											}
+											else
+														direction=0;
+
+//	if(temp_x<24)
+	//{
+	//	direction=0;
+//	}
+//	if(temp_x>=48  &&temp_x<48+24)
+	//	{
+	//		direction=0;
+	//	}
+	/*	if((temp_x>=direction*coutOfeachCam+halfOfcam0)  &&(temp_x<direction*coutOfeachCam+halfOfcam0+1))
+		{
+			AppOverlap=true;
+		}
+		if((temp_x>=direction*coutOfeachCam+halfOfcam0)  &&(temp_x<direction*coutOfeachCam+halfOfcam0+2))
+		{
+			direction+=1;
+			AppOverlap=true;
+		}
+*/
+#endif
 }
 
 void setOverlapArea(int count,int & direction,bool &AppOverlap)
