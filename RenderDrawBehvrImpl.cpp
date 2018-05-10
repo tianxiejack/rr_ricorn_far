@@ -32,24 +32,36 @@ void Render::FBOdraw()
 		 else
 			{
 			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
-		//	gettimeofday(&startT[5],0);
 			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
-		//	gettimeofday(&startT[6],0);
 			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
-	//		gettimeofday(&startT[7],0);
-	//	    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
-	//		RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
 			}
-		//	t[3]=(startT[6].tv_sec-startT[5].tv_sec)*1000000+(startT[6].tv_usec-startT[5].tv_usec);
-	//	t[4]=(startT[7].tv_sec-startT[6].tv_sec)*1000000+(startT[7].tv_usec-startT[6].tv_usec);
-
-	//	printf("deltatimet[5]-t[4] =%d us\n",t[2]);
-	//	printf("deltatimet[6]-t[5] =%d us\n",t[3]);
-	//	printf("deltatimet[7]-t[6] =%d us\n",t[4]);
 		break;
 	case FBO_CHOSEN_VIEW_MODE:
 		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
+	case	FBO_ALL_VIEW_559_MODE:
+	{
+		 if(g_windowHeight==768)
+		{
+			RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN,0,0,0,0,true);
+			RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,false);
+			RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
+			RenderTwotimesView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
+			RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
+//1X 2X  MIWEI
+		}
+		 else
+			{
+			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
+			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
+			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
+			RenderTwotimesView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
+			//	    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
+	//		RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
+			//1X 2X  MIWEI
+			}
+		 break;
+	}
 	default:
 				break;
 

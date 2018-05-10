@@ -31,14 +31,19 @@ void Render::RenderSceneDS()
 	{
 	case SECOND_ALL_VIEW_MODE:
 		env.Getp_FboPboFacade()->Render2Front(SUB);
-	//	RenderRightPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*694.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*116.0/1080.0,SUB,0,0,0,0,false);
-	//	RenderLeftPanoView(env,g_windowWidth*448.0/1920.0,g_windowHeight*811.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*115.0/1080.0,SUB);
-	//	RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
+		glScissor(0,0,1024,538);
+			//glScissor(g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024,g_windowHeight*537);
+
+		glEnable(GL_SCISSOR_TEST);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_SCISSOR_TEST);
+		//RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
+		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,SUB);
 
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
-		RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
-	//	RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
+	//	RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
+		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
 	default :
 		break;
@@ -435,6 +440,7 @@ void RenderMain::ReSizeGLSceneDS(int Width, int Height)
 void RenderMain::DrawGLSceneDS()
 {
 		render.DrawGLSceneDS();
+		glutPostRedisplay();
 }
 void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 {
@@ -445,9 +451,9 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 	{
 		char arg1[256], arg2[256];
 	//	glutInit (&argc, argv);
-		glutCreateSubWindow(2,0,0,500,200);
+		glutCreateSubWindow(2,0,0,1920,1080);
 		glutInitWindowPosition(1921,0);
-		glutInitWindowSize(500, 500);
+		glutInitWindowSize(1920, 1080);
 
 		glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
@@ -482,7 +488,7 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 	//	glewInit();
 
 			glutDisplayFunc(DrawGLSceneDS); /* Register the function to do all our OpenGL drawing. */
-			glutIdleFunc(DrawIdleDS);
+			//glutIdleFunc(DrawIdleDS);
 			glutReshapeFunc(ReSizeGLSceneDS); /* Register the function called when our window is resized. */
 			glutKeyboardFunc(keyPressedDS); /* Register the function called when the keyboard is pressed. */
 	//		glutSpecialFunc(specialkeyPressed); /* Register the special key function */

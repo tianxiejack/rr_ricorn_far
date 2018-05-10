@@ -260,8 +260,8 @@ void HDv4l_cam::YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h)
 {
 	for(int i=0;i<w*h;i++)
 	{
-    *(dst++) =*(src++) ;
-    src++;
+    *(dst++) =*(src) ;
+    src+=2;
 	}
 }
 
@@ -487,6 +487,14 @@ void save_rgb(char *filename,void *pic,int w,int h)
 {
 	Mat Pic(h,w,CV_8UC3,pic);
 	imwrite(filename,Pic);
+}
+
+void save_yuyv2rgb(char *filename,void *pic,int w,int h)
+{
+	char bmp[1920*1080*4];
+	Mat Pic(h,w,CV_8UC2,pic);
+	Mat BMP(h,w,CV_8UC4,bmp);
+
 }
 void save_gray(char *filename,void *pic,int w,int h)
 {

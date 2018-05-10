@@ -123,8 +123,14 @@ private:
 
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
+
 		ALL_VIEW_MODE,
 		PREVIEW_MODE,
+		CHOSEN_VIEW_MODE,
+		TEL_559_VIEW_MODE,
+		MVDETECT_559_VIEW_MODE,
+		FREE_VIEW_MODE,
+
 		VGA_WHITE_VIEW_MODE,
 		VGA_HOT_BIG_VIEW_MODE,
 		VGA_HOT_SMALL_VIEW_MODE,
@@ -152,7 +158,7 @@ private:
 
 
 		SINGLE_PORT_MODE ,	//view an individual camera
-		FREE_VIEW_MODE,		// operate the preset cameras
+		// operate the preset cameras
 		TRIPLE_VIEW_MODE,		// birdview + presetCamera + individual camera
 		BACK_VIEW_MODE,
 		EXTENSION_VIEW_MODE,	// view external cameras
@@ -179,6 +185,9 @@ private:
 		 enum FBO_MODE {
 			 FBO_ALL_VIEW_MODE,
 			 FBO_CHOSEN_VIEW_MODE,
+			 FBO_ALL_VIEW_559_MODE,
+		//	 FBO_TEL_VIEW_559_MODE,
+		//	 FBO_MVDETECT_VIEW_559_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
 

@@ -129,7 +129,8 @@ extern Point3f bar[CAM_COUNT*2];
 #define SHOW_DIRECTION_DYNAMIC 1
 #define HIDE_DIRECTION_DYNAMIC 0
 //#define ALPHA_ZOOM_SCALE 0.50f
-#define SET_POINT_SCALE 512.0/256.0
+//#define SET_POINT_SCALE 512.0/256.0
+#define SET_POINT_SCALE 480.0/240.0
 #define RULER_ANGLE_MOVE_STEP 	0.80f    // move_step==360/450
 #define SMALL_PANO_VIEW_SCALE   1.45/3.0
 
@@ -167,7 +168,6 @@ CVideoProcess* trackMode=CVideoProcess::getInstance();
 #if MVDETECTOR_MODE
 mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
-
 void readcanshu()
 {
 
@@ -657,7 +657,7 @@ void Render::readPixleFile(const char* file, int index)
 //-------------------------GL-related function---------------
 Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		g_nonFullwindowWidth(0),g_nonFullwindowHeight(0),bRotTimerStart(FALSE),
-		bControlViewCamera(FALSE),displayMode(EMPTY_MODE),pVehicle(NULL),
+		bControlViewCamera(FALSE),displayMode(ALL_VIEW_MODE),pVehicle(NULL),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
@@ -1546,12 +1546,12 @@ void Render::panel_fillDataList(vector<cv::Point3f> *list,int x,int idx)
 	}
 	else if(idx==1)
 	{
-		vector<cv::Point3f> *poly_list = PanelLoader.Getpoly_vector2();
-		list->clear();
-		for(int i=0; i<4; i++)
-		{
-			list->push_back(poly_list->at(x*4+i));
-		}
+//		vector<cv::Point3f> *poly_list = PanelLoader.Getpoly_vector2();
+//		list->clear();
+//		for(int i=0; i<4; i++)
+//		{
+//			list->push_back(poly_list->at(x*4+i));
+//		}
 	}
 #if 0
 	if(idx==1)
@@ -1824,7 +1824,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);	/* Clear The Screen And The Depth Buffer*/
 	calcCommonZone();
 
-	cv::Point2f Point[3], Point1[3], Point2[3],PointZero[3],Point_temp;
+	cv::Point2f Point[3], Point1[3], Point2[3],PointZero[3],Point_temp[3];
 	cv::Point2f Alpha[3];
 	vector<cv::Point3f> list;
 	GLBatch *pBatch = m_env.GetPanel_Petal(0);
@@ -1881,7 +1881,8 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 		rotate_init=false;
 		for(int x=0;x<CAM_COUNT;x++)
 		{
-			getPointsValue(x,int(512.0*x/CAM_COUNT+0.6*512/CAM_COUNT),Point);
+			//getPointsValue(x,int(512.0*x/CAM_COUNT+0.6*512/CAM_COUNT),Point);
+			getPointsValue(x,int(480.0*x/CAM_COUNT+0.6*480/CAM_COUNT),Point);
 			rotate_center[x]=Point[0];
 		}
 	}
@@ -1897,7 +1898,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	}
 
 
-	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
+	for(int x = 0 ; x <35/*poly_count */; x++)//loop through all vertex in triangles
 	{
 		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
 		{
@@ -1910,6 +1911,7 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 		panel_fillDataList(&list, x,idx); //将STL文件值导入到list中
 
+		getPointsValue(1,34,Point_temp);
 
 		//每个x在cam_count上，true则对于在该相机上，false则不在
 		checkDirection(AppDirection, x);
@@ -1962,16 +1964,16 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				Point1[k].x = Point1[k].x/1920.0*640.0+2%CAM_COUNT*640.0;
 				Point1[k].y = Point1[k].y/1080.0*540.0;
 
-				Point2[k].x = Point2[k].x/1920.0*640.0+0%CAM_COUNT*640.0;
-				Point2[k].y = Point2[k].y/1080.0*540.0*2;
+				Point2[k].x = Point2[k].x/1920.0*640.0+0%CAM_COUNT*640.0;//?
+				Point2[k].y = Point2[k].y/1080.0*540.0*2.0;//?
 			}
 			else if(direction==3)
 		{
 			Point1[k].x = Point1[k].x/1920.0*640.0+0*640.0;
 			Point1[k].y = Point1[k].y/1080.0*1*540.0+540.0;
 
-			Point2[k].x = Point2[k].x/1920.0*640.0+1*640.0; //３左边
-			Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0; //
+			Point2[k].x = Point2[k].x/1920.0*640.0+1*640.0;
+			Point2[k].y = Point2[k].y/1080.0*1*540.0+540.0;
 		}
 			else if(direction==4)
 			{
@@ -2022,13 +2024,13 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 				Point2[k].x = Point2[k].x/1920.0*640.0+(0)*640.0;
 				Point2[k].y = Point2[k].y/1080.0*1*540.0;
 			}
-					Point1[k].x=Point1[k].x+move_hor[(direction)%CAM_COUNT];
-					Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
-					Point1[k]=RotatePoint( Point1[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
+					//Point1[k].x=Point1[k].x+move_hor[(direction)%CAM_COUNT];
+					//Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
+					//Point1[k]=RotatePoint( Point1[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
 
-					Point2[k].x=Point2[k].x+move_hor[(direction+1)%CAM_COUNT];
-					Point2[k].y=(Point2[k].y-base_y_scale)*(channel_right_scale[(direction+1)%CAM_COUNT])+base_y_scale+PanoFloatData[(direction+1)%CAM_COUNT];
-					Point2[k]=RotatePoint( Point2[k],rotate_center[direction+1],rotate_angle[direction+1],max_panel_length,CAM_COUNT);
+					//Point2[k].x=Point2[k].x+move_hor[(direction+1)%CAM_COUNT];
+					//Point2[k].y=(Point2[k].y-base_y_scale)*(channel_right_scale[(direction+1)%CAM_COUNT])+base_y_scale+PanoFloatData[(direction+1)%CAM_COUNT];
+					//Point2[k]=RotatePoint( Point2[k],rotate_center[direction+1],rotate_angle[direction+1],max_panel_length,CAM_COUNT);
 
 				}
 			}
@@ -2037,13 +2039,13 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 		}else if(!pixleList[direction].empty())
 		{
 			App = true;
-
 			pBatch = 	m_env.GetPanel_Petal(direction%CAM_COUNT);
 			getPointsValue(direction,x,Point);
 			{
 				for(int k=0;k<3;k++)
 				{
-
+				//	Point[k].x=Point[k].x/1980.0;
+				//	Point[k].y=;
 					if(direction>=0&&direction<=2)
 					{
 						Point[k].x = Point[k].x/1920.0*640.0+direction%CAM_COUNT*640.0;
@@ -2110,7 +2112,7 @@ DRAW:
 			}else if(App)
 			{
 					pBatch->MultiTexCoord2f(0, Point[index].x/(float)DEFAULT_IMAGE_WIDTH,  ((Point[index].y)/(float)DEFAULT_IMAGE_HEIGHT));
-		}
+			}
 			pBatch->Vertex3f(list[index+1].x, list[index+1].y, list[index+1].z);
 		}
 		alpha_dir=1-alpha_dir;
@@ -3401,7 +3403,7 @@ void Render::DrawOitVehicle(GLEnv &m_env)
 
 void Render::DrawVehiclesEtcWithFixedBBD(GLEnv &m_env,M3DMatrix44f camera )
 {
-	DrawVehiclesEtc(m_env,camera);
+	//DrawVehiclesEtc(m_env,camera);
 	
 }
 void Render::DrawVehiclesEtc(GLEnv &m_env,M3DMatrix44f camera)
@@ -4312,6 +4314,8 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 
 #else
+	if(mainOrsub==MAIN)
+	{
 	petal3[1]=1;
 	petal3[2]=2;
 	petal3[3]=3;
@@ -4321,6 +4325,19 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			//	DrawPanel(m_env,false,petal3,mainOrsub);
 				DrawPanel(m_env,false,petal3,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
+	}
+	else if(mainOrsub==SUB)
+	{
+		petal3[3]=3;
+		petal3[4]=4;
+		petal3[5]=5;
+
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+	//	DrawPanel(m_env,false,petal3,mainOrsub);
+		DrawPanel(m_env,false,petal3,mainOrsub);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+	}
 #if 0
 				m_env.GetmodelViewMatrix()->PushMatrix();
 							m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0); //1
@@ -5997,7 +6014,16 @@ if(setpriorityOnce)
 #endif
 	// Clear the window with current clearing color
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-#if RENDER2FRONT
+
+#if 1
+	if(env.Getp_FboPboFacade()->IsFboUsed())
+	{
+		env.Getp_FBOmgr()->SetDrawBehaviour(&render);
+		env.Getp_FboPboFacade()->DrawAndGet();
+	}
+
+#endif
+	#if 1
 #if USE_UART
 	zodiac_msg.setXspeedandMove();
 	zodiac_msg.setYspeedandMove();
@@ -6171,8 +6197,6 @@ if(setpriorityOnce)
 		{
 			InitScanAngle();//each time enter pano_view_mode read the angle file again
 		}
-
-
 		RenderRightPanoView(env,0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 		RenderLeftPanoView(env,0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 
@@ -6183,11 +6207,30 @@ if(setpriorityOnce)
 		break;
 	case ALL_VIEW_MODE:
 	{
-		RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
-		RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
-		RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
+		env.Getp_FboPboFacade()->Render2Front();
+		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
+	//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
+		//RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 		break;
 	}
+	case CHOSEN_VIEW_MODE:
+		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
+		break;
+	case TEL_559_VIEW_MODE:
+		break;
+	case		MVDETECT_559_VIEW_MODE:
+	break;
+
+
+
+
+
+
+
+
+
+
+
 	case ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE:
 	{
 			RenderRightPanoView(env,0,g_windowHeight*440.0/1080.0,g_windowWidth, g_windowHeight*320.0/1080.0);
@@ -6778,15 +6821,7 @@ if(setpriorityOnce)
 #endif
 
 #endif// RENDER2FRONT
-#if 1
-	if(env.Getp_FboPboFacade()->IsFboUsed())
-	{
-		env.Getp_FBOmgr()->SetDrawBehaviour(&render);
-		env.Getp_FboPboFacade()->DrawAndGet();
-		env.Getp_FboPboFacade()->Render2Front();
-	}
 
-#endif
 }
 
 
@@ -11606,11 +11641,12 @@ void setOverlapArea(int count,int & direction,bool &AppOverlap)
 	int set_corner_angle[CAM_COUNT*2];
 	int y=0;
 	int temp_x=0;
-	temp_x=count%512;
-
+	//temp_x=count%512;
+	temp_x=count%480;
 	for(y=0;y<CAM_COUNT;y++)
 	{
-		set_corner_angle[2*y]=256*SET_POINT_SCALE/(CAM_COUNT*2)+256*y*SET_POINT_SCALE/(CAM_COUNT);
+		set_corner_angle[2*y]=240*SET_POINT_SCALE/(CAM_COUNT*2)+240*y*SET_POINT_SCALE/(CAM_COUNT);
+	//	set_corner_angle[2*y]=256*SET_POINT_SCALE/(CAM_COUNT*2)+256*y*SET_POINT_SCALE/(CAM_COUNT);
 		if(set_corner_angle[2*y]%2!=0)
 		{
 			set_corner_angle[2*y]=set_corner_angle[2*y]-1;
@@ -11827,23 +11863,26 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 {
 	//微调使用
 	int y=0;
-	int set_corner_angle[CAM_COUNT*2]={24,25,76,77,128,129,180,181,232,233,284,285,336,337,386,387,436,437,486,487};
+	//int set_corner_angle[CAM_COUNT*2]={24,25,76,77,128,129,180,181,232,233,284,285,336,337,386,387,436,437,486,487};
 	//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
-
+	int set_corner_angle[CAM_COUNT*2]={0};
 //TODO 单相机融合区对应位置
 	int temp_count=0;
-	temp_count=count%512;
-/*
+//	temp_count=count%512;
+	temp_count=count%480;
+
 	for(y=0;y<CAM_COUNT;y++)
 	{
-		set_corner_angle[2*y]=256*SET_POINT_SCALE/(CAM_COUNT*2)+256*y*SET_POINT_SCALE/(CAM_COUNT);
+		set_corner_angle[2*y]=240*SET_POINT_SCALE/(CAM_COUNT*2)+240*y*SET_POINT_SCALE/(CAM_COUNT);
+
+	//	set_corner_angle[2*y]=256*SET_POINT_SCALE/(CAM_COUNT*2)+256*y*SET_POINT_SCALE/(CAM_COUNT);
 		if(set_corner_angle[2*y]%2!=0)
 		{
 			set_corner_angle[2*y]=set_corner_angle[2*y]-1;
 		}
 		set_corner_angle[2*y+1]=set_corner_angle[2*y]+1;
 	}
-*/
+
 	if(direction>0)
 	{
 		scale_count=temp_count-set_corner_angle[2*(direction-1)];
@@ -11853,13 +11892,16 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 	{
 		if(temp_count<set_corner_angle[0])
 		{
-			scale_count=temp_count+512-set_corner_angle[2*(CAM_COUNT-1)];
+		//	scale_count=temp_count+512-set_corner_angle[2*(CAM_COUNT-1)];
+			scale_count=temp_count+480-set_corner_angle[2*(CAM_COUNT-1)];
 		}
 		else
 		{
 			scale_count=temp_count-set_corner_angle[2*(CAM_COUNT-1)];
 		}
-		this_channel_max_count=512-set_corner_angle[2*(CAM_COUNT-1)]+set_corner_angle[0];
+		//this_channel_max_count=512-set_corner_angle[2*(CAM_COUNT-1)]+set_corner_angle[0];
+		this_channel_max_count=480-set_corner_angle[2*(CAM_COUNT-1)]+set_corner_angle[0];
+
 	}
 
 }

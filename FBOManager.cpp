@@ -534,10 +534,6 @@ void FBOManager::DrawTex2Front(int mainOrsub)
 				env.GetmodelViewMatrix()->PushMatrix();
 				env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
 				env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
-				if( mainOrsub==SUB)
-				{
-					env.GetmodelViewMatrix()->Scale(0.5f,0.5f,1.0f);
-				}
 				glActiveTexture(GL_TEXTURE31);
 				glBindTexture(GL_TEXTURE_2D, textureId);
 				 render.getShaderManager()->UseStockShader(GLT_SHADER_ORI,env.GettransformPipeline()->GetModelViewProjectionMatrix(),31);
