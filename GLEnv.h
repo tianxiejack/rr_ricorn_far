@@ -28,11 +28,13 @@ public:
 	PBOSender *Getp_PBOMgr();
 	PBOSender *Getp_PBOExtMgr();
 	PBOSender *Getp_PBOVGAMgr();
+	PBOSender *Getp_PBOTargetMgr();
 	PBOSender *Getp_PBOSDIMgr();
 	PBOSender *Getp_PBOChosenMgr();
 	FBOManager *Getp_FBOmgr();
 	pPBO_FBO_Facade Getp_FboPboFacade();
 	void Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr);
+	CaptureGroup *GetMvdectCaptureGroup(){return m_mvdectCaptureGroup;};
 	CaptureGroup *GetPanoCaptureGroup(){return m_panoCaptureGroup;};
 	CaptureGroup *GetChosenCaptureGroup(){return m_chosenCaptureGroup;};
 	CaptureGroup *GetMiscCaptureGroup(){return m_miscCaptureGroup;};
@@ -59,6 +61,7 @@ private:
 	PBOSender PBOMgr;
 	PBOSender PBOExtMgr;
 	PBOSender PBOVGAMgr;
+	PBOSender PBOTargetMgr;
 	PBOSender PBOSDIMgr;
 	PBOSender PBOChosenMgr;
 	FBOManager FBOmgr;

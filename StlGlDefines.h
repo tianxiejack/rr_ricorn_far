@@ -176,6 +176,13 @@ enum{
 //	SDI_CAM_1,
 	SDI_CAM_COUNT
 };
+enum{
+	MAIN_TARGET_0,
+	MAIN_TARGET_1,
+	SUB_TARGET_0,
+	SUB_TARGET_1,
+	TARGET_CAM_COUNT
+};
 
 enum{
 	VGA_CAM_0,
@@ -187,7 +194,8 @@ enum{
 
 #define SDI_WIDTH 1920
 #define SDI_HEIGHT 1080
-
+#define FPGA_SINGLE_PIC_W 640
+#define FPGA_SINGLE_PIC_H 540
 #define VGA_DEV_NUM 5
 #define SDI_DEV_NUM 4
 

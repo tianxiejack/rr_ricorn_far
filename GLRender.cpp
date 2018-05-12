@@ -60,6 +60,13 @@
 #include"Cap_Spi_Message.h"
 #endif
 #include"Thread_Priority.h"
+#include"MvDetect.hpp"
+extern unsigned char * target_data[CAM_COUNT];
+
+#if MVDECT
+ extern MvDetect mv_detect;
+#endif
+int m_cam_pos=-1;
 
 extern GLEnv env1;
 extern GLEnv env2;
@@ -792,6 +799,31 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 	env.GetPanoCaptureGroup()->captureCam(ptr,index);
 }
 
+static void mainTarget0(GLubyte *ptr, int index,GLEnv &env)
+{
+#if MVDECT
+	mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_0,index);
+#endif
+}
+static void mainTarget1(GLubyte *ptr, int index,GLEnv &env)
+{
+#if MVDECT
+	mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_1,index);
+#endif
+}
+static void subTarget0(GLubyte *ptr, int index,GLEnv &env)
+{
+#if MVDECT
+	mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_0,index);
+#endif
+}
+static void subTarget1(GLubyte *ptr, int index,GLEnv &env)
+{
+#if MVDECT
+	mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_1,index);
+#endif
+}
+
 static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
 {
 #	if USE_BMPCAP
@@ -976,6 +1008,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		GenerateSDIView();
 		GenerateVGAView();
 		GenerateRender2FrontView();
+		GenerateTargetFrameView();
 #endif
 
 		PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
@@ -1044,6 +1077,17 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 				glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
+						format, GL_UNSIGNED_BYTE, 0);
+			}
+		for(int i = 0; i < TARGET_CAM_COUNT; i++){
+				glBindTexture(GL_TEXTURE_2D, GL_TargetTextureIDs[i]);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+				glTexImage2D(GL_TEXTURE_2D,0,nComponents,FPGA_SINGLE_PIC_W, FPGA_SINGLE_PIC_H, 0,
 						format, GL_UNSIGNED_BYTE, 0);
 			}
 #else
@@ -1255,11 +1299,19 @@ void Render::GenerateGLTextureIds()
 		GL_SDITextureIDs[i] = GL_SDITextureIDs[i-1] + 1;
 	}
 
+	textureCount = sizeof(GL_TargetTextureIDs)/sizeof(GL_TargetTextureIDs[0]);
+	GL_TargetTextureIDs[0] = GL_TEXTURE26;
+	for(int i = 1; i < textureCount; i++){
+		GL_TargetTextureIDs[i] = GL_TargetTextureIDs[i-1] + 1;
+	}
+
 	textureCount = sizeof(GL_ChosenTextureIDs)/sizeof(GL_ChosenTextureIDs[0]);
 	GL_ChosenTextureIDs[0] = GL_TEXTURE30;
 	for(int i = 1; i < textureCount; i++){
 		GL_ChosenTextureIDs[i] = GL_ChosenTextureIDs[i-1] + 1;
 	}
+
+
 
 	textureCount = sizeof(GL_FBOTextureIDs)/sizeof(GL_FBOTextureIDs[0]);
 	GL_FBOTextureIDs[0] = GL_TEXTURE31;
@@ -1900,14 +1952,14 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 	for(int x = 0 ; x <poly_count ; x++)//loop through all vertex in triangles
 	{
-		if(x>=(poly_count/2-poly_count*1.4/8)&&(x<(poly_count/2+poly_count*1.6/8)))
-		{
-
-		}
-		if(x>=(poly_count*7/40) && (x<poly_count*33/40))  //poly_count/512==40
-			{
-
-			}
+		//if(x>=(poly_count*11/42+24) && (x<poly_count*22/42))  //poly_count/512==40
+		//	{																								//	p_c/480=42
+		//	continue;poly_count*33/42-416
+		//	}
+		if(x>=(poly_count/80*19) && (x<poly_count/80*62))
+				{																								//	38400
+				continue;
+				}
 
 		panel_fillDataList(&list, x,idx); //将STL文件值导入到list中
 
@@ -2242,6 +2294,40 @@ void Render::DrawIndividualVideo(GLEnv &m_env,bool needSendData)
 	}
 }
 
+void Render::DrawTargetVideo(GLEnv &m_env,int  targetIdx,int camIdx,bool needSendData)
+{
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
+			m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
+			glActiveTexture(GL_TargetTextureIDs[targetIdx]);
+			if(needSendData){
+				switch (targetIdx)
+				{
+				case MAIN_TARGET_0:
+					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)mainTarget0,camIdx);
+					break;
+				case MAIN_TARGET_1:
+					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)mainTarget1,camIdx);
+
+					break;
+				case SUB_TARGET_0:
+					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)subTarget0,camIdx);
+
+					break;
+				case SUB_TARGET_1:
+					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)subTarget1,camIdx);
+
+					break;
+							}
+			}
+			else{
+				glBindTexture(GL_TEXTURE_2D, GL_TargetTextureIDs[targetIdx]);
+			}
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), targetIdx+28);
+			m_env.Getp_shadowBatch()->Draw();
+			m_env.GetmodelViewMatrix()->PopMatrix();
+	//todo
+}
 void Render::DrawVGAVideo(GLEnv &m_env,bool needSendData)
 {
 	if(1)//vga_data!=NULL)
@@ -2427,7 +2513,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
-	//			 (*m_env.GetPanel_Petal(i)).Draw();
+				 (*m_env.GetPanel_Petal(i)).Draw();
 				USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
 				m_env.Getp_Panel_Petal_OverLap(i)->Draw();
 			}
@@ -2617,61 +2703,61 @@ void Render::InitForesightGroupTrack(GLEnv &m_env)
 
 	 int porindex=0;
 	GLfloat pano_outer_rect[48][3];
+	float ttdelta=pano_length/9/25;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
+	pano_outer_rect[porindex][1] =0;
+	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta+pano_length/outsideLen;
+	pano_outer_rect[porindex][1] =0;
+	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
 
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
-	pano_outer_rect[porindex][0] =-pano_length/9/2+pano_length/outsideLen;
-	pano_outer_rect[porindex][1] =0;
-	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
-
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
-	pano_outer_rect[porindex][1] =0;
-	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH+pano_length/outsideLen;
 
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
-	pano_outer_rect[porindex][0] =pano_length/9/2-pano_length/outsideLen;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta-pano_length/outsideLen;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
 
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH;
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height/outsideDH+pano_length/outsideLen;
 
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
-	pano_outer_rect[porindex][0] =pano_length/9/2-pano_length/outsideLen;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta-pano_length/outsideLen;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
 
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
-	pano_outer_rect[porindex][0] =pano_length/9/2;
+	pano_outer_rect[porindex][0] =pano_length/9/2-ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH-pano_length/outsideLen;
 
 
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
-	pano_outer_rect[porindex][0] =-pano_length/9/2+pano_length/outsideLen;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta+pano_length/outsideLen;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
 
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH;
-	pano_outer_rect[porindex][0] =-pano_length/9/2;
+	pano_outer_rect[porindex][0] =-pano_length/9/2+ttdelta;
 	pano_outer_rect[porindex][1] =0;
 	pano_outer_rect[porindex++][2] =  pano_height*outsideUH-pano_length/outsideLen;
 
@@ -2844,13 +2930,15 @@ void Render::InitForesightGroupTrack(GLEnv &m_env)
 	 {
 		 foresightPos.SetxDelta(inidelta);
 	 }
-	  float deltaY=11.5-5.7+1.0;
+	  float deltaY_core=1.2;
+	  float deltaY=11.5-5.7+1.0+10.0;
+	  float deltaY1=11.5-5.7+1.0-3.0;
 	  float deltaY2=11.5-5.7+1.0+4.0;
 	 	  p_ForeSightFacade =new ForeSightFacade(
 	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
 	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
-	 									  new PseudoForeSight_core()),pcindex,pano_cross,pano_length*100.0,pano_height/(5.7-2.4))),pirindex,pano_inner_rect,pano_length*102.0,pano_height/(11.5-deltaY))),
+	 									  new PseudoForeSight_core()),pcindex,pano_cross,pano_length*100.0,pano_height/(5.7-2.4+deltaY_core))),pirindex,pano_inner_rect,pano_length*102.0,pano_height/(11.5-deltaY1))),
 	 					  	  	  	  porindex,pano_outer_rect,pano_length*100.0,pano_height/(0+deltaY))
 	 	  	  	  	  	  	  	  	  	  ,foresightPos,&panocamonforesight);
 		  assert(p_ForeSightFacade);
@@ -4317,14 +4405,18 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 #else
 	if(mainOrsub==MAIN)
 	{
-	petal3[1]=1;
-	petal3[2]=2;
-	petal3[3]=3;
-
+float nowposx=foresightPos.GetAngle()[0];
+int array[10]={2,1,0,9,8,7,6,5,4,3};
+m_cam_pos=(nowposx+18+18)/(360/10);
+if(m_cam_pos==10)
+	m_cam_pos=0;
+m_cam_pos=array[m_cam_pos];
+petal3[m_cam_pos]=m_cam_pos;
+petal3[(m_cam_pos+1)%CAM_COUNT]=(m_cam_pos+1)%CAM_COUNT;
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-			//	DrawPanel(m_env,false,petal3,mainOrsub);
 				DrawPanel(m_env,false,petal3,mainOrsub);
+			//	DrawPanel(m_env,false,petal3,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 	else if(mainOrsub==SUB)
@@ -4335,8 +4427,8 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-	//	DrawPanel(m_env,false,petal3,mainOrsub);
-		DrawPanel(m_env,false,petal3,mainOrsub);
+		DrawPanel(m_env,false,NULL,mainOrsub);
+		//DrawPanel(m_env,false,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
 #if 0
@@ -4460,9 +4552,10 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 				sprintf(temp2,"QE%d",i);
 				strcpy(text5[i],temp2);
 			}
-			strcpy(text," FANG");
-			strcpy(text2," YANG");
-			strcpy(text3," CEJU");
+			strcpy(text," FANG:");
+			strcpy(text2," YANG:");
+			strcpy(text3," M IL");
+		//	strcpy(text3,"    CEJU:");
 #endif
 
 			float pos1[50]={3.42,3.10,2.825,2.6,2.4,2.22,2.065,1.94,1.83,1.73,1.645,1.57,1.495,1.435,1.382,1.334,1.286,1.237,1.19
@@ -4470,6 +4563,36 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 
 			float pos2[20]={1.615,1.54,1.47,1.408,1.35,1.298,1.25,1.2055,1.16,1.12,1.08};
 			float pos3[5]={1.7,1.615,1.53,1.46,1.39};
+
+			if(fboMode==FBO_ALL_VIEW_559_MODE)
+			{
+				if(g_windowWidth==1024)
+				{
+					Rect2i rect1(g_windowWidth*730/1024,g_windowHeight*320/768, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect1,text,0.8);
+					Rect2i rect2(g_windowWidth*730/1024,g_windowHeight*280.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect2,text2,0.8);
+					Rect2i rect3(g_windowWidth*900/1024,g_windowHeight*320.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect3,text3,0.8);
+					Rect2i rect4(g_windowWidth*900/1024,g_windowHeight*280.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect4,text3,0.8);
+				}
+				else
+				{
+					Rect2i rect1(g_windowWidth*89.5/100,g_windowHeight/4, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect1,text,0.65);
+					Rect2i rect2(g_windowWidth*89.5/100,g_windowHeight*400.0/1920.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect2,text2,0.65);
+					Rect2i rect3(g_windowWidth*89.5/100,g_windowHeight*400.0/1920.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect2,text2,0.65);
+					Rect2i rect4(g_windowWidth*89.5/100,g_windowHeight*400.0/1920.0, g_windowWidth/20, g_windowHeight*1/20);
+					DrawAngleCordsView(m_env,&rect2,text2,0.65);
+				}
+			}
+
+
+
+
 			if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 					||displayMode==TELESCOPE_FRONT_MODE
 					||displayMode==TELESCOPE_RIGHT_MODE
@@ -4851,6 +4974,30 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
+void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int targetIdx,int camIdx,int enlarge,int mainOrsub)
+{
+		glViewport(x,y,w,h);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
+
+		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->LoadIdentity();
+		// move h since the shadow dimension is [-1,1], use h/2 if it is [0,1]
+		M3DMatrix44f camera ;
+
+		targetFrame[targetIdx].GetCameraMatrix(camera);
+		m_env.GetmodelViewMatrix()->PushMatrix(targetFrame[targetIdx]);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
+		DrawTargetVideo(m_env,targetIdx,camIdx,true);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+}
+
+
+
 void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	//get_delta;
@@ -5081,8 +5228,9 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(5.5,1.0,3.3);//6.0
-	m_env.GetmodelViewMatrix()->Translate(-14.6,0.0,-0.1);//-17.6
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,4.58);//6.0
+	m_env.GetmodelViewMatrix()->Translate(-15.8,0.0,-0.1);//-17.6
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -5217,12 +5365,12 @@ else if(displayMode==ALL_VIEW_MODE
 		{
 			petal2[i]=i;
 		}
-		petal1[0]=0;
+		petal1[9]=9;
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		DrawPanel(m_env,false,petal2,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->PushMatrix();
-			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+			m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0);
 			DrawPanel(m_env,false,petal1,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
@@ -5379,8 +5527,9 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE)
 {
-	m_env.GetmodelViewMatrix()->Scale(5.5,1.0,3.3);//6.0
-	m_env.GetmodelViewMatrix()->Translate(28,0.0,0.0);//26.2
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,4.58);//6.0
+	m_env.GetmodelViewMatrix()->Translate(26.2+2.0,0.0,0);//26.2 +1.8
 }
 
 else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
@@ -6217,16 +6366,6 @@ if(setpriorityOnce)
 	case CHOSEN_VIEW_MODE:
 		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
-	case TEL_559_VIEW_MODE:
-		break;
-	case		MVDETECT_559_VIEW_MODE:
-	break;
-
-
-
-
-
-
 
 
 
@@ -6253,36 +6392,58 @@ if(setpriorityOnce)
 			p_ForeSightFacade2->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-			RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-			RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-			RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+			//	if(mv_detect.CanUseMD())
+			{
+				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+				TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+			}
+
+			//	RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+	//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+	//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		case	TELESCOPE_RIGHT_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				//	if(mv_detect.CanUseMD())
+						{
+							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						}
+
+				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_BACK_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				//	if(mv_detect.CanUseMD())
+						{
+							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						}
+			   //		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_LEFT_MODE:
 			p_ForeSightFacade2->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
-				RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
+				//	if(mv_detect.CanUseMD())
+						{
+							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						}
+				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
+				//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
+		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 
@@ -6600,44 +6761,67 @@ if(setpriorityOnce)
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 
 	}
+	else if(fboMode==	FBO_ALL_VIEW_559_MODE)
+	{
+		p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+
+		//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
+		//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+
+	}
 
 	else if(displayMode==TELESCOPE_FRONT_MODE
 			||displayMode==TELESCOPE_RIGHT_MODE
 			||displayMode==TELESCOPE_BACK_MODE
 			||displayMode==TELESCOPE_LEFT_MODE)
 	{
+		/*
 	p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 		p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
 		RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-
+*/
 	p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 	RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
 		 if(displayMode==TELESCOPE_FRONT_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
-		//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		//	if(mv_detect.CanUseMD())
+		//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		//	else
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
 				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
-			//		RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				//	if(mv_detect.CanUseMD())
+						//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+						//	else
+							RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_BACK_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
-			//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			//	if(mv_detect.CanUseMD())
+					//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+					//	else
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_LEFT_MODE)
 		{
 		p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
-	//	RenderChineseCharacterBillBoardAt(g_windowWidth*1100.0/1920.0, g_windowHeight*123/1920.0, g_windowWidth*812.5/1920.0,g_windowWidth*650.0/1920.0);
-		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		//	if(mv_detect.CanUseMD())
+				//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				//	else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 	}
 
@@ -7060,7 +7244,7 @@ void  Render::GenerateOnetimeView()
 		once = false;
 			panocamonforesight.getOneTimeCam().RotateLocalX(-PI/2);
 		panocamonforesight.getOneTimeCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0+1/20.0));
+		panocamonforesight.getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
 		panocamonforesight.getOneTimeCam().MoveRight(-inidelta);
 		panocamonforesight.getOneTimeCam().MoveForward(-0.16*leftandrightdis/2);
 			panocamonforesight.getOneTimeCam().GetOrigin(OnetimeCamView);
@@ -7086,7 +7270,7 @@ void  Render::GenerateOnetimeView2()
 		once = false;
 		panocamonforesight.getOneTimeCam2().RotateLocalX(-PI/2);
 		panocamonforesight.getOneTimeCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0+1/20.0));
+		panocamonforesight.getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
 			panocamonforesight.getOneTimeCam2().MoveRight(-inidelta);
 			panocamonforesight.getOneTimeCam2().MoveForward(0.16*leftandrightdis/2);
 			panocamonforesight.getOneTimeCam2().RotateLocalY(-PI);
@@ -8104,10 +8288,13 @@ GLEnv & env=env1;
 			break;
 
 			case '!':
-				if(fboMode==	FBO_ALL_VIEW_MODE)
+				if(fboMode==	FBO_ALL_VIEW_MODE
+						||displayMode==ALL_VIEW_MODE)
 				{
 							p_ForeSightFacade->MoveLeft(-PanoLen*100.0);
-							foresightPos.ShowPosX();
+							printf("m_cam_pos=%d\n",m_cam_pos);
+						//	foresightPos.GetAngle()[0];
+					//		foresightPos.ShowPosX();
 					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
 					//		printf("POS_angle=%f\n",pano_pos2angle);
 				}
@@ -8185,16 +8372,21 @@ GLEnv & env=env1;
 			break;
 			case '@':
 				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
-													||displayMode==PREVIEW_MODE)
+													||displayMode==PREVIEW_MODE
+													)
 							{
 									p_ForeSightFacade->MoveRight(PanoLen*100.0);
 									pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
-						//			printf("POS_angle=%f\n",pano_pos2angle);
+
+									//			printf("POS_angle=%f\n",pano_pos2angle);
 							}
-				if(fboMode==	FBO_ALL_VIEW_MODE)
+				if(fboMode==	FBO_ALL_VIEW_MODE
+						||displayMode==ALL_VIEW_MODE)
 				{
 					p_ForeSightFacade->MoveRight(PanoLen*100.0);
-					foresightPos.ShowPosX();
+			//		foresightPos.GetAngle()[0];
+					printf("m_cam_pos=%d\n",m_cam_pos);
+				//	foresightPos.ShowPosX();
 				}
 							else if(displayMode==TELESCOPE_FRONT_MODE
 													||displayMode==TELESCOPE_RIGHT_MODE
@@ -11322,6 +11514,27 @@ void Render::GenerateVGAView()
 	VGACameraFrame.SetOrigin(camPanoView);
 }
 
+void Render::GenerateTargetFrameView()
+{
+	static M3DVector3f camPanoView;
+	static bool once =true;
+	if(once){
+		once = false;
+for(int i=0;i<2;i++)
+{
+		targetFrame[i].RotateLocalX(0.0);
+		targetFrame[i].MoveForward(0.0);
+		targetFrame[i].MoveUp(0.0);
+
+		targetFrame[i].RotateLocalY(0.0);
+		targetFrame[i].MoveRight(0.0);
+		targetFrame[i].GetOrigin(camPanoView);
+		targetFrame[i].SetOrigin(camPanoView);
+}
+	}
+
+}
+
 void Render::GenerateRender2FrontView()
 {
 	static M3DVector3f camPanoView;
@@ -11644,7 +11857,8 @@ void set10camsOverlapArea(int count,int & direction,bool &AppOverlap)
 	int overlapcount=2;
 	int temp_x=count%480;
 	int array[10]={0};
-	int delta=50;
+#if 1
+	int delta=48;
 	if(temp_x<2)
 	{
 		direction=9;
@@ -11736,26 +11950,102 @@ void set10camsOverlapArea(int count,int & direction,bool &AppOverlap)
 											{
 												direction=9;
 											}
+#else
+	int delta=24;
+			if(temp_x<delta)
+			{
+				direction=0;
+			}
+			else if(temp_x<delta+2)
+			{
+				direction=0;
+				AppOverlap=true;
+			}
+			else if(temp_x<delta+48)
+			{
+				direction=1;
+			}
+			else if(temp_x<delta+48+2)
+			{
+				direction=1;
+				AppOverlap=true;
+			}
+			else if(temp_x<delta+48*2)
+				{
+					direction=2;
+				}
+				else if(temp_x<delta+48*2+2)
+				{
+					direction=2;
+					AppOverlap=true;
+				}
+				else if(temp_x<delta+48*3)
+					{
+						direction=3;
+					}
+					else if(temp_x<delta+48*3+2)
+					{
+						direction=3;
+						AppOverlap=true;
+					}
+					else if(temp_x<delta+48*4)
+						{
+							direction=4;
+						}
+						else if(temp_x<delta+48*4+2)
+						{
+							direction=4;
+							AppOverlap=true;
+						}
+						else if(temp_x<delta+48*5)
+							{
+								direction=5;
+							}
+							else if(temp_x<delta+48*5+2)
+							{
+								direction=5;
+								AppOverlap=true;
+							}
+
+							else if(temp_x<delta+48*6)
+								{
+									direction=6;
+								}
+								else if(temp_x<delta+48*6+2)
+								{
+									direction=6;
+									AppOverlap=true;
+								}
+								else if(temp_x<delta+48*7)
+									{
+										direction=7;
+									}
+									else if(temp_x<delta+48*7+2)
+									{
+										direction=7;
+										AppOverlap=true;
+									}
+									else if(temp_x<delta+48*8)
+										{
+											direction=8;
+										}
+										else if(temp_x<delta+48*8+2)
+										{
+											direction=8;
+											AppOverlap=true;
+										}
+										else if(temp_x<delta+48*9)
+											{
+												direction=9;
+											}
+										else if(temp_x<delta+48*9+2)
+										{
+											direction=9;
+											AppOverlap=true;
+										}
+#endif
 
 
-//	if(temp_x<24)
-	//{
-	//	direction=0;
-//	}
-//	if(temp_x>=48  &&temp_x<48+24)
-	//	{
-	//		direction=0;
-	//	}
-	/*	if((temp_x>=direction*coutOfeachCam+halfOfcam0)  &&(temp_x<direction*coutOfeachCam+halfOfcam0+1))
-		{
-			AppOverlap=true;
-		}
-		if((temp_x>=direction*coutOfeachCam+halfOfcam0)  &&(temp_x<direction*coutOfeachCam+halfOfcam0+2))
-		{
-			direction+=1;
-			AppOverlap=true;
-		}
-*/
 
 }
 

@@ -75,11 +75,11 @@ float tel_four_camPosY=0.0;
 	 }
 	 if(readAngle <180.0 ||readAngle>270)
 		 	{
-			 	 foresightPos.SetAlignPos(2,1.25+1.0/20.0);
+			 	 foresightPos.SetAlignPos(2,1.25);
 		 	}
 		 	else
 		 	{
-		 		foresightPos.SetAlignPos(2,-1.75+1.0/20.0);
+		 		foresightPos.SetAlignPos(2,-1.75);
 		 	}
 
 			for(int i=0;i< foresightPos.GetAlignNum();i++)
@@ -137,9 +137,9 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 
 	  speedXY[0]=1.0;
 	  speedXY[1]=1.0;
-	  ForeSight_Pos[0]=-0.75+1.0/20.0;//-0.75;
-	  	ForeSight_Pos[1]=0.25+1.0/20.0;//0.25;
-	  	ForeSight_Pos[2]=1.25+1.0/20.0;
+	  ForeSight_Pos[0]=-0.75;//-0.75;
+	  	ForeSight_Pos[1]=0.25;//0.25;
+	  	ForeSight_Pos[2]=1.25;
 
 	  	ForeSight_Pos[3]=0.25;
 	  	ForeSight_Pos[4]=0.5;

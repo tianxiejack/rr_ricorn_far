@@ -145,7 +145,7 @@ private:
 	void YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h);
 	void YUYV2GRAY(unsigned char * src,unsigned char * dst,int w,int h);
 	void RectFromPixels(unsigned char *src);
-	int GetNowPicIdx();
+	int GetNowPicIdx(unsigned char *src);
 	int ChangeIdx2chid(int idx);
 	void start_queue();
 	bool Data2Queue(unsigned char *pYuvBuf,int width,int height,int chId);

@@ -47,7 +47,7 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //Mat SDI_frame,VGA_frame;
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
-
+unsigned char * target_data[CAM_COUNT];
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
 
@@ -64,8 +64,9 @@ unsigned char * GRAY_data_main[CAM_COUNT];
 
 unsigned char * vga_data=NULL;
 
-
-extern MvDetect mv_detect;
+#if MVDECT
+ MvDetect mv_detect;
+#endif
 HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_USERPTR/*IO_METHOD_MMAP*/),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
 force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
@@ -81,6 +82,9 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			{
 				init_buffer();
 				Once_buffer=false;
+				for(int i=0;i<CAM_COUNT;i++){
+					target_data[i]=(unsigned char *)malloc(1920*1080*4);
+				}
 			}
 }
 
@@ -463,16 +467,17 @@ void yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
 	return ;
 }
 
-int HDv4l_cam::GetNowPicIdx()
+int HDv4l_cam::GetNowPicIdx(unsigned char *src)
 {
-	int picIdx=0;
-	//todo
+	int picIdx=-1;
+	picIdx=(int)*src;
 	return picIdx;
 }
 int HDv4l_cam::ChangeIdx2chid(int idx)
 {//0~9
-	int picidx=(GetNowPicIdx()+2);
-	return picidx;
+	//int picidx=(GetNowPicIdx()+2);
+	//return picidx;
+	return 0;
 }
 
 void save_yuyv(char *filename,void *pic,int w,int h)
@@ -559,9 +564,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
-						chid[MAIN]=ChangeIdx2chid(MAIN);
-						nowGrayidx=GetNowPicIdx();
-						transformed_src_main=&GRAY_data_main[nowGrayidx];
+					//	chid[MAIN]=ChangeIdx2chid(MAIN);
+						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
+				//		transformed_src_main=&GRAY_data_main[nowGrayidx];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -576,7 +581,14 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
-							YUYV2GRAY((unsigned char *)buffers[buf.index].start,*transformed_src_main,SDI_WIDTH,SDI_HEIGHT);
+					//		if(mv_detect.CanUseMD())
+						{
+							YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+							#if MVDECT
+							mv_detect.m_mvDetect( nowGrayidx,(unsigned char *)buffers[buf.index].start,int SDI_WIDTH,int SDI_HEIGHT)
+
+							#endif
+						}
 						}
 						else //４副　６副　　车长１０选一
 						{
@@ -588,6 +600,19 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							{
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
+#if MVDECT
+								if(mv_detect.CanUseMD())
+								{
+									if(nowpicW==1280)
+									{
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
+									}
+									else if (nowpicW==1920)
+									{
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
+									}
+								}
+#endif
 							}
 								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
 						}
@@ -618,27 +643,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							}
 						}
 					}
-#if 0
-					OSA_semWait(&sem[now_pic_format],OSA_TIMEOUT_FOREVER);
-							currentWR[now_pic_format]=1;
-							if(currentWR[now_pic_format]==0) //０的时候线程里在写
-							{
-								printf("%d OSA_sem failed\n",now_pic_format);
-							}
-							memcpy(sdi_data[now_pic_format],buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
-				//			unsigned char* abcd = (unsigned char*)malloc(1920*1080*1);
-				//			yuyv2gray((unsigned char *)buffers[buf.index].start,abcd,1920,1080);
-			//				Mat tmp = Mat(1080,1920,CV_8UC1,abcd);
-			//				imshow("abcd",tmp);
-			//				waitKey(0);
-						//	mvDetect(uchar index,uchar* inframe,int width,int height,cv::Rect *boundRect);
-						//	mvDetect((unsigned char)now_pic_format,*(unsigned char *) buffers[buf.index].start,1920,1080,Rect *boundRect);
-							//index 代表第几个 检测OBJ 执行，boundRect 输出 目标的矩形框参数
-							#if MVDECT
-							mv_detect.m_mvDetect(now_pic_format,(unsigned char*)sdi_data[now_pic_format]);
-							#endif
-							OSA_semSignal(&sem[now_pic_format]);
-#endif
+
+
 			}
 					if (-1 ==xioctl(m_devFd, VIDIOC_QBUF, &buf)){
 						fprintf(stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno));

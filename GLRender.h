@@ -123,12 +123,15 @@ private:
 
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
-
 		ALL_VIEW_MODE,
-		PREVIEW_MODE,
 		CHOSEN_VIEW_MODE,
-		TEL_559_VIEW_MODE,
-		MVDETECT_559_VIEW_MODE,
+
+		TELESCOPE_FRONT_MODE,
+		TELESCOPE_RIGHT_MODE,
+		TELESCOPE_BACK_MODE,
+		TELESCOPE_LEFT_MODE,
+
+		PREVIEW_MODE,
 		FREE_VIEW_MODE,
 
 		VGA_WHITE_VIEW_MODE,
@@ -140,10 +143,7 @@ private:
 		VGA_FUSE_DESERT_VIEW_MODE,
 		VGA_FUSE_CITY_VIEW_MODE,
 		ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE,//全景
-			TELESCOPE_FRONT_MODE,
-			TELESCOPE_RIGHT_MODE,
-			TELESCOPE_BACK_MODE,
-			TELESCOPE_LEFT_MODE,
+
 			SDI1_WHITE_BIG_VIEW_MODE,
 			SDI1_WHITE_SMALL_VIEW_MODE,
 			SDI2_HOT_BIG_VIEW_MODE,
@@ -186,8 +186,6 @@ private:
 			 FBO_ALL_VIEW_MODE,
 			 FBO_CHOSEN_VIEW_MODE,
 			 FBO_ALL_VIEW_559_MODE,
-		//	 FBO_TEL_VIEW_559_MODE,
-		//	 FBO_MVDETECT_VIEW_559_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
 
@@ -402,6 +400,7 @@ private:
 	void DrawSDIVideo(GLEnv &m_env,bool needSendData);
 	void DrawChosenVideo(GLEnv &m_env,bool needSendData);
 
+	void DrawTargetVideo(GLEnv &m_env, int targetIdx,int camIdx,bool needSendData);
 	int GetCurrentVGAVideoId(){return m_VGAVideoId;};
 	int GetCurrentSDIVideoId(){return m_SDIVideoId;};
 	int GetCurrentChosenVideoId(){return m_ChosenVideoId;};
@@ -488,6 +487,10 @@ private:
 	void RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
+	void TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int camidx,int targetIdx,int enlarge=0,int mainOrsub=MAIN);
+
+
+
 
 	void GenerateCheckView();
 	void GenerateOnetimeView();
@@ -507,6 +510,7 @@ private:
 	void GenerateSDIView();
 	void GenerateVGAView();
 	void GenerateRender2FrontView();
+	void GenerateTargetFrameView();
 	void GeneratePanoTelView();
 	void GenerateTrack();
 
@@ -639,6 +643,7 @@ public:
 						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
 						GLFrame	*getVGACameraFrame(){return &VGACameraFrame;};
 						GLFrame	*getRender2FrontCameraFrame(){return &Render2FrontCameraFrame;};
+						GLFrame	*getRenderTargetCameraFrame(int i){return &targetFrame[i];};
 
 private:
 	GLBatch Petal[CAM_COUNT];
@@ -716,6 +721,7 @@ private:
 	GLFrame	SDICameraFrame;
 	GLFrame Render2FrontCameraFrame;
 	GLFrame ChosenCameraFrame;
+	GLFrame targetFrame[2];
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
@@ -756,6 +762,7 @@ private:
 	int GetWindowHeight(){return g_windowHeight;};
 	GLuint GL_ChosenTextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
+	GLuint GL_TargetTextureIDs[TARGET_CAM_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
 	GLuint GL_FBOTextureIDs[1];
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
