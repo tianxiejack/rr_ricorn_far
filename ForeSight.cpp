@@ -9,9 +9,7 @@
 using namespace cv;
 
 extern Render render;
-ForeSightPos foresightPos;
-
-
+ForeSightPos foresightPos[MS_COUNT];
 
 
 static float xmove[2]={0,0};
@@ -53,9 +51,9 @@ float tel_four_camPosY=0.0;
 		myBatch.End();
  }
 
- void ForeSight_decorator::DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle)
+ void ForeSight_decorator::DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle,int mainorsub)
  {
-	 m_core->DrawSeveralpairs(m_env,posX,posY,readAngle);
+	 m_core->DrawSeveralpairs(m_env,posX,posY,readAngle,mainorsub);
 //	 foresightPosxy.GetSpeedX()
 	 if(posY>=limitY)
 	 {
@@ -75,26 +73,26 @@ float tel_four_camPosY=0.0;
 	 }
 	 if(readAngle <180.0 ||readAngle>270)
 		 	{
-			 	 foresightPos.SetAlignPos(2,1.25);
+			 	 foresightPos[mainorsub].SetAlignPos(2,1.25);
 		 	}
 		 	else
 		 	{
-		 		foresightPos.SetAlignPos(2,-1.75);
+		 		foresightPos[mainorsub].SetAlignPos(2,-1.75);
 		 	}
 
-			for(int i=0;i< foresightPos.GetAlignNum();i++)
+			for(int i=0;i< foresightPos[mainorsub].GetAlignNum();i++)
 			{
 				modelViewMatrix.PushMatrix();
-				foresightPos.AlignTo(foresightPos.GetAlignIndex()+i);     //1/2
-				if(foresightPos.GetAlignIndex()>=TRACK_VGA)
+				foresightPos[mainorsub].AlignTo(foresightPos[mainorsub].GetAlignIndex()+i);     //1/2
+				if(foresightPos[mainorsub].GetAlignIndex()>=TRACK_VGA)
 				{
-					modelViewMatrix.Translate(foresightPos.GetMatrixX()+posX, 0.0,posY);
+					modelViewMatrix.Translate(foresightPos[mainorsub].GetMatrixX()+posX, 0.0,posY);
 					Draw(m_env);
 			//		printf("posY=%f\n",posY);
 				}
 				else
 				{
-					modelViewMatrix.Translate(foresightPos.GetMatrixX()+posX+foresightPos.GetxDelta(), 0.0,posY);
+					modelViewMatrix.Translate(foresightPos[mainorsub].GetMatrixX()+posX+foresightPos[mainorsub].GetxDelta(), 0.0,posY);
 					Drawpairs(m_env);
 				}
 					//+foresightPosxy.getxDelta()+foresightPosxy.GetForeSightPosX(),0.0f,foresightPosxy.GetForeSightPosY()
@@ -102,13 +100,13 @@ float tel_four_camPosY=0.0;
 			}
  }
 
- void ForeSight_decorator::Drawpairs(GLEnv &m_env)
+ void ForeSight_decorator::Drawpairs(GLEnv &m_env,int mainorsub)
  {
 	float flag=1.0;//to put  frames before  or behind the picture
 	for(int i=0;i<2;i++)
 	{
 		modelViewMatrix.PushMatrix();
-		modelViewMatrix.Translate(0.0f,(foresightPos.GetMatrixY())*flag,0.0f);
+		modelViewMatrix.Translate(0.0f,(foresightPos[mainorsub].GetMatrixY())*flag,0.0f);
 		Draw(m_env);
 		modelViewMatrix.PopMatrix();
 		flag*= -1.0;
@@ -436,65 +434,68 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 	{
 		this->xOffset=pano_length*ForeSight_Pos[num];
 	}
-	void ForeSightFacade::MoveUp(float Ylimit)
+	void ForeSightFacade::MoveUp(float Ylimit,int mainorsub)
 	{
 		foreSightPos.MoveUp( Ylimit);
 	//	printf("foresightPOSY=%f\n",foreSightPos.GetForeSightPosY());
-		pcamonForeSight->CamMoveUp();
+		pcamonForeSight->CamMoveUp(mainorsub);
 	//	camonForeSight.pano_CamMoveUp();
 	//	camonForeSight.tel_CamTwoMoveUp();
 	//	camonForeSight.tel_CamFourMoveUp();
 	}
-	void ForeSightFacade::MoveDown(float Ylimit)
+	void ForeSightFacade::MoveDown(float Ylimit,int mainorsub)
 	{
 		foreSightPos.MoveDown( Ylimit);
 //		printf("foresightPOSY=%f\n",foreSightPos.GetForeSightPosY());
-		pcamonForeSight->CamMoveDown();
+		pcamonForeSight->CamMoveDown(mainorsub);
 //		camonForeSight.pano_CamMoveDown();
 //		camonForeSight.tel_CamTwoMoveDown();
 //		camonForeSight.tel_CamFourMoveDown();
 	}
-	bool  ForeSightFacade::MoveLeft(float Xlimit)
+	bool  ForeSightFacade::MoveLeft(float Xlimit,int mainorsub)
 	{
 		bool istochangeTelMode=false;
 		istochangeTelMode=foreSightPos.MoveLeft(Xlimit);
-		pcamonForeSight->CamMoveLeft();
+		pcamonForeSight->CamMoveLeft(mainorsub);
 //		camonForeSight.pano_CamMoveX();
 //		camonForeSight.tel_CamMoveTwoLeft();
 //		camonForeSight.tel_CamMoveFourLeft();
 		return istochangeTelMode;
 	}
-	bool  ForeSightFacade::MoveRight(float Xlimit)
+	bool  ForeSightFacade::MoveRight(float Xlimit,int mainorsub)
 	{
 		bool istochangeTelMode=false;
 		istochangeTelMode=foreSightPos.MoveRight(Xlimit);
-		pcamonForeSight->CamMoveRight();
+		pcamonForeSight->CamMoveRight(mainorsub);
 //		camonForeSight.pano_CamMoveX();
 //		camonForeSight.tel_CamMoveTwoRight();
 	//	camonForeSight.tel_CamMoveFourRight();
 		return istochangeTelMode;
 	}
-	void ForeSightFacade::Draw(GLEnv &m_env,float readAngle)//在渲染时间时调用
+	void ForeSightFacade::Draw(GLEnv &m_env,float readAngle,int mainorsub)//在渲染时间时调用
 	{
-		pInterfaceForeSight->DrawSeveralpairs(m_env,foreSightPos.GetForeSightPosX(),foreSightPos.GetForeSightPosY(), readAngle);
+		pInterfaceForeSight->DrawSeveralpairs(m_env,foreSightPos.GetForeSightPosX(),foreSightPos.GetForeSightPosY(), readAngle,mainorsub);
 	}
 
 
 	PanoCamOnForeSight::PanoCamOnForeSight():pano_length(0),pano_height(0),
 			pano_two_lastposX(0),pano_two_lastposY(0)
 	{
+		for(int i=0;i<2;i++)
+		{
 		OnetimeViewCameraFrame.SetOrigin(0.0,0.0,0.0);
 		TwotimesViewCameraFrame2.SetOrigin(0.0,0.0,0.0);
 		OnetimeViewCameraFrame.SetOrigin(0.0,0.0,0.0);
 		TwotimesViewCameraFrame2.SetOrigin(0.0,0.0,0.0);
+		}
 		Front=true;
 	}
 
 
 
-	void  PanoCamOnForeSight::pano_CamMoveX()
+	void  PanoCamOnForeSight::pano_CamMoveX(int mainorsub)
 		{
-			float PosX=foresightPos.GetForeSightPosX();
+			float PosX=foresightPos[mainorsub].GetForeSightPosX();
 			if(PosX<-pano_length/4.0 && PosX>-pano_length*3.0/4.0)
 			{
 				Front=false;
@@ -528,10 +529,10 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 			TwotimesViewCameraFrame2.MoveRight(moveX);
 		}
 
-	void PanoCamOnForeSight::pano_CamMoveUp()
+	void PanoCamOnForeSight::pano_CamMoveUp(int mainorsub)
 	{
 			float limit=pano_height/(11.5-5.7+1.0);
-			float PosY=foresightPos.GetForeSightPosY();
+			float PosY=foresightPos[mainorsub].GetForeSightPosY();
 			if(PosY<-limit)
 			{
 				return;
@@ -550,10 +551,10 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 			getTwoTimesCam2().MoveUp(moveY);
 	}
 
-	void PanoCamOnForeSight::pano_CamMoveDown()
+	void PanoCamOnForeSight::pano_CamMoveDown(int mainorsub)
 	{
 		float limit=-pano_height/(11.5-5.7+1.0);
-		float PosY=foresightPos.GetForeSightPosY();
+		float PosY=foresightPos[mainorsub].GetForeSightPosY();
 		if(PosY>-limit)
 		{
 			return;
@@ -587,10 +588,10 @@ TelCamOnForeSight::TelCamOnForeSight():pano_length(0),pano_height(0),
 	}
 }
 
-void  TelCamOnForeSight::tel_CamMoveTwoLeft()
+void  TelCamOnForeSight::tel_CamMoveTwoLeft(int mainorsub)
 	{
 		float limit=(pano_length/TELXLIMIT-(1/14.0-1/25.0)*pano_length);
-		float PosX=foresightPos.GetForeSightPosX();
+		float PosX=foresightPos[mainorsub].GetForeSightPosX();
 
 //		printf("2LtwoLlimit=%f\n",limit/pano_length*360.0);
 		float moveX=0.0;
@@ -613,10 +614,10 @@ void  TelCamOnForeSight::tel_CamMoveTwoLeft()
 		getTwoTimesCamTelL().MoveRight(-moveX);
 	}
 
-void  TelCamOnForeSight::tel_CamMoveTwoRight()
+void  TelCamOnForeSight::tel_CamMoveTwoRight(int mainorsub)
 	{
 		float limit=(pano_length/TELXLIMIT-(1/14.0-1/25.0)*pano_length);
-		float PosX=foresightPos.GetForeSightPosX();
+		float PosX=foresightPos[mainorsub].GetForeSightPosX();
 
 //		printf("2RLlimit=%f\n",limit/pano_length*360.0);
 		float moveX=0.0;
@@ -642,10 +643,10 @@ void  TelCamOnForeSight::tel_CamMoveTwoRight()
 
 
 
-void  TelCamOnForeSight::tel_CamMoveFourLeft()
+void  TelCamOnForeSight::tel_CamMoveFourLeft(int mainorsub)
 	{
 			float limit=pano_length/TELXLIMIT-((1.0/14.0-1.0/15.75)*pano_length);
-			float PosX=foresightPos.GetForeSightPosX();
+			float PosX=foresightPos[mainorsub].GetForeSightPosX();
 
 		//	printf("4Llimit=%f\n",limit/pano_length*360.0);
 			float moveX=0.0;
@@ -668,10 +669,10 @@ void  TelCamOnForeSight::tel_CamMoveFourLeft()
 			getFourTimesCamTelL().MoveRight(-moveX);
 	}
 
-void  TelCamOnForeSight::tel_CamMoveFourRight()
+void  TelCamOnForeSight::tel_CamMoveFourRight(int mainorsub)
 	{
 			float limit=pano_length/TELXLIMIT-((1.0/14.0-1.0/15.75)*pano_length);
-			float PosX=foresightPos.GetForeSightPosX();
+			float PosX=foresightPos[mainorsub].GetForeSightPosX();
 			//printf("4RFORELlimit=%f\n",limit/pano_length*360.0);
 			float moveX=0.0;
 			if(PosX<-limit)
@@ -693,10 +694,10 @@ void  TelCamOnForeSight::tel_CamMoveFourRight()
 			getFourTimesCamTelL().MoveRight(-moveX);
 	}
 
-void TelCamOnForeSight::tel_CamTwoMoveUp()
+void TelCamOnForeSight::tel_CamTwoMoveUp(int mainorsub)
 	{
 		float two_limit=pano_height/12;
-		float two_PosY=foresightPos.GetForeSightPosY();
+		float two_PosY=foresightPos[mainorsub].GetForeSightPosY();
 		if(two_PosY<-two_limit)
 		{
 			return;
@@ -714,10 +715,10 @@ void TelCamOnForeSight::tel_CamTwoMoveUp()
 		getTwoTimesCamTelL().MoveUp(two_moveY);
 	}
 
-void TelCamOnForeSight::tel_CamTwoMoveDown()
+void TelCamOnForeSight::tel_CamTwoMoveDown(int mainorsub)
 	{
 		float two_limit=-pano_height/12;
-		float two_PosY=foresightPos.GetForeSightPosY();
+		float two_PosY=foresightPos[mainorsub].GetForeSightPosY();
 		if(two_PosY>-two_limit)
 		{
 			return;
@@ -735,10 +736,10 @@ void TelCamOnForeSight::tel_CamTwoMoveDown()
 		getTwoTimesCamTelL().MoveUp(two_moveY);
 	}
 
-void TelCamOnForeSight::tel_CamFourMoveUp()
+void TelCamOnForeSight::tel_CamFourMoveUp(int mainorsub)
 	{
 		float four_limit=pano_height/8;
-			float four_PosY=foresightPos.GetForeSightPosY();
+			float four_PosY=foresightPos[mainorsub].GetForeSightPosY();
 		//	printf("TELPOSY=%f\n  |limitY|=%f\n",four_PosY,four_limit);
 			if(four_PosY<-four_limit)
 			{
@@ -757,10 +758,10 @@ void TelCamOnForeSight::tel_CamFourMoveUp()
 			getFourTimesCamTelB().MoveUp(four_moveY);
 			getFourTimesCamTelL().MoveUp(four_moveY);
 	}
-	void TelCamOnForeSight::tel_CamFourMoveDown()
+	void TelCamOnForeSight::tel_CamFourMoveDown(int mainorsub)
 	{
 		float four_limit=-pano_height/8;
-			float four_PosY=foresightPos.GetForeSightPosY();
+			float four_PosY=foresightPos[mainorsub].GetForeSightPosY();
 		//	printf("TELPOSY=%f\n  |limitY|=%f\n",four_PosY,four_limit);
 			if(four_PosY>-four_limit)
 			{

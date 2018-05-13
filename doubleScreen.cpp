@@ -30,27 +30,79 @@ void Render::RenderSceneDS()
 	switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
+#if 1
 		env.Getp_FboPboFacade()->Render2Front(SUB);
+		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,SUB);
+		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,SUB);
+
 		glScissor(0,0,1024,538);
 			//glScissor(g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024,g_windowHeight*537);
-
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
-		//RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
+#endif
+	//	RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
 		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,SUB);
 
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 	//	RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
-		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
+		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,SUB,true);
 		break;
+	case 	SECOND_TELESCOPE_FRONT_MODE:
+		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_FRONT_MODE,SUB);
+			    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+				//	if(mv_detect.CanUseMD())
+				{
+					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0,0,SUB);
+					TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1,1,SUB);
+				}
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+
+	break;
+	case	SECOND_TELESCOPE_RIGHT_MODE:
+			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
+			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+				//	if(mv_detect.CanUseMD())
+						{
+							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						}
+				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+	break;
+	case	SECOND_TELESCOPE_BACK_MODE:
+		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
+		   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+		   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+			//	if(mv_detect.CanUseMD())
+					{
+						TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+						TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+					}
+			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+
+
+	break;
+	case	SECOND_TELESCOPE_LEFT_MODE:
+		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_LEFT_MODE,SUB);
+		  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
+			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+			//	if(mv_detect.CanUseMD())
+					{
+						TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
+						TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+					}
+					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+	break;
 	default :
 		break;
 	}
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
 {
+#if 0
 //#define PANO_FLOAT_DATA_FILENAME "panofloatdata.yml"
 	GLEnv &env=env2;
 	GLubyte *pBytes;
@@ -120,7 +172,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 #if 1
 		float x;
 		x=(p_LineofRuler->Load())/360.0*(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
-		RulerAngle=p_LineofRuler->Load();
+		RulerAngle=p_LineofRuler->Load();\
 		GenerateOnetimeView();
 		GenerateOnetimeView2();
 
@@ -364,6 +416,7 @@ void Render::SetupRCDS(int windowWidth, int windowHeight)
 
 	}
 	glMatrixMode(GL_MODELVIEW);
+#endif
 }
 void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 {
@@ -375,6 +428,27 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 				SecondDisplayMode = nextMode;
 			}
 				break;
+			case '1':
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+						p_ForeSightFacade[SUB]->MoveLeft(-PanoLen*100.0,SUB);
+				//	else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
+
+						break;
+				case '2':
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+						p_ForeSightFacade[SUB]->MoveRight(PanoLen*100.0,SUB);
+			//		else if(SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
+									break;
+				case '3':
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+						p_ForeSightFacade[SUB]->MoveUp(PanoHeight/(5.7-2.7),SUB);
+				//	else if(SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
+									break;
+				case '4':
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+						p_ForeSightFacade[SUB]->MoveDown(-PanoHeight/(5.7-2.7),SUB);
+			//		else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+									break;
 			default:
 		break;
 		}

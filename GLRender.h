@@ -179,12 +179,15 @@ private:
 		enum SECOND_DISPLAY{
 			SECOND_ALL_VIEW_MODE,
 			SECOND_CHOSEN_VIEW_MODE,
+			SECOND_TELESCOPE_FRONT_MODE,
+			SECOND_TELESCOPE_RIGHT_MODE,
+			SECOND_TELESCOPE_BACK_MODE,
+			SECOND_TELESCOPE_LEFT_MODE,
 			SECOND_TOTAL_MODE_COUNT
 		}SecondDisplayMode;
 
 		 enum FBO_MODE {
 			 FBO_ALL_VIEW_MODE,
-			 FBO_CHOSEN_VIEW_MODE,
 			 FBO_ALL_VIEW_559_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
@@ -398,7 +401,7 @@ private:
 	void SetCurrentExtesionVideoId(int curChid){m_ExtVideoId=curChid;};
 	void DrawVGAVideo(GLEnv &m_env,bool needSendData);
 	void DrawSDIVideo(GLEnv &m_env,bool needSendData);
-	void DrawChosenVideo(GLEnv &m_env,bool needSendData);
+	void DrawChosenVideo(GLEnv &m_env,bool needSendData,int mainorsub=MAIN);
 
 	void DrawTargetVideo(GLEnv &m_env, int targetIdx,int camIdx,bool needSendData);
 	int GetCurrentVGAVideoId(){return m_VGAVideoId;};
@@ -438,7 +441,8 @@ private:
 	void RenderPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 
 
-
+	void RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 
 	void RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mianORsub=MAIN,bool needSendData=true);
 	void RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,GLint scissor_x=0, GLint scissor_y=0, GLint scissor_w=0, GLint scissor_h=0,bool needSendData=true);
@@ -479,7 +483,7 @@ private:
 
 	void ChangeMainChosenCamidx(char idx);
 	void ChangeSubChosenCamidx(char idx);
-	void RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData);
+	void RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, int mainorsub=MAIN,bool needSendData=true);
 	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
@@ -493,12 +497,12 @@ private:
 
 
 	void GenerateCheckView();
-	void GenerateOnetimeView();
-	void GenerateOnetimeView2();
-	void GenerateTwotimesView();
-	void GenerateTwotimesView2();
-	void GenerateTwotimesTelView();
-	void GenerateFourtimesTelView();
+	void GenerateOnetimeView(int mainOrsub=MAIN);
+	void GenerateOnetimeView2(int mainOrsub=MAIN);
+	void GenerateTwotimesView(int mainOrsub=MAIN);
+	void GenerateTwotimesView2(int mainOrsub=MAIN);
+	void GenerateTwotimesTelView(int mainOrsub=MAIN);
+	void GenerateFourtimesTelView(int mainOrsub=MAIN);
 
 	void GenerateBirdView();
 	void GenerateExtentView();
@@ -637,8 +641,8 @@ public:
 					void WriteRotateAngleDataToFile(char * filename,float * rotateangledata);
 
 					 Calibrate * getRulerAngle(){return p_LineofRuler;};
-						ForeSightFacade * GetpWholeFacade(){return p_ForeSightFacade;};
-						ForeSightFacade * GetpTelFacade(){return p_ForeSightFacade2;};
+						ForeSightFacade * GetpWholeFacade(int mainorsub){return p_ForeSightFacade[mainorsub];};
+						ForeSightFacade * GetpTelFacade(int mainorsub){return p_ForeSightFacade2[mainorsub];};
 						ForeSightFacade * GetpTrackFacade(){return p_ForeSightFacade_Track;};
 						PBOReceiver *GetPBORcr(GLEnv &env){return env.Getp_PBORcr();};
 						GLFrame	*getVGACameraFrame(){return &VGACameraFrame;};
@@ -675,8 +679,8 @@ private:
 	GLBatch triangleBatch;
 	GLBatch AlarmAreaBatch;
 	GLBatch AlarmLineBatch;
-	ForeSightFacade * p_ForeSightFacade;
-	ForeSightFacade * p_ForeSightFacade2;
+	ForeSightFacade * p_ForeSightFacade[2];
+	ForeSightFacade * p_ForeSightFacade2[2];
 
 	ForeSightFacade * p_ForeSightFacade_Track;
 	ForeSightFacade * p_ForeSightFacade_Dector;
@@ -760,7 +764,7 @@ private:
 	float PanoHeight;
 	int GetWindowWidth(){return g_windowWidth;};
 	int GetWindowHeight(){return g_windowHeight;};
-	GLuint GL_ChosenTextureIDs[VGA_TEXTURE_COUNT];
+	GLuint GL_ChosenTextureIDs[CHOSEN_TEXTURE_COUNT];
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
 	GLuint GL_TargetTextureIDs[TARGET_CAM_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];

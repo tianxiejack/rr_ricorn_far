@@ -17,12 +17,7 @@ void Render::FBOdraw()
 	switch(fboMode)
 	{
 	case  FBO_ALL_VIEW_MODE:
-		if(displayMode==ALL_VIEW_MODE)
-		{
-			needSendData=true;
-		}
 	//	gettimeofday(&startT[4],0);
-
 		 if(g_windowHeight==768)
 		{
 			RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN,0,0,0,0,true);
@@ -35,9 +30,6 @@ void Render::FBOdraw()
 			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
 			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 			}
-		break;
-	case FBO_CHOSEN_VIEW_MODE:
-		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
 		break;
 	case	FBO_ALL_VIEW_559_MODE:
 	{

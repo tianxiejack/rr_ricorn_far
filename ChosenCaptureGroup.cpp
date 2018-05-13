@@ -65,8 +65,8 @@ ChosenCaptureGroup * ChosenCaptureGroup::GetMvDetectInstance()
 }
 ChosenCaptureGroup * ChosenCaptureGroup::GetMainInstance()
 {
-	int queueid[1]={MAIN_ONE_OF_TEN};
-	int count=1;
+	int queueid[2]={MAIN_ONE_OF_TEN,SUB_ONE_OF_TEN};
+	int count=2;
 	static bool once =true;
 	if(once){
 		MainChosenGroup.init(queueid,count);

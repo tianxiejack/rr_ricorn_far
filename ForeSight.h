@@ -6,7 +6,7 @@
 
 typedef class InterfaceForeSight{
 public:
-	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle)=0;
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle,int mainorsub=MAIN)=0;
 } *PInterfaceForeSight;
 
 class BaseForeSight:public InterfaceForeSight
@@ -20,7 +20,7 @@ public :
 class PseudoForeSight_core:public BaseForeSight
 {
 public:
-	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle){};
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle,int mainorsub=MAIN){};
 };
 
 //decorator
@@ -36,9 +36,9 @@ public:
 			float recvlimitX,
 			float  recvlimitY);
 	virtual ~ForeSight_decorator(){};
-	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle);
+	virtual void DrawSeveralpairs(GLEnv &m_env,float posX,float posY,float readAngle,int mainorsub=MAIN);
 private:
-	void Drawpairs(GLEnv &m_env);
+	void Drawpairs(GLEnv &m_env,int mainorsub=MAIN);
 	void Draw(GLEnv &m_env);
 	float limitX;
 	float limitY;
@@ -51,18 +51,18 @@ private:
 
 typedef class InterfaceCamonForeSight{
 public:
-	virtual void CamMoveUp()=0;
-	virtual void CamMoveDown()=0;
-	virtual void CamMoveLeft()=0;
-	virtual void CamMoveRight()=0;
+	virtual void CamMoveUp(int mainorsub=MAIN)=0;
+	virtual void CamMoveDown(int mainorsub=MAIN)=0;
+	virtual void CamMoveLeft(int mainorsub=MAIN)=0;
+	virtual void CamMoveRight(int mainorsub=MAIN)=0;
 } *PInterfaceCamonForeSight;
 
 class PseudoForeSight_cam:public InterfaceCamonForeSight
 {
-	 void CamMoveUp(){};
-	 void CamMoveDown(){};
-	 void CamMoveLeft(){};
-	 void CamMoveRight(){};
+	 void CamMoveUp(int mainorsub=MAIN){};
+	 void CamMoveDown(int mainorsub=MAIN){};
+	 void CamMoveLeft(int mainorsub=MAIN){};
+	 void CamMoveRight(int mainorsub=MAIN){};
 };
 
 
@@ -76,17 +76,17 @@ public:
 	GLFrame  &getTwoTimesCam(){return TwotimesViewCameraFrame;};
 	GLFrame  &getOneTimeCam2(){return OnetimeViewCameraFrame2;};
 	GLFrame  &getTwoTimesCam2(){return TwotimesViewCameraFrame2;};
-	void CamMoveUp(){pano_CamMoveUp();};
-	 void CamMoveDown(){pano_CamMoveDown();};
-	 void CamMoveLeft(){pano_CamMoveX();};
-	 void CamMoveRight(){ pano_CamMoveX();};
+	void CamMoveUp(int mainorsub=MAIN){pano_CamMoveUp(mainorsub);};
+	 void CamMoveDown(int mainorsub=MAIN){pano_CamMoveDown(mainorsub);};
+	 void CamMoveLeft(int mainorsub=MAIN){pano_CamMoveX(mainorsub);};
+	 void CamMoveRight(int mainorsub=MAIN){ pano_CamMoveX(mainorsub);};
 
 	void setPanolen(float len){pano_length=len;};
 	void setPanoheight(float height){pano_height=height;};
 private:
-	void pano_CamMoveX();
-	void pano_CamMoveUp();
-	void pano_CamMoveDown();
+	void pano_CamMoveX(int mainorsub=MAIN);
+	void pano_CamMoveUp(int mainorsub=MAIN);
+	void pano_CamMoveDown(int mainorsub=MAIN);
 	float pano_two_lastposX;
 	float pano_two_lastposY;
 	float pano_length;
@@ -112,33 +112,33 @@ public:
 	GLFrame  &getTwoTimesCamTelL(){return TwotimesTelViewCameraFrame[3];};
 	GLFrame  &getFourTimesCamTelL(){return FourtimesTelViewCameraFrame[3];};
 
-	 void CamMoveUp(){
-		 tel_CamTwoMoveUp();
-		 tel_CamFourMoveUp();
+	 void CamMoveUp(int mainorsub=MAIN){
+		 tel_CamTwoMoveUp(mainorsub);
+		 tel_CamFourMoveUp(mainorsub);
 	 };
-	 void CamMoveDown(){
-		 tel_CamTwoMoveDown();
-		 tel_CamFourMoveDown();
+	 void CamMoveDown(int mainorsub=MAIN){
+		 tel_CamTwoMoveDown(mainorsub);
+		 tel_CamFourMoveDown(mainorsub);
 	 };
-	 void CamMoveLeft(){
-		 tel_CamMoveTwoLeft();
-		 tel_CamMoveFourLeft();
+	 void CamMoveLeft(int mainorsub=MAIN){
+		 tel_CamMoveTwoLeft(mainorsub);
+		 tel_CamMoveFourLeft(mainorsub);
 	 };
-	 void CamMoveRight(){
-		 tel_CamMoveTwoRight();
-		 tel_CamMoveFourRight();
+	 void CamMoveRight(int mainorsub=MAIN){
+		 tel_CamMoveTwoRight(mainorsub);
+		 tel_CamMoveFourRight(mainorsub);
 	 };
 	void setPanolen(float len){pano_length=len;};
 	void setPanoheight(float height){pano_height=height;};
 private:
-	void tel_CamMoveTwoLeft();
-	void tel_CamMoveTwoRight();
-	void tel_CamMoveFourLeft();
-	void tel_CamMoveFourRight();
-	void tel_CamTwoMoveUp();
-	void tel_CamTwoMoveDown();
-	void tel_CamFourMoveUp();
-	void tel_CamFourMoveDown();
+	void tel_CamMoveTwoLeft(int mainorsub=MAIN);
+	void tel_CamMoveTwoRight(int mainorsub=MAIN);
+	void tel_CamMoveFourLeft(int mainorsub=MAIN);
+	void tel_CamMoveFourRight(int mainorsub=MAIN);
+	void tel_CamTwoMoveUp(int mainorsub=MAIN);
+	void tel_CamTwoMoveDown(int mainorsub=MAIN);
+	void tel_CamFourMoveUp(int mainorsub=MAIN);
+	void tel_CamFourMoveDown(int mainorsub=MAIN);
 	float tel_two_lastposX;
 	float tel_four_lastposX;
 	float tel_two_lastposY;
@@ -244,10 +244,10 @@ public:
 			if(pForeSight){
 				delete pForeSight;}
 	};
-	void MoveUp(float Ylimit); //在按键事件时调用
-	void MoveDown(float Ylimit);
-	bool MoveLeft(float Xlimit);
-	bool MoveRight(float Xlimit);
+	void MoveUp(float Ylimit,int mainorsub=MAIN); //在按键事件时调用
+	void MoveDown(float Ylimit,int mainorsub=MAIN);
+	bool MoveLeft(float Xlimit,int mainorsub=MAIN);
+	bool MoveRight(float Xlimit,int mainorsub=MAIN);
 
 	void TrackMoveUp(float Ylimit){foreSightPos.TrackMoveUp(Ylimit);}; //在按键事件时调用
 	void TrackMoveDown(float Ylimit){foreSightPos.TrackMoveDown(Ylimit);};
@@ -256,7 +256,7 @@ public:
 
 
 
-	void Draw(GLEnv &m_env,float readAngle);//在渲染时间时调用
+	void Draw(GLEnv &m_env,float readAngle,int mainorsub=MAIN);//在渲染时间时调用
 	void SetAlign(int num,int index){foreSightPos.SetAlignNum(num),foreSightPos.SetAlignindex(index);};
 	float GetForeSightPosX( ){return foreSightPos.GetForeSightPosX();};
 	float GetForeSightPosY( ){return foreSightPos.GetForeSightPosY();};
@@ -270,13 +270,13 @@ public:
 		return foreSightPos.ChangeTelA2M();
 	}
 
-	void Reset(int mode){
+	void Reset(int mode,int mainorsub=MAIN){
 		if(foreSightPos.Reset(mode))
 		{
-			pcamonForeSight->CamMoveDown();
-			pcamonForeSight->CamMoveLeft();
-			pcamonForeSight->CamMoveRight();
-			pcamonForeSight->CamMoveUp();
+			pcamonForeSight->CamMoveDown(mainorsub);
+			pcamonForeSight->CamMoveLeft(mainorsub);
+			pcamonForeSight->CamMoveRight(mainorsub);
+			pcamonForeSight->CamMoveUp(mainorsub);
 		}
 	};
 private:

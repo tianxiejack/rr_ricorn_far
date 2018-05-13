@@ -74,15 +74,15 @@ bool enable_hance=false;
 
 bool isTracking=false;
 
-PanoCamOnForeSight  panocamonforesight;
-TelCamOnForeSight	     telcamonforesight;
+PanoCamOnForeSight  panocamonforesight[2];
+TelCamOnForeSight	     telcamonforesight[2];
 
 //Process_Zodiac_Message  zodiac_msg;
 extern AlarmTarget mainAlarmTarget;
 extern unsigned char *sdi_data;
 extern unsigned char *vga_data;
 extern SelfCheck selfcheck;
-extern ForeSightPos foresightPos;
+extern ForeSightPos foresightPos[MS_COUNT];
 #if USE_UART
 extern IPC_msg  g_MSG[2];
 #endif
@@ -157,16 +157,16 @@ extern Point3f bar[CAM_COUNT*2];
 int alarm_period=200000;
 float forward_data=-30.0f;
 float x_set_angle=0.0;
-float temp_math=0.0;
-int center_cam=0;
-int Twotimescenter_cam=0;
-float Twotimestemp_math=0.0;
-int TelTwotimescenter_cam=0;
-float TelTwotimestemp_math=0.0;
-int Fourtimescenter_cam=0;
-float Fourtimestemp_math=0.0;
-int Telscenter_cam=0;
-float Teltemp_math=0.0;
+float temp_math[2]={0};
+int center_cam[2]={0};
+int Twotimescenter_cam[2]={0};
+float Twotimestemp_math[2]={0};
+int TelTwotimescenter_cam[2]={0};
+float TelTwotimestemp_math[2]={0};
+int Fourtimescenter_cam[2]={0};
+float Fourtimestemp_math[2]={0};
+int Telscenter_cam[2]={0};
+float Teltemp_math[2]={0};
 extern float track_pos[4];
 float  canshu[8]={0,0,0,0,0,0,0,0};
 #if TRACK_MODE
@@ -664,12 +664,13 @@ void Render::readPixleFile(const char* file, int index)
 //-------------------------GL-related function---------------
 Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		g_nonFullwindowWidth(0),g_nonFullwindowHeight(0),bRotTimerStart(FALSE),
-		bControlViewCamera(FALSE),displayMode(ALL_VIEW_MODE),pVehicle(NULL),
+		bControlViewCamera(FALSE),pVehicle(NULL),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
 		fboMode(FBO_ALL_VIEW_MODE),
-		SecondDisplayMode(SECOND_ALL_VIEW_MODE),
+		displayMode(CHOSEN_VIEW_MODE),
+		SecondDisplayMode(SECOND_CHOSEN_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
 		send_follow_angle_enable(false),p_CompassBillBoard(NULL),p_LineofRuler(NULL),refresh_ruler(true),
@@ -828,7 +829,7 @@ static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
 {
 #	if USE_BMPCAP
 #else
-	index-=MAGICAL_NUM;
+//	index-=MAGICAL_NUM;
 #endif
 	env.GetChosenCaptureGroup()->captureCam(ptr,index);
 }
@@ -990,14 +991,17 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		float x;
 		x=(p_LineofRuler->Load())/360.0*(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 		RulerAngle=p_LineofRuler->Load();
-		GenerateOnetimeView();
-		GenerateOnetimeView2();
+		for(int i=0;i<2;i++)
+		{
+		GenerateOnetimeView(i);
+		GenerateOnetimeView2(i);
 
-		GenerateTwotimesView();
-		GenerateTwotimesView2();
+		GenerateTwotimesView(i);
+		GenerateTwotimesView2(i);
 
-		GenerateTwotimesTelView();
-		GenerateFourtimesTelView();
+		GenerateTwotimesTelView(i);
+		GenerateFourtimesTelView(i);
+		}
 		GenerateCheckView();
 
 		GenerateBirdView();
@@ -1013,14 +1017,17 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 
 		PanoLen=(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x());
 		PanoHeight=(PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z());
-		foresightPos.SetPanoLen_Height(PanoLen,PanoHeight);
+		for(int i=0;i<MS_COUNT;i++)
+		{
+			foresightPos[i].SetPanoLen_Height(PanoLen,PanoHeight);
 //		zodiac_msg.setPanoHeight_Length(PanoHeight,PanoLen);
 
 	//	camonforesight.setPanoheight(PanoHeight);
-		panocamonforesight.setPanoheight(PanoHeight);
-		panocamonforesight.setPanolen(PanoLen);
-		telcamonforesight.setPanoheight(PanoHeight);
-		telcamonforesight.setPanolen(PanoLen);
+		panocamonforesight[i].setPanoheight(PanoHeight);
+		panocamonforesight[i].setPanolen(PanoLen);
+		telcamonforesight[i].setPanoheight(PanoHeight);
+		telcamonforesight[i].setPanolen(PanoLen);
+		}
 	//camonforesight.setPanolen(PanoLen);
 
 		InitALPHA_ZOOM_SCALE();
@@ -1286,7 +1293,7 @@ void Render::GenerateGLTextureIds()
 		GL_ExtensionTextureIDs[i] = GL_ExtensionTextureIDs[i-1] + 1;
 	}
 
-
+/*
 	textureCount = sizeof(GL_VGATextureIDs)/sizeof(GL_VGATextureIDs[0]);
 	GL_VGATextureIDs[0] = GL_TEXTURE22;
 	for(int i = 1; i < textureCount; i++){
@@ -1298,7 +1305,7 @@ void Render::GenerateGLTextureIds()
 	for(int i = 1; i < textureCount; i++){
 		GL_SDITextureIDs[i] = GL_SDITextureIDs[i-1] + 1;
 	}
-
+*/
 	textureCount = sizeof(GL_TargetTextureIDs)/sizeof(GL_TargetTextureIDs[0]);
 	GL_TargetTextureIDs[0] = GL_TEXTURE26;
 	for(int i = 1; i < textureCount; i++){
@@ -1306,7 +1313,7 @@ void Render::GenerateGLTextureIds()
 	}
 
 	textureCount = sizeof(GL_ChosenTextureIDs)/sizeof(GL_ChosenTextureIDs[0]);
-	GL_ChosenTextureIDs[0] = GL_TEXTURE30;
+	GL_ChosenTextureIDs[0] = GL_TEXTURE22;
 	for(int i = 1; i < textureCount; i++){
 		GL_ChosenTextureIDs[i] = GL_ChosenTextureIDs[i-1] + 1;
 	}
@@ -2372,9 +2379,9 @@ void Render::DrawSDIVideo(GLEnv &m_env,bool needSendData)
 }
 
 
-void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData)
+void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData,int mainorsub)
 {
-		int idx = GetCurrentChosenVideoId();
+		int idx = mainorsub;//GetCurrentChosenVideoId();
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
 		m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
@@ -2386,9 +2393,9 @@ void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData)
 				glBindTexture(GL_TEXTURE_2D, GL_ChosenTextures[idx]);
 			}
 #if USE_CPU
-			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);// VGA texture start from 15
+			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #else
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);// VGA texture start from 15
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #endif
 			m_env.Getp_shadowBatch()->Draw();
 		m_env.GetmodelViewMatrix()->PopMatrix();
@@ -2924,38 +2931,50 @@ void Render::InitForesightGroupTrack(GLEnv &m_env)
 	  if(inidelta>pano_length*3/4)
 	 {
 		 inidelta-=pano_length;      //ORI POS IS LEN LEFT OF STANDARD POS ,SO MOVE RIGHT
-		 foresightPos.SetxDelta(inidelta);
+		for(int i=0;i<MS_COUNT;i++)
+		 foresightPos[i].SetxDelta(inidelta);
 	 }
 	 else
 	 {
-		 foresightPos.SetxDelta(inidelta);
+		 for(int i=0;i<MS_COUNT;i++)
+			 foresightPos[i].SetxDelta(inidelta);
 	 }
 	  float deltaY_core=1.2;
 	  float deltaY=11.5-5.7+1.0+10.0;
 	  float deltaY1=11.5-5.7+1.0-3.0;
 	  float deltaY2=11.5-5.7+1.0+4.0;
-	 	  p_ForeSightFacade =new ForeSightFacade(
+	  for(int i=0;i<2;i++)
+	  {
+	 	  p_ForeSightFacade[i] =new ForeSightFacade(
 	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
 	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 	 									  new PseudoForeSight_core()),pcindex,pano_cross,pano_length*100.0,pano_height/(5.7-2.4+deltaY_core))),pirindex,pano_inner_rect,pano_length*102.0,pano_height/(11.5-deltaY1))),
 	 					  	  	  	  porindex,pano_outer_rect,pano_length*100.0,pano_height/(0+deltaY))
-	 	  	  	  	  	  	  	  	  	  ,foresightPos,&panocamonforesight);
-		  assert(p_ForeSightFacade);
+	 	  	  	  	  	  	  	  	  	  ,foresightPos[i],&panocamonforesight[i]);
+		  assert(p_ForeSightFacade[i]);
 
-		  p_ForeSightFacade2 =new ForeSightFacade(
+		  p_ForeSightFacade2[i] =new ForeSightFacade(
 		 	 			  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager, auto_ptr<BaseForeSight>(
 		 	 					  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()),&shaderManager,auto_ptr<BaseForeSight>(
 		 	 							  new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 	 									  new PseudoForeSight_core()),tcindex,tel_cross,pano_length/TELXLIMIT,pano_height/5.7)) ,tirindex,tel_inner_rect,pano_length/TELXLIMIT-((1.0/14.0-1.0/15.75)*pano_length),pano_height/8.0)),
 		 	 					  	  	  	  	  torindex,tel_outer_rect,(pano_length/TELXLIMIT-(1/14.0-1/25.0)*pano_length),pano_height/12.0)
-		  	  	  	  	  	  	  	  	  	  	  	  ,  foresightPos  ,&telcamonforesight);   //14.0  15.75   25
-		 		  assert(p_ForeSightFacade2);
+		  	  	  	  	  	  	  	  	  	  	  	  ,  foresightPos[i],&telcamonforesight[i]);   //14.0  15.75   25
+		 		  assert(p_ForeSightFacade2[i]);
+
+	  }
+
+
+
+
+
+
 
 		 			  p_ForeSightFacade_Track=new ForeSightFacade(
 		 					 		 														new ForeSight_decorator(*(m_env.GetmodelViewMatrix()),*(m_env.GetprojectionMatrix()), &shaderManager,auto_ptr<BaseForeSight>(
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_core()),trackindex,track_cross,g_windowWidth*1434.0/1920.0/2.0*100.0,g_windowHeight/2.0*100.0),
-		 					 		 				 	 	 	 	 	 	 	 	 	 	 	foresightPos,
+		 					 		 				 	 	 	 	 	 	 	 	 	 	 	foresightPos[0],
 		 					 		 				 	 	 	 	 	 	 	 	 	 	 	new PseudoForeSight_cam());
 		 			  assert(p_ForeSightFacade_Track);
 }
@@ -4028,61 +4047,69 @@ void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			PanoTelViewCameraFrame.GetCameraMatrix(mCamera);
 		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 }
-if(displayMode==TELESCOPE_LEFT_MODE)
+if(displayMode==TELESCOPE_LEFT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 	m_env.GetmodelViewMatrix()->Translate(37.68+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_BACK_MODE)
+else if(displayMode==TELESCOPE_BACK_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 	m_env.GetmodelViewMatrix()->Translate(47.1+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_FRONT_MODE)
+else if(displayMode==TELESCOPE_FRONT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 	static bool once=true;
 	m_env.GetmodelViewMatrix()->Translate(28.26+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_RIGHT_MODE)
+else if(displayMode==TELESCOPE_RIGHT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
 	m_env.GetmodelViewMatrix()->Translate(18.838+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
 }
 			float Angle=RulerAngle;
-			if(displayMode==TELESCOPE_FRONT_MODE)
+			if(displayMode==TELESCOPE_FRONT_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 			{
 				 i=0;
 			}
-			else if(displayMode==TELESCOPE_RIGHT_MODE)
+			else if(displayMode==TELESCOPE_RIGHT_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
 			{
 				i=3;
 			}
-			else if(displayMode==TELESCOPE_BACK_MODE)
+			else if(displayMode==TELESCOPE_BACK_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
 			{
 				i=6;
 			}
-			else if(displayMode==TELESCOPE_LEFT_MODE)
+			else if(displayMode==TELESCOPE_LEFT_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 			{
 				i=9;
 			}
 			int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
 			if((Angle<15.0)||(Angle>=345.0))
 			{
-				Telscenter_cam=0;
+				Telscenter_cam[mainOrsub]=0;
 			}
 			else
 			{
-				Teltemp_math=(Angle-15.0)/30.0;
-				Telscenter_cam=(int)Teltemp_math;
-				Telscenter_cam++;
+				Teltemp_math[mainOrsub]=(Angle-15.0)/30.0;
+				Telscenter_cam[mainOrsub]=(int)Teltemp_math[mainOrsub];
+				Telscenter_cam[mainOrsub]++;
 			}
-			Telscenter_cam+=i;
-			while(Telscenter_cam>11)
+			Telscenter_cam[mainOrsub]+=i;
+			while(Telscenter_cam[mainOrsub]>11)
 			{
-				Telscenter_cam-=12;
+				Telscenter_cam[mainOrsub]-=12;
 			}
-				if(Cam_num[Telscenter_cam]+1==12)
+				if(Cam_num[Telscenter_cam[mainOrsub]]+1==12)
 				{
 					petal1[1]=1;
 					petal1[0]=0;
@@ -4096,7 +4123,7 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 					petal2[10]=10;
 					petal2[9]=9;
 				}
-				else if(Cam_num[Telscenter_cam]-1==-1)
+				else if(Cam_num[Telscenter_cam[mainOrsub]]-1==-1)
 				{
 					petal1[0]=0;
 					petal1[1]=1;
@@ -4109,7 +4136,7 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 					petal2[11]=11;
 					petal2[10]=10;
 				}
-				else if(Cam_num[Telscenter_cam]==10)
+				else if(Cam_num[Telscenter_cam[mainOrsub]]==10)
 				{
 					petal1[0]=0;
 					petal1[9]=9;
@@ -4122,7 +4149,7 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 					petal2[11]=11;
 					petal2[10]=10;
 				}
-				else if(Cam_num[Telscenter_cam]==1)
+				else if(Cam_num[Telscenter_cam[mainOrsub]]==1)
 				{
 					petal1[0]=0;
 					petal1[1]=1;
@@ -4137,17 +4164,17 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 				}
 				else
 				{
-					petal1[Cam_num[Telscenter_cam]+2]=Cam_num[Telscenter_cam]+2;
-					petal1[Cam_num[Telscenter_cam]-2]=Cam_num[Telscenter_cam]-2;
-					petal1[Cam_num[Telscenter_cam]]=Cam_num[Telscenter_cam];
-					petal1[Cam_num[Telscenter_cam]+1]=Cam_num[Telscenter_cam]+1;
-					petal1[Cam_num[Telscenter_cam]-1]=Cam_num[Telscenter_cam]-1;
+					petal1[Cam_num[Telscenter_cam[mainOrsub]]+2]=Cam_num[Telscenter_cam[mainOrsub]]+2;
+					petal1[Cam_num[Telscenter_cam[mainOrsub]]-2]=Cam_num[Telscenter_cam[mainOrsub]]-2;
+					petal1[Cam_num[Telscenter_cam[mainOrsub]]]=Cam_num[Telscenter_cam[mainOrsub]];
+					petal1[Cam_num[Telscenter_cam[mainOrsub]]+1]=Cam_num[Telscenter_cam[mainOrsub]]+1;
+					petal1[Cam_num[Telscenter_cam[mainOrsub]]-1]=Cam_num[Telscenter_cam[mainOrsub]]-1;
 
-					petal2[Cam_num[Telscenter_cam]+2]=Cam_num[Telscenter_cam]+2;
-					petal2[Cam_num[Telscenter_cam]-2]=Cam_num[Telscenter_cam]-2;
-					petal2[Cam_num[Telscenter_cam]]=Cam_num[Telscenter_cam];
-					petal2[Cam_num[Telscenter_cam]+1]=Cam_num[Telscenter_cam]+1;
-					petal2[Cam_num[Telscenter_cam]-1]=Cam_num[Telscenter_cam]-1;
+					petal2[Cam_num[Telscenter_cam[mainOrsub]]+2]=Cam_num[Telscenter_cam[mainOrsub]]+2;
+					petal2[Cam_num[Telscenter_cam[mainOrsub]]-2]=Cam_num[Telscenter_cam[mainOrsub]]-2;
+					petal2[Cam_num[Telscenter_cam[mainOrsub]]]=Cam_num[Telscenter_cam[mainOrsub]];
+					petal2[Cam_num[Telscenter_cam[mainOrsub]]+1]=Cam_num[Telscenter_cam[mainOrsub]]+1;
+					petal2[Cam_num[Telscenter_cam[mainOrsub]]-1]=Cam_num[Telscenter_cam[mainOrsub]]-1;
 				}
 #if 1
 				if(RulerAngle<=270 ||RulerAngle>300)
@@ -4182,30 +4209,31 @@ else if(displayMode==TELESCOPE_RIGHT_MODE)
 				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
-
+for(int i=0;i<0;i++)
+{
 	if(displayMode==TELESCOPE_FRONT_MODE)
 	{
-		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_FRONT);
-		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
+		p_ForeSightFacade2[i]->SetAlign(1,TEL_FORESIGHT_POS_FRONT);
+		p_ForeSightFacade2[i]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
 	}
 	else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
-		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_RIGHT);
-		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
+		p_ForeSightFacade2[i]->SetAlign(1,TEL_FORESIGHT_POS_RIGHT);
+		p_ForeSightFacade2[i]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
 		}
 
 	else if(displayMode==TELESCOPE_BACK_MODE)
 		{
-		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_BACK);
-		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
+		p_ForeSightFacade2[i]->SetAlign(1,TEL_FORESIGHT_POS_BACK);
+		p_ForeSightFacade2[i]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
 		}
 
 	else if(displayMode==TELESCOPE_LEFT_MODE)
 	{
-		p_ForeSightFacade2->SetAlign(1,TEL_FORESIGHT_POS_LEFT);
-		p_ForeSightFacade2->Draw(m_env,render.getRulerAngle()->Load());
+		p_ForeSightFacade2[i]->SetAlign(1,TEL_FORESIGHT_POS_LEFT);
+		p_ForeSightFacade2[i]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
 	}
-
+}
 	{
 		{
 			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
@@ -4312,14 +4340,14 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			{
 				once = false;
 			}
-			if(panocamonforesight.GetFront())
-				panocamonforesight.getOneTimeCam().GetCameraMatrix(mCamera);
+			if(panocamonforesight[mainOrsub].GetFront())
+				panocamonforesight[mainOrsub].getOneTimeCam().GetCameraMatrix(mCamera);
 			else
-					panocamonforesight.getOneTimeCam2().GetCameraMatrix(mCamera);
+					panocamonforesight[mainOrsub].getOneTimeCam2().GetCameraMatrix(mCamera);
 			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
 
-	float FXangle=foresightPos.GetAngle()[0];
+	float FXangle=foresightPos[mainOrsub].GetAngle()[0];//todo
 	float Angle=FXangle+RulerAngle;
 		while(Angle>360)
 		{
@@ -4328,15 +4356,15 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
 		if((Angle<15.0)||(Angle>=345.0))
 		{
-			center_cam=0;
+			center_cam[mainOrsub]=0;
 		}
 		else
 		{
-			temp_math=(Angle-15.0)/30.0;
-			center_cam=(int)temp_math;
-			center_cam++;
+			temp_math[mainOrsub]=(Angle-15.0)/30.0;
+			center_cam[mainOrsub]=(int)temp_math[mainOrsub];
+			center_cam[mainOrsub]++;
 		}
-			if(Cam_num[center_cam]==11)
+			if(Cam_num[center_cam[mainOrsub]]==11)
 			{
 				petal1[0]=0;
 				petal1[11]=11;
@@ -4345,7 +4373,7 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 				petal2[11]=11;
 				petal2[10]=10;
 			}
-			else if(Cam_num[center_cam]==0)
+			else if(Cam_num[center_cam[mainOrsub]]==0)
 			{
 				petal1[0]=0;
 				petal1[11]=11;
@@ -4357,13 +4385,13 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			}
 			else
 			{
-				petal1[Cam_num[center_cam]]=Cam_num[center_cam];
-				petal1[Cam_num[center_cam]+1]=Cam_num[center_cam]+1;
-				petal1[Cam_num[center_cam]-1]=Cam_num[center_cam]-1;
+				petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
+				petal1[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
+				petal1[Cam_num[center_cam[mainOrsub]]-1]=Cam_num[center_cam[mainOrsub]]-1;
 
-				petal2[Cam_num[center_cam]]=Cam_num[center_cam];
-				petal2[Cam_num[center_cam]+1]=Cam_num[center_cam]+1;
-				petal2[Cam_num[center_cam]-1]=Cam_num[center_cam]-1;
+				petal2[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
+				petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
+				petal2[Cam_num[center_cam[mainOrsub]]-1]=Cam_num[center_cam[mainOrsub]]-1;
 			}
 
 #if 0
@@ -4405,7 +4433,7 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 #else
 	if(mainOrsub==MAIN)
 	{
-float nowposx=foresightPos.GetAngle()[0];
+float nowposx=foresightPos[MAIN].GetAngle()[0];//todo
 int array[10]={2,1,0,9,8,7,6,5,4,3};
 m_cam_pos=(nowposx+18+18)/(360/10);
 if(m_cam_pos==10)
@@ -4769,28 +4797,28 @@ void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 					||displayMode==ALL_VIEW_MODE
 					||SecondDisplayMode==SECOND_TOTAL_MODE_COUNT)
 			{
-				if(panocamonforesight.GetFront())
-					panocamonforesight.getTwoTimesCam().GetCameraMatrix(mCamera);
+				if(panocamonforesight[mainOrsub].GetFront())
+					panocamonforesight[mainOrsub].getTwoTimesCam().GetCameraMatrix(mCamera);
 				else
-					panocamonforesight.getTwoTimesCam2().GetCameraMatrix(mCamera);
+					panocamonforesight[mainOrsub].getTwoTimesCam2().GetCameraMatrix(mCamera);
 				}
 			else if(displayMode==TELESCOPE_FRONT_MODE)
 			{
-				telcamonforesight.getTwoTimesCamTelF().GetCameraMatrix(mCamera);
+				telcamonforesight[mainOrsub].getTwoTimesCamTelF().GetCameraMatrix(mCamera);
 			}
 			else if(displayMode==TELESCOPE_RIGHT_MODE)
-				telcamonforesight.getTwoTimesCamTelR().GetCameraMatrix(mCamera);
+				telcamonforesight[mainOrsub].getTwoTimesCamTelR().GetCameraMatrix(mCamera);
 			else if(displayMode==TELESCOPE_BACK_MODE)
-				telcamonforesight.getTwoTimesCamTelB().GetCameraMatrix(mCamera);
+				telcamonforesight[mainOrsub].getTwoTimesCamTelB().GetCameraMatrix(mCamera);
 			else if(displayMode==TELESCOPE_LEFT_MODE)
-				telcamonforesight.getTwoTimesCamTelL().GetCameraMatrix(mCamera);
+				telcamonforesight[mainOrsub].getTwoTimesCamTelL().GetCameraMatrix(mCamera);
 
 			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
 if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 {
-	float FXangle=foresightPos.GetAngle()[0];
+	float FXangle=foresightPos[MAIN].GetAngle()[0];//todo
 	float Angle=FXangle+RulerAngle;
 		while(Angle>360)
 		{
@@ -4801,23 +4829,23 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 
 		if((Angle<15.0-8.0)||(Angle>=345.0-8.0))
 		{
-			Twotimescenter_cam=0;
+			Twotimescenter_cam[mainOrsub]=0;
 		}
 		else
 		{
-			Twotimestemp_math=(Angle-15.0+8.0)/30.0;
-			Twotimescenter_cam=(int)Twotimestemp_math;
-			Twotimescenter_cam++;
+			Twotimestemp_math[mainOrsub]=(Angle-15.0+8.0)/30.0;
+			Twotimescenter_cam[mainOrsub]=(int)Twotimestemp_math[mainOrsub];
+			Twotimescenter_cam[mainOrsub]++;
 		}
 		//printf("now Center_cam= %d\n",Cam_num[Twotimescenter_cam]);
-			if(Cam_num[Twotimescenter_cam]==11)
+			if(Cam_num[Twotimescenter_cam[mainOrsub]]==11)
 			{
 				petal1[0]=0;
 				petal1[11]=11;
 				petal2[0]=0;
 				petal2[11]=11;
 			}
-			else if(Cam_num[Twotimescenter_cam]==0)
+			else if(Cam_num[Twotimescenter_cam[mainOrsub]]==0)
 			{
 				petal1[0]=0;
 				petal1[1]=1;
@@ -4826,10 +4854,10 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 			}
 			else
 			{
-				petal1[Cam_num[Twotimescenter_cam]]=Cam_num[Twotimescenter_cam];
-				petal1[Cam_num[Twotimescenter_cam]+1]=Cam_num[Twotimescenter_cam]+1;
-				petal2[Cam_num[Twotimescenter_cam]]=Cam_num[Twotimescenter_cam];
-				petal2[Cam_num[Twotimescenter_cam]+1]=Cam_num[Twotimescenter_cam]+1;
+				petal1[Cam_num[Twotimescenter_cam[mainOrsub]]]=Cam_num[Twotimescenter_cam[mainOrsub]];
+				petal1[Cam_num[Twotimescenter_cam[mainOrsub]]+1]=Cam_num[Twotimescenter_cam[mainOrsub]]+1;
+				petal2[Cam_num[Twotimescenter_cam[mainOrsub]]]=Cam_num[Twotimescenter_cam[mainOrsub]];
+				petal2[Cam_num[Twotimescenter_cam[mainOrsub]]+1]=Cam_num[Twotimescenter_cam[mainOrsub]]+1;
 			}
 }
 
@@ -4838,7 +4866,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		||displayMode==TELESCOPE_BACK_MODE
 		||displayMode==TELESCOPE_LEFT_MODE)
 {
-	float FXangle=foresightPos.GetAngle()[0];
+	float FXangle=foresightPos[MAIN].GetAngle()[0];//todo
 	float Angle=RulerAngle+FXangle;
 	int i=0;
 	if(displayMode==TELESCOPE_FRONT_MODE)
@@ -4865,23 +4893,23 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
 		if((Angle<15.0-8.0)||(Angle>=345.0-8.0))
 		{
-			TelTwotimescenter_cam=0;
+			TelTwotimescenter_cam[mainOrsub]=0;
 		}
 		else
 		{
-			TelTwotimestemp_math=(Angle-15.0+0.0)/30.0;
-			TelTwotimescenter_cam=(int)TelTwotimestemp_math;
-			TelTwotimescenter_cam++;
+			TelTwotimestemp_math[mainOrsub]=(Angle-15.0+0.0)/30.0;
+			TelTwotimescenter_cam[mainOrsub]=(int)TelTwotimestemp_math[mainOrsub];
+			TelTwotimescenter_cam[mainOrsub]++;
 		}
 
 		//printf("now Center_cam= %d\n",Cam_num[Twotimescenter_cam]);
-		TelTwotimescenter_cam+=i;
-		while(TelTwotimescenter_cam>11)
+		TelTwotimescenter_cam[mainOrsub]+=i;
+		while(TelTwotimescenter_cam[mainOrsub]>11)
 		{
-			TelTwotimescenter_cam-=12;
+			TelTwotimescenter_cam[mainOrsub]-=12;
 		}
 		//printf("now TelTwotimescenter_cam= %d\n",Cam_num[TelTwotimescenter_cam]);
-			if(Cam_num[TelTwotimescenter_cam]==11)
+			if(Cam_num[TelTwotimescenter_cam[mainOrsub]]==11)
 			{
 				petal1[0]=0;
 				petal1[11]=11;
@@ -4890,7 +4918,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 				petal2[11]=11;
 				petal2[10]=10;
 			}
-			else if(Cam_num[TelTwotimescenter_cam]==0)
+			else if(Cam_num[TelTwotimescenter_cam[mainOrsub]]==0)
 			{
 				petal1[0]=0;
 				petal1[1]=1;
@@ -4901,13 +4929,13 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 			}
 			else
 			{
-				petal1[Cam_num[TelTwotimescenter_cam]]=Cam_num[TelTwotimescenter_cam];
-				petal1[Cam_num[TelTwotimescenter_cam]+1]=Cam_num[TelTwotimescenter_cam]+1;
-				petal1[Cam_num[TelTwotimescenter_cam]-1]=Cam_num[TelTwotimescenter_cam]-1;
+				petal1[Cam_num[TelTwotimescenter_cam[mainOrsub]]]=Cam_num[TelTwotimescenter_cam[mainOrsub]];
+				petal1[Cam_num[TelTwotimescenter_cam[mainOrsub]]+1]=Cam_num[TelTwotimescenter_cam[mainOrsub]]+1;
+				petal1[Cam_num[TelTwotimescenter_cam[mainOrsub]]-1]=Cam_num[TelTwotimescenter_cam[mainOrsub]]-1;
 
-				petal2[Cam_num[TelTwotimescenter_cam]]=Cam_num[TelTwotimescenter_cam];
-				petal2[Cam_num[TelTwotimescenter_cam]+1]=Cam_num[TelTwotimescenter_cam]+1;
-				petal2[Cam_num[TelTwotimescenter_cam]-1]=Cam_num[TelTwotimescenter_cam]-1;
+				petal2[Cam_num[TelTwotimescenter_cam[mainOrsub]]]=Cam_num[TelTwotimescenter_cam[mainOrsub]];
+				petal2[Cam_num[TelTwotimescenter_cam[mainOrsub]]+1]=Cam_num[TelTwotimescenter_cam[mainOrsub]]+1;
+				petal2[Cam_num[TelTwotimescenter_cam[mainOrsub]]-1]=Cam_num[TelTwotimescenter_cam[mainOrsub]]-1;
 			}
 }
 
@@ -4917,7 +4945,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		||displayMode==TELESCOPE_LEFT_MODE
 		||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
  {
-		float FXangle=foresightPos.GetAngle()[0];
+		float FXangle=foresightPos[MAIN].GetAngle()[0]; //todo
 		if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 			{
 				DrawPanel(m_env,false,petal2,mainOrsub);
@@ -4976,6 +5004,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 
 void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int targetIdx,int camIdx,int enlarge,int mainOrsub)
 {
+#if MVDECT
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
@@ -4994,6 +5023,9 @@ void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int 
 		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 		DrawTargetVideo(m_env,targetIdx,camIdx,true);
 		m_env.GetmodelViewMatrix()->PopMatrix();
+#else
+		RenderSDIView(m_env,x,y,w,h,true);
+#endif
 }
 
 
@@ -5022,17 +5054,17 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 				//camonforesight.getOneTimeCam().MoveRight(-36.0f);
 			}
 		if(displayMode==TELESCOPE_FRONT_MODE)
-			telcamonforesight.getFourTimesCamTelF().GetCameraMatrix(mCamera);
+			telcamonforesight[mainOrsub].getFourTimesCamTelF().GetCameraMatrix(mCamera);
 		else if(displayMode==TELESCOPE_RIGHT_MODE)
-			telcamonforesight.getFourTimesCamTelR().GetCameraMatrix(mCamera);
+			telcamonforesight[mainOrsub].getFourTimesCamTelR().GetCameraMatrix(mCamera);
 		else if(displayMode==TELESCOPE_BACK_MODE)
-			telcamonforesight.getFourTimesCamTelB().GetCameraMatrix(mCamera);
+			telcamonforesight[mainOrsub].getFourTimesCamTelB().GetCameraMatrix(mCamera);
 		else if(displayMode==TELESCOPE_LEFT_MODE)
-			telcamonforesight.getFourTimesCamTelL().GetCameraMatrix(mCamera);
+			telcamonforesight[mainOrsub].getFourTimesCamTelL().GetCameraMatrix(mCamera);
 
 			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 		}
-	float FXangle=foresightPos.GetAngle()[0];
+	float FXangle=foresightPos[MAIN].GetAngle()[0];//todo
 	float Angle=RulerAngle+FXangle;
 	while(Angle>360)
 	{
@@ -5059,21 +5091,21 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 			int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
 			if((Angle<15.0)||(Angle>=345.0))
 			{
-				Fourtimescenter_cam=0;
+				Fourtimescenter_cam[mainOrsub]=0;
 			}
 			else
 			{
-				Fourtimestemp_math=(Angle-15.0)/30.0;
-				Fourtimescenter_cam=(int)Fourtimestemp_math;
-				Fourtimescenter_cam++;
+				Fourtimestemp_math[mainOrsub]=(Angle-15.0)/30.0;
+				Fourtimescenter_cam[mainOrsub]=(int)Fourtimestemp_math[mainOrsub];
+				Fourtimescenter_cam[mainOrsub]++;
 			}
-			Fourtimescenter_cam+=i;
-			while(Fourtimescenter_cam>11)
+			Fourtimescenter_cam[mainOrsub]+=i;
+			while(Fourtimescenter_cam[mainOrsub]>11)
 			{
-				Fourtimescenter_cam-=12;
+				Fourtimescenter_cam[mainOrsub]-=12;
 			}
 		//	printf("now 4Center_cam= %d\n",Cam_num[Fourtimescenter_cam]);
-				if(Cam_num[Fourtimescenter_cam]+1==12)
+				if(Cam_num[Fourtimescenter_cam[mainOrsub]]+1==12)
 				{
 					petal1[0]=0;
 					petal1[11]=11;
@@ -5082,7 +5114,7 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 					petal2[11]=11;
 					petal2[10]=10;
 				}
-				else if(Cam_num[Fourtimescenter_cam]-1==-1)
+				else if(Cam_num[Fourtimescenter_cam[mainOrsub]]-1==-1)
 				{
 					petal1[0]=0;
 					petal1[1]=1;
@@ -5093,13 +5125,13 @@ void Render::RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLin
 				}
 				else
 				{
-					petal1[Cam_num[Fourtimescenter_cam]]=Cam_num[Fourtimescenter_cam];
-					petal1[Cam_num[Fourtimescenter_cam]+1]=Cam_num[Fourtimescenter_cam]+1;
-					petal1[Cam_num[Fourtimescenter_cam]-1]=Cam_num[Fourtimescenter_cam]-1;
+					petal1[Cam_num[Fourtimescenter_cam[mainOrsub]]]=Cam_num[Fourtimescenter_cam[mainOrsub]];
+					petal1[Cam_num[Fourtimescenter_cam[mainOrsub]]+1]=Cam_num[Fourtimescenter_cam[mainOrsub]]+1;
+					petal1[Cam_num[Fourtimescenter_cam[mainOrsub]]-1]=Cam_num[Fourtimescenter_cam[mainOrsub]]-1;
 
-					petal2[Cam_num[Fourtimescenter_cam]]=Cam_num[Fourtimescenter_cam];
-					petal2[Cam_num[Fourtimescenter_cam]+1]=Cam_num[Fourtimescenter_cam]+1;
-					petal2[Cam_num[Fourtimescenter_cam]-1]=Cam_num[Fourtimescenter_cam]-1;
+					petal2[Cam_num[Fourtimescenter_cam[mainOrsub]]]=Cam_num[Fourtimescenter_cam[mainOrsub]];
+					petal2[Cam_num[Fourtimescenter_cam[mainOrsub]]+1]=Cam_num[Fourtimescenter_cam[mainOrsub]]+1;
+					petal2[Cam_num[Fourtimescenter_cam[mainOrsub]]-1]=Cam_num[Fourtimescenter_cam[mainOrsub]]-1;
 				}
 				if(RulerAngle<=135.0 ||RulerAngle>=270.0)
 					{
@@ -5436,8 +5468,12 @@ else
 		p_ForeSightFacade->Draw(render.getRulerAngle()->Load());
 	}
 */
-p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
-p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
+/*
+for(int i=0;i<2;i++)
+{
+p_ForeSightFacade[i]->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade[i]->Draw(m_env,render.getRulerAngle()->Load());
+}*/
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
@@ -5467,6 +5503,99 @@ p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
 		}
 	}
 }
+void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
+{
+	glViewport(x,y,w,h);
+	m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+
+	m_env.GetmodelViewMatrix()->PushMatrix();
+
+{
+		M3DMatrix44f mCamera;
+		repositioncamera();
+		if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
+				||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
+				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+				||fboMode==FBO_ALL_VIEW_MODE
+				||displayMode==ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+		{
+			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
+		}
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+	}
+ if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
+{
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,4.58);//6.0
+	m_env.GetmodelViewMatrix()->Translate(-15.8,0.0,-0.1);//-17.6
+}
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
+
+if(RulerAngle<180.0)
+	{
+		m_env.GetmodelViewMatrix()->Translate((PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x()),0.0,0.0);
+	}
+p_ForeSightFacade[mainOrsub]->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade[mainOrsub]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
+	{
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
+	}
+	m_env.GetmodelViewMatrix()->PopMatrix();
+}
+
+void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
+{
+	glViewport(x,y,w,h);
+	if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE||
+			displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
+			||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+			||displayMode==ALL_VIEW_MODE
+			||fboMode==FBO_ALL_VIEW_MODE
+			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+			)
+	{
+		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
+	}
+	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
+
+	//pVehicle->PrepareBlendMode();
+	m_env.GetmodelViewMatrix()->PushMatrix();
+		M3DMatrix44f mCamera;
+		if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE||
+				displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE ||
+				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+				||displayMode==ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+		{
+			RightSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
+		}
+		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
+
+
+ if(displayMode==ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_MODE)
+{
+	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
+	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,4.58);//6.0
+	m_env.GetmodelViewMatrix()->Translate(26.2+2.0,0.0,0);//26.2 +1.8
+}
+m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
+
+p_ForeSightFacade[mainOrsub]->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade[mainOrsub]->Draw(m_env,render.getRulerAngle()->Load(),mainOrsub);
+
+	{
+		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
+	}
+	m_env.GetmodelViewMatrix()->PopMatrix();
+}
+
 
 void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub,GLint scissor_x, GLint scissor_y, GLint scissor_w, GLint scissor_h,bool needSendData)
 {
@@ -5570,8 +5699,13 @@ else
 			DrawPanel(m_env,true,NULL,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
-p_ForeSightFacade->SetAlign(3,FORESIGHT_POS_LEFT);
-p_ForeSightFacade->Draw(m_env,render.getRulerAngle()->Load());
+ /*
+ for(int i=0;i<2;i++)
+ {
+p_ForeSightFacade[i]->SetAlign(3,FORESIGHT_POS_LEFT);
+p_ForeSightFacade[i]->Draw(m_env,render.getRulerAngle()->Load());
+ }
+ */
 	{
 		m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 	}
@@ -5755,7 +5889,7 @@ void Render::ChangeSubChosenCamidx(char idx)
 }
 
 
-void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, bool needSendData)
+void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, int mainorsub,bool needSendData)
 {
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -5769,7 +5903,7 @@ void Render::RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, b
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
 		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
-		DrawChosenVideo(m_env,needSendData);
+		DrawChosenVideo(m_env,needSendData,mainorsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
@@ -6358,13 +6492,18 @@ if(setpriorityOnce)
 	case ALL_VIEW_MODE:
 	{
 		env.Getp_FboPboFacade()->Render2Front();
+		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
+
+		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
+		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
+
 		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
 	//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
 		//RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 		break;
 	}
 	case CHOSEN_VIEW_MODE:
-		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,true);
+		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,MAIN,true);
 		break;
 
 
@@ -6378,7 +6517,7 @@ if(setpriorityOnce)
 	//	RenderRightPanoView(env,0,g_windowHeight*0.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 		//	RenderLeftPanoView(env,0,g_windowHeight*540.0/1080.0,g_windowWidth*1920.0/1920.0, g_windowHeight*540.0/1080.0);
 			PrepareAlarmAera(env,0,0,g_windowWidth,g_windowHeight);
-			p_ForeSightFacade->Reset(ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE);
+			p_ForeSightFacade[MAIN]->Reset(ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE);
 		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*0.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);
 		    RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_180);
 		    RenderOnetimeView(env,g_windowWidth*60.0/1920.0,g_windowHeight*20.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6389,7 +6528,7 @@ if(setpriorityOnce)
 	}
 
 	case	TELESCOPE_FRONT_MODE:
-			p_ForeSightFacade2->Reset(TELESCOPE_FRONT_MODE);
+			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
 			//	if(mv_detect.CanUseMD())
@@ -6404,7 +6543,7 @@ if(setpriorityOnce)
 			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 			break;
 		case	TELESCOPE_RIGHT_MODE:
-			p_ForeSightFacade2->Reset(TELESCOPE_RIGHT_MODE);
+			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
 				//	if(mv_detect.CanUseMD())
@@ -6419,7 +6558,7 @@ if(setpriorityOnce)
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_BACK_MODE:
-			p_ForeSightFacade2->Reset(TELESCOPE_BACK_MODE);
+			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
 				//	if(mv_detect.CanUseMD())
@@ -6433,7 +6572,7 @@ if(setpriorityOnce)
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_LEFT_MODE:
-			p_ForeSightFacade2->Reset(TELESCOPE_LEFT_MODE);
+			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
 				//	if(mv_detect.CanUseMD())
@@ -7226,7 +7365,7 @@ void Render::GenerateRightPanoView()
 	RightPanoViewCameraFrame.SetOrigin(camPanoView);
 }
 
-void  Render::GenerateOnetimeView()
+void  Render::GenerateOnetimeView(int mainOrsub)
 {
 //	float inidelta=p_LineofRuler->Load();
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
@@ -7239,20 +7378,20 @@ void  Render::GenerateOnetimeView()
 	else
 		inidelta-=Len;
 	static M3DVector3f OnetimeCamView;
-	static bool once =true;
-	if(once){
-		once = false;
-			panocamonforesight.getOneTimeCam().RotateLocalX(-PI/2);
-		panocamonforesight.getOneTimeCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
-		panocamonforesight.getOneTimeCam().MoveRight(-inidelta);
-		panocamonforesight.getOneTimeCam().MoveForward(-0.16*leftandrightdis/2);
-			panocamonforesight.getOneTimeCam().GetOrigin(OnetimeCamView);
+	static bool once[2] ={true,true};
+	if(once[mainOrsub]){
+		once[mainOrsub] = false;
+			panocamonforesight[mainOrsub].getOneTimeCam().RotateLocalX(-PI/2);
+		panocamonforesight[mainOrsub].getOneTimeCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+		panocamonforesight[mainOrsub].getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
+		panocamonforesight[mainOrsub].getOneTimeCam().MoveRight(-inidelta);
+		panocamonforesight[mainOrsub].getOneTimeCam().MoveForward(-0.16*leftandrightdis/2);
+			panocamonforesight[mainOrsub].getOneTimeCam().GetOrigin(OnetimeCamView);
 	}
-	panocamonforesight.getOneTimeCam().SetOrigin(OnetimeCamView);
+	panocamonforesight[mainOrsub].getOneTimeCam().SetOrigin(OnetimeCamView);
 }
 
-void  Render::GenerateOnetimeView2()
+void  Render::GenerateOnetimeView2(int mainOrsub)
 {
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float inidelta=(RulerAngle)/360.0*Len;
@@ -7264,22 +7403,22 @@ void  Render::GenerateOnetimeView2()
 	else
 		inidelta-=Len;
 	static M3DVector3f OnetimeCamView2;
-	static bool once =true;
+	static bool once[2] ={true,true};
 
-	if(once){
-		once = false;
-		panocamonforesight.getOneTimeCam2().RotateLocalX(-PI/2);
-		panocamonforesight.getOneTimeCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		panocamonforesight.getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
-			panocamonforesight.getOneTimeCam2().MoveRight(-inidelta);
-			panocamonforesight.getOneTimeCam2().MoveForward(0.16*leftandrightdis/2);
-			panocamonforesight.getOneTimeCam2().RotateLocalY(-PI);
-		panocamonforesight.getOneTimeCam2().GetOrigin(OnetimeCamView2);
+	if(once[mainOrsub]){
+		once[mainOrsub] = false;
+		panocamonforesight[mainOrsub].getOneTimeCam2().RotateLocalX(-PI/2);
+		panocamonforesight[mainOrsub].getOneTimeCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+		panocamonforesight[mainOrsub].getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
+			panocamonforesight[mainOrsub].getOneTimeCam2().MoveRight(-inidelta);
+			panocamonforesight[mainOrsub].getOneTimeCam2().MoveForward(0.16*leftandrightdis/2);
+			panocamonforesight[mainOrsub].getOneTimeCam2().RotateLocalY(-PI);
+		panocamonforesight[mainOrsub].getOneTimeCam2().GetOrigin(OnetimeCamView2);
 	}
-	panocamonforesight.getOneTimeCam2().SetOrigin(OnetimeCamView2);
+	panocamonforesight[mainOrsub].getOneTimeCam2().SetOrigin(OnetimeCamView2);
 }
 
-void  Render::GenerateTwotimesView()
+void  Render::GenerateTwotimesView(int mainOrsub)
 {
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float inidelta=(RulerAngle)/360.0*Len;
@@ -7291,20 +7430,20 @@ void  Render::GenerateTwotimesView()
 	else
 		inidelta-=Len;
 	static M3DVector3f TwotimesCamView;
-	static bool once =true;
-	if(once){
-	once = false;
-	panocamonforesight.getTwoTimesCam().RotateLocalX(-PI/2);
-	panocamonforesight.getTwoTimesCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	panocamonforesight.getTwoTimesCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
-	panocamonforesight.getTwoTimesCam().MoveRight(-inidelta);
-	panocamonforesight.getTwoTimesCam().MoveForward(-0.08*leftandrightdis/2);
-	panocamonforesight.getTwoTimesCam().GetOrigin(TwotimesCamView);
+	static bool once[2] ={true,true};
+	if(once[mainOrsub]){
+	once[mainOrsub] = false;
+	panocamonforesight[mainOrsub].getTwoTimesCam().RotateLocalX(-PI/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+	panocamonforesight[mainOrsub].getTwoTimesCam().MoveRight(-inidelta);
+	panocamonforesight[mainOrsub].getTwoTimesCam().MoveForward(-0.08*leftandrightdis/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam().GetOrigin(TwotimesCamView);
 	}
-	panocamonforesight.getTwoTimesCam().SetOrigin(TwotimesCamView);
+	panocamonforesight[mainOrsub].getTwoTimesCam().SetOrigin(TwotimesCamView);
 }
 
-void  Render::GenerateTwotimesView2()
+void  Render::GenerateTwotimesView2(int mainOrsub)
 {
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float inidelta=(RulerAngle)/360.0*Len;
@@ -7316,21 +7455,21 @@ void  Render::GenerateTwotimesView2()
 	else
 		inidelta-=Len;
 	static M3DVector3f TwotimesCamView2;
-	static bool once =true;
-	if(once){
-	once = false;
-	panocamonforesight.getTwoTimesCam2().RotateLocalX(-PI/2);
-	panocamonforesight.getTwoTimesCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	panocamonforesight.getTwoTimesCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
-	panocamonforesight.getTwoTimesCam2().MoveRight(-inidelta);
-	panocamonforesight.getTwoTimesCam2().MoveForward(0.08*leftandrightdis/2);
-	panocamonforesight.getTwoTimesCam2().RotateLocalY(-PI);
-	panocamonforesight.getTwoTimesCam2().GetOrigin(TwotimesCamView2);
+	static bool once[2] ={true,true};
+	if(once[mainOrsub]){
+	once[mainOrsub] = false;
+	panocamonforesight[mainOrsub].getTwoTimesCam2().RotateLocalX(-PI/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().MoveRight(-inidelta);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().MoveForward(0.08*leftandrightdis/2);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().RotateLocalY(-PI);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().GetOrigin(TwotimesCamView2);
 	}
-	panocamonforesight.getTwoTimesCam2().SetOrigin(TwotimesCamView2);
+	panocamonforesight[mainOrsub].getTwoTimesCam2().SetOrigin(TwotimesCamView2);
 }
 
-void  Render::GenerateTwotimesTelView()
+void  Render::GenerateTwotimesTelView(int mainOrsub)
 {
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float inidelta=(RulerAngle)/360.0*Len;
@@ -7342,57 +7481,57 @@ void  Render::GenerateTwotimesTelView()
 	else
 		inidelta-=Len;
 	static M3DVector3f TwotimesCamTelViewF;
-	static bool once =true;
-	if(once){
-	once = false;
-	telcamonforesight.getTwoTimesCamTelF().RotateLocalX(-PI/2);
-	telcamonforesight.getTwoTimesCamTelF().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	telcamonforesight.getTwoTimesCamTelF().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
-	telcamonforesight.getTwoTimesCamTelF().MoveRight(-inidelta);
-	telcamonforesight.getTwoTimesCamTelF().MoveForward(-0.08*leftandrightdis/2);
-	telcamonforesight.getTwoTimesCamTelF().GetOrigin(TwotimesCamTelViewF);
+	static bool once[2] ={true,true};
+	if(once[mainOrsub]){
+	once[mainOrsub] = false;
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().RotateLocalX(-PI/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().MoveRight(-inidelta);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().MoveForward(-0.08*leftandrightdis/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().GetOrigin(TwotimesCamTelViewF);
 	}
-	telcamonforesight.getTwoTimesCamTelF().SetOrigin(TwotimesCamTelViewF);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelF().SetOrigin(TwotimesCamTelViewF);
 
 	static M3DVector3f TwotimesCamTelViewR;
-	static bool onceR =true;
-	if(onceR){
-	onceR = false;
-	telcamonforesight.getTwoTimesCamTelR().RotateLocalX(-PI/2);
-	telcamonforesight.getTwoTimesCamTelR().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	telcamonforesight.getTwoTimesCamTelR().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/2.0);
-	telcamonforesight.getTwoTimesCamTelR().MoveRight(-inidelta);
-	telcamonforesight.getTwoTimesCamTelR().MoveForward(-0.08*leftandrightdis/2);
-	telcamonforesight.getTwoTimesCamTelR().GetOrigin(TwotimesCamTelViewR);
+	static bool onceR[2] ={true,true};
+	if(onceR[mainOrsub]){
+	onceR[mainOrsub] = false;
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().RotateLocalX(-PI/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/2.0);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().MoveRight(-inidelta);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().MoveForward(-0.08*leftandrightdis/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().GetOrigin(TwotimesCamTelViewR);
 	}
-	telcamonforesight.getTwoTimesCamTelR().SetOrigin(TwotimesCamTelViewR);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelR().SetOrigin(TwotimesCamTelViewR);
 	static M3DVector3f TwotimesCamTelViewB;
-	static bool onceB =true;
-	if(onceB){
-	onceR = false;
-	telcamonforesight.getTwoTimesCamTelB().RotateLocalX(-PI/2);
-	telcamonforesight.getTwoTimesCamTelB().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	telcamonforesight.getTwoTimesCamTelB().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*3.0/4.0);
-	telcamonforesight.getTwoTimesCamTelB().MoveRight(-inidelta);
-	telcamonforesight.getTwoTimesCamTelB().MoveForward(-0.08*leftandrightdis/2);
-	telcamonforesight.getTwoTimesCamTelB().GetOrigin(TwotimesCamTelViewB);
+	static bool onceB[2] ={true,true};
+	if(onceB[mainOrsub]){
+	onceR[mainOrsub] = false;
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().RotateLocalX(-PI/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*3.0/4.0);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().MoveRight(-inidelta);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().MoveForward(-0.08*leftandrightdis/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().GetOrigin(TwotimesCamTelViewB);
 	}
-	telcamonforesight.getTwoTimesCamTelB().SetOrigin(TwotimesCamTelViewB);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelB().SetOrigin(TwotimesCamTelViewB);
 	static M3DVector3f TwotimesCamTelViewL;
-	static bool onceL =true;
-	if(onceL){
-	onceL = false;
-	telcamonforesight.getTwoTimesCamTelL().RotateLocalX(-PI/2);
-	telcamonforesight.getTwoTimesCamTelL().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	telcamonforesight.getTwoTimesCamTelL().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/1);
-	telcamonforesight.getTwoTimesCamTelL().MoveRight(-inidelta);
-	telcamonforesight.getTwoTimesCamTelL().MoveForward(-0.08*leftandrightdis/2);
-	telcamonforesight.getTwoTimesCamTelL().GetOrigin(TwotimesCamTelViewL);
+	static bool onceL[2] ={true,true};
+	if(onceL[mainOrsub]){
+	onceL[mainOrsub] = false;
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().RotateLocalX(-PI/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/1);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().MoveRight(-inidelta);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().MoveForward(-0.08*leftandrightdis/2);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().GetOrigin(TwotimesCamTelViewL);
 	}
-	telcamonforesight.getTwoTimesCamTelL().SetOrigin(TwotimesCamTelViewL);
+	telcamonforesight[mainOrsub].getTwoTimesCamTelL().SetOrigin(TwotimesCamTelViewL);
 }
 
-void  Render::GenerateFourtimesTelView()
+void  Render::GenerateFourtimesTelView(int mainOrsub)
 {
 	float Len=(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
 	float inidelta=(RulerAngle)/360.0*Len;
@@ -7404,55 +7543,55 @@ void  Render::GenerateFourtimesTelView()
 	else
 		inidelta-=Len;
 	static M3DVector3f FourtimesCamTelViewF;
-	static bool onceF =true;
-	if(onceF){
-	onceF = false;
-	telcamonforesight.getFourTimesCamTelF().RotateLocalX(-PI/2);
-	telcamonforesight.getFourTimesCamTelF().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-	telcamonforesight.getFourTimesCamTelF().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
-	telcamonforesight.getFourTimesCamTelF().MoveRight(-inidelta);
-	telcamonforesight.getFourTimesCamTelF().MoveForward(-0.04*leftandrightdis);
-	telcamonforesight.getFourTimesCamTelF().GetOrigin(FourtimesCamTelViewF);
+	static bool onceF[2] ={true,true};
+	if(onceF[mainOrsub]){
+	onceF[mainOrsub] = false;
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().RotateLocalX(-PI/2);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/4);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().MoveRight(-inidelta);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().MoveForward(-0.04*leftandrightdis);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().GetOrigin(FourtimesCamTelViewF);
 	}
-	telcamonforesight.getFourTimesCamTelF().SetOrigin(FourtimesCamTelViewF);
+	telcamonforesight[mainOrsub].getFourTimesCamTelF().SetOrigin(FourtimesCamTelViewF);
 
 		static M3DVector3f FourtimesCamTelViewR;
-		static bool onceR =true;
-		if(onceR){
-		onceR = false;
-		telcamonforesight.getFourTimesCamTelR().RotateLocalX(-PI/2);
-		telcamonforesight.getFourTimesCamTelR().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		telcamonforesight.getFourTimesCamTelR().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/2);
-		telcamonforesight.getFourTimesCamTelR().MoveRight(-inidelta);
-		telcamonforesight.getFourTimesCamTelR().MoveForward(-0.04*leftandrightdis);
-		telcamonforesight.getFourTimesCamTelR().GetOrigin(FourtimesCamTelViewR);
+		static bool onceR[2] ={true,true};
+		if(onceR[mainOrsub]){
+		onceR[mainOrsub] = false;
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().RotateLocalX(-PI/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().MoveRight(-inidelta);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().MoveForward(-0.04*leftandrightdis);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().GetOrigin(FourtimesCamTelViewR);
 		}
-		telcamonforesight.getFourTimesCamTelR().SetOrigin(FourtimesCamTelViewR);
+		telcamonforesight[mainOrsub].getFourTimesCamTelR().SetOrigin(FourtimesCamTelViewR);
 		static M3DVector3f FourtimesCamTelViewB;
-		static bool onceB =true;
-		if(onceB){
-		onceR = false;
-		telcamonforesight.getFourTimesCamTelB().RotateLocalX(-PI/2);
-		telcamonforesight.getFourTimesCamTelB().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		telcamonforesight.getFourTimesCamTelB().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*3.0/4.0);
-		telcamonforesight.getFourTimesCamTelB().MoveRight(-inidelta);
-		telcamonforesight.getFourTimesCamTelB().MoveForward(-0.04*leftandrightdis);
-		telcamonforesight.getFourTimesCamTelB().GetOrigin(FourtimesCamTelViewB);
+		static bool onceB[2]={true,true};
+		if(onceB[mainOrsub]){
+		onceR[mainOrsub] = false;
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().RotateLocalX(-PI/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*3.0/4.0);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().MoveRight(-inidelta);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().MoveForward(-0.04*leftandrightdis);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().GetOrigin(FourtimesCamTelViewB);
 		}
-		telcamonforesight.getFourTimesCamTelB().SetOrigin(FourtimesCamTelViewB);
+		telcamonforesight[mainOrsub].getFourTimesCamTelB().SetOrigin(FourtimesCamTelViewB);
 
 		static M3DVector3f FourtimesCamTelViewL;
-		static bool onceL =true;
-		if(onceL){
-		onceL = false;
-		telcamonforesight.getFourTimesCamTelL().RotateLocalX(-PI/2);
-		telcamonforesight.getFourTimesCamTelL().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
-		telcamonforesight.getFourTimesCamTelL().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/1);
-		telcamonforesight.getFourTimesCamTelL().MoveRight(-inidelta);
-		telcamonforesight.getFourTimesCamTelL().MoveForward(-0.04*leftandrightdis);
-		telcamonforesight.getFourTimesCamTelL().GetOrigin(FourtimesCamTelViewL);
+		static bool onceL[2] ={true,true};
+		if(onceL[mainOrsub]){
+		onceL[mainOrsub] = false;
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().RotateLocalX(-PI/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().MoveUp((PanelLoader.Getextent_pos_z()-PanelLoader.Getextent_neg_z())/2);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())/1);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().MoveRight(-inidelta);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().MoveForward(-0.04*leftandrightdis);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().GetOrigin(FourtimesCamTelViewL);
 		}
-		telcamonforesight.getFourTimesCamTelL().SetOrigin(FourtimesCamTelViewL);
+		telcamonforesight[mainOrsub].getFourTimesCamTelL().SetOrigin(FourtimesCamTelViewL);
 }
 
 void  Render::GenerateCheckView()
@@ -7801,12 +7940,12 @@ GLEnv & env=env1;
 			}
 		}
 			break;
-		case  'n':
+		case	'n':
 		{
 			FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
 			fboMode = nextMode;
 		}
-			break;
+		break;
 		case 'L':
 		//case 'l':
 			DISPLAYMODE_SWITCH_TO(TRIPLE_VIEW_MODE);
@@ -8288,10 +8427,9 @@ GLEnv & env=env1;
 			break;
 
 			case '!':
-				if(fboMode==	FBO_ALL_VIEW_MODE
-						||displayMode==ALL_VIEW_MODE)
+				if(displayMode==ALL_VIEW_MODE)
 				{
-							p_ForeSightFacade->MoveLeft(-PanoLen*100.0);
+							p_ForeSightFacade[MAIN]->MoveLeft(-PanoLen*100.0);
 							printf("m_cam_pos=%d\n",m_cam_pos);
 						//	foresightPos.GetAngle()[0];
 					//		foresightPos.ShowPosX();
@@ -8301,7 +8439,7 @@ GLEnv & env=env1;
 				else	if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 													||displayMode==PREVIEW_MODE)
 				{
-							p_ForeSightFacade->MoveLeft(-PanoLen*100.0);
+							p_ForeSightFacade[MAIN]->MoveLeft(-PanoLen*100.0);
 					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
 				//			printf("POS_angle=%f\n",pano_pos2angle);
 				}
@@ -8311,15 +8449,15 @@ GLEnv & env=env1;
 										||displayMode==TELESCOPE_BACK_MODE
 										||displayMode==TELESCOPE_LEFT_MODE)
 				{
-					istochangeTelMode=p_ForeSightFacade2->MoveLeft(-PanoLen/TELXLIMIT);
+					istochangeTelMode=p_ForeSightFacade2[MAIN]->MoveLeft(-PanoLen/TELXLIMIT);
 					if(displayMode==TELESCOPE_FRONT_MODE)
-						p_ForeSightFacade->GetTelMil(0);
+						p_ForeSightFacade[MAIN]->GetTelMil(0);
 					else if(displayMode==TELESCOPE_RIGHT_MODE)
-						p_ForeSightFacade->GetTelMil(1);
+						p_ForeSightFacade[MAIN]->GetTelMil(1);
 					else if(displayMode==TELESCOPE_BACK_MODE)
-						p_ForeSightFacade->GetTelMil(2);
+						p_ForeSightFacade[MAIN]->GetTelMil(2);
 					else if(displayMode==TELESCOPE_LEFT_MODE)
-						p_ForeSightFacade->GetTelMil(3);
+						p_ForeSightFacade[MAIN]->GetTelMil(3);
 					if(istochangeTelMode)
 					{
 						DISPLAYMODE nextMode = DISPLAYMODE(((int)displayMode-1) % TOTAL_MODE_COUNT);
@@ -8375,15 +8513,14 @@ GLEnv & env=env1;
 													||displayMode==PREVIEW_MODE
 													)
 							{
-									p_ForeSightFacade->MoveRight(PanoLen*100.0);
-									pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
+									p_ForeSightFacade[MAIN]->MoveRight(PanoLen*100.0);
+									pano_pos2angle=p_ForeSightFacade[MAIN]->GetForeSightPosX()/PanoLen*360.0;
 
 									//			printf("POS_angle=%f\n",pano_pos2angle);
 							}
-				if(fboMode==	FBO_ALL_VIEW_MODE
-						||displayMode==ALL_VIEW_MODE)
+				if(displayMode==ALL_VIEW_MODE)
 				{
-					p_ForeSightFacade->MoveRight(PanoLen*100.0);
+					p_ForeSightFacade[MAIN]->MoveRight(PanoLen*100.0);
 			//		foresightPos.GetAngle()[0];
 					printf("m_cam_pos=%d\n",m_cam_pos);
 				//	foresightPos.ShowPosX();
@@ -8393,15 +8530,15 @@ GLEnv & env=env1;
 													||displayMode==TELESCOPE_BACK_MODE
 													||displayMode==TELESCOPE_LEFT_MODE)
 							{
-								istochangeTelMode=p_ForeSightFacade2->MoveRight(PanoLen/TELXLIMIT);
+								istochangeTelMode=p_ForeSightFacade2[MAIN]->MoveRight(PanoLen/TELXLIMIT);
 								if(displayMode==TELESCOPE_FRONT_MODE)
-													p_ForeSightFacade2->GetTelMil(0);
+													p_ForeSightFacade2[MAIN]->GetTelMil(0);
 												else if(displayMode==TELESCOPE_RIGHT_MODE)
-													p_ForeSightFacade->GetTelMil(1);
+													p_ForeSightFacade[MAIN]->GetTelMil(1);
 												else if(displayMode==TELESCOPE_BACK_MODE)
-													p_ForeSightFacade->GetTelMil(2);
+													p_ForeSightFacade[MAIN]->GetTelMil(2);
 												else if(displayMode==TELESCOPE_LEFT_MODE)
-													p_ForeSightFacade->GetTelMil(3);
+													p_ForeSightFacade[MAIN]->GetTelMil(3);
 
 
 								if(istochangeTelMode)
@@ -8468,11 +8605,11 @@ GLEnv & env=env1;
 				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 													||displayMode==PREVIEW_MODE)
 							{
-											p_ForeSightFacade->MoveUp(PanoHeight/5.7);
+											p_ForeSightFacade[MAIN]->MoveUp(PanoHeight/5.7);
 							}
-				else if (fboMode==FBO_ALL_VIEW_MODE)
+				else if (displayMode==ALL_VIEW_MODE)
 				{
-					p_ForeSightFacade->MoveUp(PanoHeight/(5.7-2.7));
+					p_ForeSightFacade[MAIN]->MoveUp(PanoHeight/(5.7-2.7));
 				}
 
 							else if(displayMode==TELESCOPE_FRONT_MODE
@@ -8480,7 +8617,7 @@ GLEnv & env=env1;
 													||displayMode==TELESCOPE_BACK_MODE
 													||displayMode==TELESCOPE_LEFT_MODE)
 							{
-											p_ForeSightFacade2->MoveUp(PanoHeight/5.7);
+											p_ForeSightFacade2[MAIN]->MoveUp(PanoHeight/5.7);
 							}
 							else if(displayMode==	VGA_WHITE_VIEW_MODE
 													||displayMode==VGA_HOT_BIG_VIEW_MODE
@@ -8520,18 +8657,18 @@ GLEnv & env=env1;
 				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 													||displayMode==PREVIEW_MODE)
 				{
-								p_ForeSightFacade->MoveDown(-PanoHeight/5.7);
+								p_ForeSightFacade[MAIN]->MoveDown(-PanoHeight/5.7);
 				}
-				else if (fboMode==FBO_ALL_VIEW_MODE)
+				else if (displayMode==ALL_VIEW_MODE)
 				{
-					p_ForeSightFacade->MoveDown(-PanoHeight/(5.7-2.7));
+					p_ForeSightFacade[MAIN]->MoveDown(-PanoHeight/(5.7-2.7));
 				}
 				else if(displayMode==TELESCOPE_FRONT_MODE
 										||displayMode==TELESCOPE_RIGHT_MODE
 										||displayMode==TELESCOPE_BACK_MODE
 										||displayMode==TELESCOPE_LEFT_MODE)
 				{
-								p_ForeSightFacade2->MoveDown(-PanoHeight/5.7);
+								p_ForeSightFacade2[MAIN]->MoveDown(-PanoHeight/5.7);
 				}
 				else if(displayMode==	VGA_WHITE_VIEW_MODE
 										||displayMode==VGA_HOT_BIG_VIEW_MODE
@@ -8570,34 +8707,35 @@ GLEnv & env=env1;
 			{
 				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 				{
-					SendBackXY(p_ForeSightFacade->GetMil());
+					SendBackXY(p_ForeSightFacade[MAIN]->GetMil());
 			//		Milx=p_ForeSightFacade->GetMil()[0];
 			//		printf("PANO_MilX=%d\n",Milx);
 				}
 				 else if(displayMode==TELESCOPE_FRONT_MODE)
 				 {
-					 SendBackXY(p_ForeSightFacade2->GetTelMil(0));
+					 SendBackXY(p_ForeSightFacade2[MAIN]->GetTelMil(0));
 			//			Milx=p_ForeSightFacade2->GetTelMil(0)[0];
 			//			printf("TEL_MilX=%d\n",Milx);
 				 }
 				 else if(displayMode==TELESCOPE_RIGHT_MODE)
 				 {
-					 SendBackXY(p_ForeSightFacade2->GetTelMil(1));
+					 SendBackXY(p_ForeSightFacade2[MAIN]->GetTelMil(1));
 				//		Milx=p_ForeSightFacade2->GetTelMil(1)[0];
 			//			printf("TEL_MilX=%d\n",Milx);
 				 }
 				 else if(displayMode==TELESCOPE_BACK_MODE)
 				 {
-					 SendBackXY(p_ForeSightFacade2->GetTelMil(2));
+					 SendBackXY(p_ForeSightFacade2[MAIN]->GetTelMil(2));
 				//		Milx=p_ForeSightFacade2->GetTelMil(2)[0];
 			//			printf("TEL_MilX=%d\n",Milx);
 				 }
 				 else if(displayMode==TELESCOPE_LEFT_MODE)
 				 {
-					 SendBackXY(p_ForeSightFacade2->GetTelMil(3));
+					 SendBackXY(p_ForeSightFacade2[MAIN]->GetTelMil(3));
 			//			Milx=p_ForeSightFacade2->GetTelMil(3)[0];
 			//			printf("TEL_MilX=%d\n",Milx);
 				 }
+#if 0
 						else if(displayMode==	VGA_WHITE_VIEW_MODE
 									||displayMode==VGA_HOT_BIG_VIEW_MODE
 									||displayMode==VGA_HOT_SMALL_VIEW_MODE
@@ -8640,6 +8778,7 @@ GLEnv & env=env1;
 										TRACKFRAMEX, TRACKFRAMEY,
 										PanoLen/37.685200*14.524,PanoHeight/6.0000*11.600);
 							}
+#endif
 			}
 				break;
 			case '%':
@@ -8647,7 +8786,7 @@ GLEnv & env=env1;
 			break;
 			case '^':
 			{
-							pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
+							pano_pos2angle=p_ForeSightFacade[MAIN]->GetForeSightPosX()/PanoLen*360.0;
 			//				printf("POS_angle=%f\n",pano_pos2angle);
 							math_ruler_angle=p_LineofRuler->GetAngle();//getrulerangle();
 							math_ruler_angle=math_ruler_angle+pano_pos2angle;
@@ -8672,11 +8811,13 @@ GLEnv & env=env1;
 			}
 			case '(':
 			//	 enable_hance=true;
-				foresightPos.SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
+				for(int i=0;i<2;i++)
+				foresightPos[i].SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
 					break;
 			case ')':
 			//	 enable_hance=false;
-				foresightPos.SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
+				for(int i=0;i<2;i++)
+				foresightPos[i].SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
 				break;
 			case '?':
 			{
@@ -12279,7 +12420,6 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 	//int set_corner_angle[CAM_COUNT*2]={24,25,76,77,128,129,180,181,232,233,284,285,336,337,386,387,436,437,486,487};
 	//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
 	int set_corner_angle[CAM_COUNT*2]={0};
-//TODO 单相机融合区对应位置
 	int temp_count=0;
 //	temp_count=count%512;
 	temp_count=count%480;
