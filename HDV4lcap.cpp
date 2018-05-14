@@ -589,7 +589,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 							YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
-							mv_detect.m_mvDetect( nowGrayidx,(unsigned char *)buffers[buf.index].start,int SDI_WIDTH,int SDI_HEIGHT)
+							mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 
 							#endif
 						}
@@ -605,7 +605,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
 #if MVDECT
-								if(mv_detect.CanUseMD())
+								if(mv_detect.MDisStart())
 								{
 									if(nowpicW==1280)
 									{

@@ -7,9 +7,12 @@ using namespace std;
 //inNumber 代表创建 检测OBJ的实例个数  有效值从1到8
 extern void createDetect(unsigned char inNumber,int inwidth,int inheight);
 extern void exitDetect();
+extern void mvDetect(unsigned char index,unsigned char* inframe,int width,int height,cv::Rect *boundRect);
 
 //index 代表第几个 检测OBJ 执行，boundRect 输出 目标的矩形框参数
-extern void mvDetect(unsigned char index,unsigned char* inframe,int width,int height,vector<cv::Rect> *boundRect);
+//extern void mvDetect(unsigned char index,unsigned char* inframe,int width,int height,vector<cv::Rect> *boundRect);
+
+
 
 
 class MvDetect
@@ -29,6 +32,7 @@ public:
 	void OpenMD(int mainorsub){MDopen[mainorsub]=true;};
 	void CloseMD(int mainorsub){MDopen[mainorsub]=false;};
 	bool CanUseMD(int mainorsub);
+	bool MDisStart(){enableMD[MAIN]==true && enableMD[SUB]==true;};
 	int getTargetNum(int cam_idx){ targetnum[cam_idx]=outRect[cam_idx].size();
 		return targetnum[cam_idx];}
 	int Choosetargetidx(int cam_idx,int tidx){
@@ -37,11 +41,13 @@ public:
 		else
 			targetidx[cam_idx][tidx]=0;
 		return targetidx[cam_idx][tidx];};
+	void SetoutRect();
 private:
 	int targetidx[CAM_COUNT][4];
 	int targetnum[CAM_COUNT];
 	bool enableMD[2];
 	bool MDopen[2];
+	cv::Rect tempoutRect[CAM_COUNT][6];
 	std::vector<cv::Rect> outRect[CAM_COUNT];
 	unsigned char* grayFrame[CAM_COUNT];
 };

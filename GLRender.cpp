@@ -6536,6 +6536,12 @@ if(setpriorityOnce)
 		break;
 	case ALL_VIEW_MODE:
 	{
+#if		MVDECT
+		if(mv_detect.CanUseMD(MAIN))
+		{
+			mv_detect.SetoutRect();
+		}
+#endif
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front();
 		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
@@ -6582,12 +6588,14 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-			//	if(mv_detect.CanUseMD())
+#if			MVDECT
+			if(mv_detect.CanUseMD(MAIN))
 			{
+					mv_detect.SetoutRect();
 				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
 				TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
 			}
-
+#endif
 			//	RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 	//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 	//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
@@ -6598,12 +6606,14 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				//	if(mv_detect.CanUseMD())
+#if MVDECT
+				if(mv_detect.CanUseMD(MAIN))
 						{
+						mv_detect.SetoutRect();
 							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
 							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
 						}
-
+#endif
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
@@ -6614,11 +6624,14 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				//	if(mv_detect.CanUseMD())
+#if MVDECT
+			   if(mv_detect.CanUseMD(MAIN))
 						{
+						mv_detect.SetoutRect();
 							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
 							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
 						}
+#endif
 			   //		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
@@ -6629,11 +6642,14 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
-				//	if(mv_detect.CanUseMD())
+#if MVDECT
+				if(mv_detect.CanUseMD(MAIN))
 						{
+					mv_detect.SetoutRect();
 							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
 							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
 						}
+#endif
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 				//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);

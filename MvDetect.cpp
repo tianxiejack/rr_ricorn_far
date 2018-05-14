@@ -8,9 +8,20 @@
 using namespace cv;
 Mat m4(1080,1920,CV_8UC4);
 Mat m6(1080,1920,CV_8UC4);
-#if MVDECT
+#if  MVDECT
 MvDetect::MvDetect()
 {
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		for(int j=0;j<6;j++)
+		{
+			tempoutRect[i][j].x=-1;
+			tempoutRect[i][j].y=-1;
+			tempoutRect[i][j].width=-1;
+			tempoutRect[i][j].height=-1;
+		}
+	}
+
 for(int i=0;i<2;i++)
 {
 		enableMD[i]=false;
@@ -52,7 +63,11 @@ void MvDetect::yuyv2gray(unsigned char* src,unsigned char* dst,int width,int hei
 void MvDetect::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 {
 	yuyv2gray(inframe,grayFrame[idx]);
-	mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
+	for(int i=0;i<6;i++)
+	{
+		mvDetect((unsigned char) idx, grayFrame[idx], w, h,&tempoutRect[idx][i]);
+	}
+	//mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
 }
 #endif
 
@@ -165,6 +180,22 @@ bool MvDetect::CanUseMD(int mainorsub)
 		return true;
 	else
 		return false;
+}
+
+void MvDetect::SetoutRect()
+{
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		outRect[i].clear();
+		for(int j=0;j<6;j++)
+		{
+			if(tempoutRect[i][j].x>0)
+			{
+				outRect[i].push_back(tempoutRect[i][j]);
+			}
+		}
+	}
+
 }
 void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {

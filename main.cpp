@@ -33,7 +33,7 @@ GLEnv env1;
 GLEnv env2;
 
 #if MVDECT
-MvDetect mv_detect;
+extern MvDetect mv_detect;
 #endif
 float track_pos[4];
 
