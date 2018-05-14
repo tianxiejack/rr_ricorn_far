@@ -1,6 +1,6 @@
 #include "ChosenCaptureGroup.h"
 #include"HDV4lcap.h"
-ChosenCaptureGroup ChosenCaptureGroup::MainChosenGroup(SDI_WIDTH,SDI_HEIGHT,3,MAIN_EXT_COUNT);
+ChosenCaptureGroup ChosenCaptureGroup::MainChosenGroup(SDI_WIDTH,SDI_HEIGHT,3,MAIN_AND_SUB_EXT_COUNT);
 ChosenCaptureGroup ChosenCaptureGroup::SubChosenGroup(SDI_WIDTH,SDI_HEIGHT,3,SUB_EXT_COUNT);
 ChosenCaptureGroup ChosenCaptureGroup::MvDetectGroup(SDI_WIDTH,SDI_HEIGHT,3,MVDECT_CAM_COUNT);
 static HDAsyncVCap4* pHDAsyncVCap[MAX_CC]={0};

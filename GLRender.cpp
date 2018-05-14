@@ -833,7 +833,7 @@ static void captureChosenCam(GLubyte *ptr, int index,GLEnv &env)
 {
 #	if USE_BMPCAP
 #else
-//	index-=MAGICAL_NUM;
+	index-=MAGICAL_NUM;
 #endif
 	env.GetChosenCaptureGroup()->captureCam(ptr,index);
 }

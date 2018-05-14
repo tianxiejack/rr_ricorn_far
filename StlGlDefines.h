@@ -232,7 +232,8 @@ enum{
 
 enum{
 	MAIN_EXT_0,
-	MAIN_EXT_COUNT
+	SUB_EXT_1,
+	MAIN_AND_SUB_EXT_COUNT
 };
 enum{
 	SUB_EXT_0,
