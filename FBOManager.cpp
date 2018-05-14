@@ -182,7 +182,7 @@ std::string  FBOManager::convertInternalFormatToString(GLenum format)
         break;
     default:
         std::stringstream ss;
-        ss << "Unknown Format(0x" << std::hex << format << ")" << std::ends;
+//        ss << "Unknown Format(0x" << std::hex << format << ")" << std::ends;
         formatName = ss.str();
     }
 
@@ -207,7 +207,7 @@ std::string  FBOManager::getTextureParameters(GLuint id)
     formatName = convertInternalFormatToString(format);
 
     std::stringstream ss;
-    ss << width << "x" << height << ", " << formatName;
+  //  ss << width << "x" << height << ", " << formatName;
     return ss.str();
 }
 
@@ -233,7 +233,7 @@ std::string  FBOManager::getRenderbufferParameters(GLuint id)
     formatName = convertInternalFormatToString(format);
 
     std::stringstream ss;
-    ss << width << "x" << height << ", " << formatName << ", MSAA(" << samples << ")";
+  //  ss << width << "x" << height << ", " << formatName << ", MSAA(" << samples << ")";
     return ss.str();
 }
 
@@ -304,17 +304,17 @@ void FBOManager::printFramebufferInfo(GLuint fbo)
     // bind fbo
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    std::cout << "\n===== FBO STATUS =====\n";
+  //  std::cout << "\n===== FBO STATUS =====\n";
 
     // print max # of colorbuffers supported by FBO
     int colorBufferCount = 0;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &colorBufferCount);
-    std::cout << "Max Number of Color Buffer Attachment Points: " << colorBufferCount << std::endl;
+//    std::cout << "Max Number of Color Buffer Attachment Points: " << colorBufferCount << std::endl;
 
     // get max # of multi samples
     int multiSampleCount = 0;
     glGetIntegerv(GL_MAX_SAMPLES, &multiSampleCount);
-    std::cout << "Max Number of Samples for MSAA: " << multiSampleCount << std::endl;
+//    std::cout << "Max Number of Samples for MSAA: " << multiSampleCount << std::endl;
 
     int objectType;
     int objectId;
@@ -335,14 +335,14 @@ void FBOManager::printFramebufferInfo(GLuint fbo)
 
             std::string formatName;
 
-            std::cout << "Color Attachment " << i << ": ";
+    //        std::cout << "Color Attachment " << i << ": ";
             if(objectType == GL_TEXTURE)
             {
-                std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
+     //           std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
             }
             else if(objectType == GL_RENDERBUFFER)
             {
-                std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
+     //           std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
             }
         }
     }
@@ -359,14 +359,14 @@ void FBOManager::printFramebufferInfo(GLuint fbo)
                                               GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
                                               &objectId);
 
-        std::cout << "Depth Attachment: ";
+    //    std::cout << "Depth Attachment: ";
         switch(objectType)
         {
         case GL_TEXTURE:
-            std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
+     //       std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
             break;
         case GL_RENDERBUFFER:
-            std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
+   //         std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
             break;
         }
     }
@@ -387,35 +387,35 @@ void FBOManager::printFramebufferInfo(GLuint fbo)
         switch(objectType)
         {
         case GL_TEXTURE:
-            std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
+     //       std::cout << "GL_TEXTURE, " << getTextureParameters(objectId) << std::endl;
             break;
         case GL_RENDERBUFFER:
-            std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
+  //          std::cout << "GL_RENDERBUFFER, " << getRenderbufferParameters(objectId) << std::endl;
             break;
         }
     }
 
-    std::cout << std::endl;
+ //   std::cout << std::endl;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 
 bool FBOManager::Init()
 {
-	glInfo glInfo;
-	glInfo.getInfo();
-	glInfo.printSelf();
+//	glInfo glInfo;
+//	glInfo.getInfo();
+//	glInfo.printSelf();
     initscreenQuad(SCREEN_W,SCREEN_H);
-	if(glInfo.isExtensionSupported("GL_ARB_framebuffer_object"))
+//	if(glInfo.isExtensionSupported("GL_ARB_framebuffer_object"))
 	{
 		fboSupported = fboUsed = true;
-		std::cout << "fbo~~~~Video card supports GL_ARB_framebuffer_object." << std::endl;
+	//	std::cout << "fbo~~~~Video card supports GL_ARB_framebuffer_object." << std::endl;
 	}
-	else
-	{
-		fboSupported = fboUsed = false;
-		std::cout << "fbo~~~~Video card does NOT support GL_ARB_framebuffer_object." << std::endl;
-	}
+//	else
+//	{
+//		fboSupported = fboUsed = false;
+	//	std::cout << "fbo~~~~Video card does NOT support GL_ARB_framebuffer_object." << std::endl;
+//	}
     if(fboSupported)
     {
         // create a framebuffer object, you need to delete them when program exits.
