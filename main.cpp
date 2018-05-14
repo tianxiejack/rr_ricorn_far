@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 //	startrecv( );
 
 #if MVDECT
-	mv_detect.init();
+	mv_detect.init(1920,1080);
 #endif
 #if USE_GPIO
 	InitIPCModule();

@@ -4439,6 +4439,21 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 
 #else
+	//for(int i=4;i<10;i++)
+//	petal4[i]=i;
+//	for(int i=0;i<6;i++)
+//		petal3[i]=i;
+	//	petal3[9]=9;
+	petal3[2]=2;
+	petal3[3]=3;
+	m_env.GetmodelViewMatrix()->PushMatrix();
+//	DrawPanel(m_env,false,petal4,mainOrsub);
+	m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+	DrawPanel(m_env,false,petal3,mainOrsub);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+
+
+#if 0
 	if(mainOrsub==MAIN)
 	{
 		for(int i=4;i<10;i++)
@@ -4491,6 +4506,7 @@ petal3[(m_cam_pos+1)%CAM_COUNT]=(m_cam_pos+1)%CAM_COUNT;
 		//DrawPanel(m_env,false,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();*/
 	}
+#endif
 #if 0
 				m_env.GetmodelViewMatrix()->PushMatrix();
 							m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0); //1
@@ -6544,15 +6560,12 @@ if(setpriorityOnce)
 #endif
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front();
-		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
-
 		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
 		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
 
 		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
 	//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
-		//RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
-		break;
+			break;
 	}
 	case TRIM_MODE:
 		env.Getp_FboPboFacade()->Render2Front();
