@@ -22,12 +22,14 @@ void Render::FBOdraw()
 		{
 			RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN,0,0,0,0,true);
 			RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,false);
+		if(displayMode!=TRIM_MODE)
 			RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
 		}
 		 else
 			{
 			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
 			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
+			if(displayMode!=TRIM_MODE)
 			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 			}
 		break;
@@ -37,6 +39,7 @@ void Render::FBOdraw()
 		{
 			RenderRightPanoView(env,0,g_windowHeight*(384.0+2)/768.0,g_windowWidth, g_windowHeight*154.0/768.0,MAIN,0,0,0,0,true);
 			RenderLeftPanoView(env,0,g_windowHeight*546.0/768.0,g_windowWidth, g_windowHeight*154.0/768.0,MAIN,false);
+			if(displayMode!=TRIM_MODE)
 			RenderOnetimeView(env,g_windowWidth*6.0/1024,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,MAIN);
 			RenderTwotimesView(env,g_windowWidth*(354.0+6)/1024.0,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,MAIN);
 			RenderRulerView(env,g_windowWidth*0/1024.0,g_windowHeight*660/768.0,g_windowWidth,g_windowHeight*150.0/768.0,RULER_90);
@@ -47,6 +50,7 @@ void Render::FBOdraw()
 			{
 			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
 			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
+			if(displayMode!=TRIM_MODE)
 			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
 			RenderTwotimesView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
 			RenderRulerView(env,g_windowWidth*0/1920.0,g_windowHeight*540/1080.0,g_windowWidth,g_windowHeight*140.0/1080,RULER_90);

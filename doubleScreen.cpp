@@ -3,10 +3,14 @@
 #include "common.h"
 #include "GLEnv.h"
 #include"Thread_Priority.h"
+#include "thread_idle.h"
+extern thread_idle tIdle;
 extern Render render;
 Common comSecondSC;
 extern float forward_data;
 extern GLEnv env2,env1;
+extern ForeSightPos foresightPos[MS_COUNT];
+
 void InitBowlDS()
 {
 
@@ -15,6 +19,16 @@ void InitBowlDS()
 
 void Render::RenderSceneDS()
 {
+#if MVDECT
+	if(mv_detect.CanUseMD(SUB) ||mv_detect.CanUseMD(MAIN))
+	{
+		threadRun(MVDECT_CN);
+	}
+	else
+	{
+		threadIDLE(MVDECT_CN);
+	}
+#endif
 	static bool setpriorityOnce=true;
 	if(setpriorityOnce)
 	{
@@ -31,6 +45,7 @@ void Render::RenderSceneDS()
 	{
 	case SECOND_ALL_VIEW_MODE:
 #if 1
+		tIdle.threadIdle(SUB_CN);
 		env.Getp_FboPboFacade()->Render2Front(SUB);
 		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,SUB);
 		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,SUB);
@@ -46,10 +61,12 @@ void Render::RenderSceneDS()
 
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
+		tIdle.threadRun(SUB_CN);
 	//	RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
 		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,SUB,true);
 		break;
 	case 	SECOND_TELESCOPE_FRONT_MODE:
+		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_FRONT_MODE,SUB);
 			    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
@@ -62,6 +79,7 @@ void Render::RenderSceneDS()
 
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
+		tIdle.threadIdle(SUB_CN);
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
@@ -73,6 +91,7 @@ void Render::RenderSceneDS()
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 	break;
 	case	SECOND_TELESCOPE_BACK_MODE:
+		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
 		   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 		   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
@@ -86,6 +105,7 @@ void Render::RenderSceneDS()
 
 	break;
 	case	SECOND_TELESCOPE_LEFT_MODE:
+		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_LEFT_MODE,SUB);
 		  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
@@ -422,6 +442,12 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	switch(key)
 		{
+	case '(':
+				foresightPos[SUB].SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
+					break;
+			case ')':
+				foresightPos[SUB].SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
+				break;
 			case'N':
 			{
 				SECOND_DISPLAY nextMode=SECOND_DISPLAY(((int)SecondDisplayMode+1)%SECOND_TOTAL_MODE_COUNT);

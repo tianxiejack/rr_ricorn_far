@@ -89,15 +89,13 @@ int main(int argc, char** argv)
 #else
 
 	env1.init(PanoCaptureGroup::GetMainInstance(),
-			NULL,
-			NULL,
-			//ChosenCaptureGroup::GetMainInstance(),
-			//ChosenCaptureGroup::GetMvDetectInstance(),
+			ChosenCaptureGroup::GetMainInstance(),
+			ChosenCaptureGroup::GetMvDetectInstance(),
 		BMPMiscGroup::GetInstance());
-	env2.init(NULL,//PanoCaptureGroup::GetSubInstance(),
-			NULL,//ChosenCaptureGroup::GetSubInstance(),
+	env2.init(PanoCaptureGroup::GetSubInstance(),
+			ChosenCaptureGroup::GetSubInstance(),
 			NULL,
-		NULL//BMPMiscGroup::GetInstance()
+			BMPMiscGroup::GetInstance()
 			);
 #endif
 

@@ -11,9 +11,11 @@ Mat m6(1080,1920,CV_8UC4);
 #if MVDECT
 MvDetect::MvDetect()
 {
-
-		enableMD=false;
-		MDopen=false;
+for(int i=0;i<2;i++)
+{
+		enableMD[i]=false;
+		MDopen[i]=false;
+}
 		for(int i=0;i<CAM_COUNT;i++)
 		{
 			targetnum[i]=0;
@@ -62,7 +64,7 @@ void MvDetect::saveConfig()
 	{
 		printf("MvDetect open failed!\n");
 	}
-	if(GetMD())
+	if(GetMD(MAIN) &&GetMD(SUB))
 	{
 		sprintf(buf,"%d\n",1);
 	}
@@ -148,16 +150,18 @@ void MvDetect::ReadConfig()
 	Yes=atoi(buf);
 	if(Yes)
 	{
-		SetMD(true);
+		SetMD(true,MAIN);
+		SetMD(true,SUB);
 	}
 	else
 	{
-		SetMD(false);
+		SetMD(false,MAIN);
+		SetMD(false,SUB);
 	}
 }
-bool MvDetect::CanUseMD()
+bool MvDetect::CanUseMD(int mainorsub)
 {
-	if(enableMD==true &&MDopen==true)
+	if(enableMD[mainorsub]==true &&MDopen[mainorsub]==true)
 		return true;
 	else
 		return false;

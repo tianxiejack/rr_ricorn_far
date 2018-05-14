@@ -24,11 +24,11 @@ public:
 	void selectFrame(unsigned char *dst,unsigned char *src,int targetId,int camIdx);
 	void saveConfig();
 	void ReadConfig();
-	bool GetMD(){return  enableMD;};
-	void SetMD(bool tof){enableMD=tof;};
-	void OpenMD(){MDopen=true;};
-	void CloseMD(){MDopen=false;};
-	bool CanUseMD();
+	bool GetMD(int mainorsub){return  enableMD[mainorsub];};
+	void SetMD(bool tof,int mainorsub){enableMD[mainorsub]=tof;};
+	void OpenMD(int mainorsub){MDopen[mainorsub]=true;};
+	void CloseMD(int mainorsub){MDopen[mainorsub]=false;};
+	bool CanUseMD(int mainorsub);
 	int getTargetNum(int cam_idx){ targetnum[cam_idx]=outRect[cam_idx].size();
 		return targetnum[cam_idx];}
 	int Choosetargetidx(int cam_idx,int tidx){
@@ -40,8 +40,8 @@ public:
 private:
 	int targetidx[CAM_COUNT][4];
 	int targetnum[CAM_COUNT];
-	bool enableMD;
-	bool MDopen;
+	bool enableMD[2];
+	bool MDopen[2];
 	std::vector<cv::Rect> outRect[CAM_COUNT];
 	unsigned char* grayFrame[CAM_COUNT];
 };

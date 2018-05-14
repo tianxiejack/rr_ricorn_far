@@ -587,11 +587,12 @@ GLShaderManager::GLShaderManager(int cam_count)
 		}
 	}
 	vanColor=new M3DVector4f[cam_count];
-	for(int i=0;i<4;i++)
+	for(int i=0;i<3;i++)
 		{
 			for(int j=0;j<cam_count;j++)
 			{
 				vanColor[j][i]=1.0f;
+				trimColor[j][i]=1.0f;
 			}
 		}
 	}
@@ -729,13 +730,19 @@ GLint GLShaderManager::UseStockShader(GLT_STOCK_SHADER nShaderID, ...)
 			vanColor[i][2]=gain_[i][2];
 			vanColor[i][3]=1.0f;
 		}
+		for(int i=0;i<m_cam_count;i++)
+						{
+							for(int j=0;j<1;j++){
+								vanColor[i][j]=trimColor[i][j];
+							}
+						}
 	}
 	else
 	{
 		for(int i=0;i<m_cam_count;i++)
 			{
 				for(int j=0;j<3;j++){
-					vanColor[i][j]=1.0f;
+					vanColor[i][j]=trimColor[i][j];
 				}
 			}
 	}

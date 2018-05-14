@@ -32,7 +32,8 @@
 #include <omp.h>
 #include"Thread_Priority.h"
 #include"MvDetect.hpp"
-
+#include "thread_idle.h"
+extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
 
@@ -48,6 +49,7 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
 unsigned char * target_data[CAM_COUNT];
+
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
 
@@ -998,9 +1000,16 @@ void HDAsyncVCap4::Run()
 	//cap in background thread
 	while(thread_state == THREAD_RUNNING)
 	{
-		HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
-		if(pcore){
-			pcore->mainloop(pic_format);
+		if(tIdle.isToIdle(pic_format))
+		{
+			usleep(500*1000);
+		}
+		else
+		{
+			HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
+			if(pcore){
+				pcore->mainloop(pic_format);
+			}
 		}
 //		usleep(sleepMs*1000);
 	}

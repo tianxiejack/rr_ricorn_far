@@ -117,6 +117,17 @@ class GLShaderManager
 		GLuint LookupShader(const char *szVertexProg, const char *szFragProg = 0);
 #if USE_GAIN
 		void set_gain_(int index,float x,float  y,float  z);
+		void ResetTrimColor(){
+			for(int i=0;i<CAM_COUNT;i++)
+			{
+				for(int j=0;j<3;j++)
+				{
+					trimColor[i][j]=1.0f;
+				}
+			}
+		};
+		void SetTrimColor(int idx){trimColor[idx][0]=0.2;
+		};
 #endif
 	protected:
 		GLuint	uiStockShaders[GLT_SHADER_LAST];
@@ -124,6 +135,7 @@ class GLShaderManager
 #if USE_GAIN
 		M3DVector3f *gain_;
 		M3DVector4f *vanColor;
+		float trimColor[CAM_COUNT][3];
 		int m_cam_count;
 	private:
 		GLShaderManager(){};
