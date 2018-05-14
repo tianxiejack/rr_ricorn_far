@@ -4451,14 +4451,15 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
 		DrawPanel(m_env,false,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
-
+		/*
 float nowposx=foresightPos[MAIN].GetAngle()[0];//todo
+//printf("nowposx=%f\n",nowposx);
 int array[10]={2,1,0,9,8,7,6,5,4,3};
-m_cam_pos=(nowposx+18+18)/(360/10);
+m_cam_pos=(nowposx)/(360/10);
 if(m_cam_pos==10)
 	m_cam_pos=0;
 m_cam_pos=array[m_cam_pos];
-/*
+
 petal3[m_cam_pos]=m_cam_pos;
 petal3[(m_cam_pos+1)%CAM_COUNT]=(m_cam_pos+1)%CAM_COUNT;
 				m_env.GetmodelViewMatrix()->PushMatrix();

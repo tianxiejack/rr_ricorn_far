@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../thread_idle.cpp\
 ../Thread_Priority.cpp\
 ../MiscCaptureGroup.cpp\
 ../BMPCaptureGroup.cpp\
@@ -63,6 +64,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./thread_idle.o\
 ./Thread_Priority.o\
 ./MiscCaptureGroup.o\
 ./BMPCaptureGroup.o\
@@ -119,6 +121,7 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./thread_idle.d\
 ./Thread_Priority.d\
 ./MiscCaptureGroup.d\
 ./BMPCaptureGroup.d\
