@@ -70,6 +70,9 @@ void mvDetectorDraw(std::vector<TRK_RECT_INFO> &resTarget,int chId)
 int main(int argc, char** argv)
 {
 
+#if MVDECT
+	mv_detect.init(1920,1080);
+#endif
 	Parayml param;
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
@@ -80,7 +83,7 @@ int main(int argc, char** argv)
 #if USE_BMPCAP
 	env1.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
-			NULL,
+			ChosenCaptureGroup::GetMvDetectInstance(),//NULL,
 			BMPMiscGroup::GetInstance());
 	env2.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
@@ -104,9 +107,7 @@ int main(int argc, char** argv)
 //	start_overLap();
 //	startrecv( );
 
-#if MVDECT
-	mv_detect.init(1920,1080);
-#endif
+
 #if USE_GPIO
 	InitIPCModule();
 	init_GPIO_IPCMessage();

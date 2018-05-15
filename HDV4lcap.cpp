@@ -62,6 +62,8 @@ unsigned char * FPGA6_bgr_data_sub=NULL;
 unsigned char * FPGA6_bgr_data_main=NULL;
 unsigned char * FPGA4_bgr_data_sub=NULL;
 unsigned char * FPGA4_bgr_data_main=NULL;
+unsigned char * MVDECT_data_main[CAM_COUNT];
+
 unsigned char * GRAY_data_main[CAM_COUNT];
 
 unsigned char * vga_data=NULL;
@@ -520,7 +522,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 	static int  count=0;
 		CLEAR(buf);
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-		buf.memory = V4L2_MEMORY_MMAP;
+		buf.memory = V4L2_MEMORY_USERPTR;
 
 		if (-1 == xioctl(m_devFd, VIDIOC_DQBUF, &buf)) {
 					switch (errno) {
@@ -569,8 +571,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						//nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
-						nowGrayidx=0;
-						//		transformed_src_main=&GRAY_data_main[nowGrayidx];
+						chid[MAIN]=MAIN_1;
+						nowGrayidx=1;
+						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -587,7 +590,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 					//		if(mv_detect.CanUseMD())
 						{
-							YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
 							mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 
@@ -1106,7 +1109,8 @@ void  HDv4l_cam::start_queue()
 {
 	int j=0;
 	for (int i = MAIN_1; i < MAIN_1+CAM_COUNT; i++) {
-		getEmpty(&GRAY_data_main[i-MAIN_1], i);
+	//	getEmpty(&GRAY_data_main[i-MAIN_1], i);
+		getEmpty(&MVDECT_data_main[i-MAIN_1], i);
 	}
 	getEmpty(&select_bgr_data_main,MAIN_ONE_OF_TEN);
 	getEmpty(&select_bgr_data_sub,SUB_ONE_OF_TEN );

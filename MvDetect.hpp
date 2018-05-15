@@ -47,7 +47,9 @@ private:
 	int targetnum[CAM_COUNT];
 	bool enableMD[2];
 	bool MDopen[2];
-	cv::Rect tempoutRect[CAM_COUNT][6];
+	static const int MAX_RECT_COUNT=6;
+	typedef struct{cv::Rect rects[MAX_RECT_COUNT];}RECT_Array;
+	RECT_Array tempoutRect[CAM_COUNT];
 	std::vector<cv::Rect> outRect[CAM_COUNT];
 	unsigned char* grayFrame[CAM_COUNT];
 };

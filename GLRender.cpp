@@ -7917,7 +7917,10 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
-			mode = OitVehicle::USER_OIT;
+#if MVDECT
+			mv_detect.CloseMD(MAIN);
+#endif
+		//	mode = OitVehicle::USER_OIT;
 			break;
 		//case 'b':
 		case 'B':
@@ -8057,10 +8060,13 @@ GLEnv & env=env1;
 			break;
 		//case 'c':
 		case 'C':
-			if(isCalibTimeOn){
-				RememberTime();
-			}
-			isCalibTimeOn = !isCalibTimeOn;
+#if MVDECT
+			mv_detect.OpenMD(MAIN);
+#endif
+	//		if(isCalibTimeOn){
+		//		RememberTime();
+	//		}
+	//		isCalibTimeOn = !isCalibTimeOn;
 			break;
 		//case 'd':
 		case 'D':

@@ -15,17 +15,17 @@ MvDetect::MvDetect()
 	{
 		for(int j=0;j<6;j++)
 		{
-			tempoutRect[i][j].x=-1;
-			tempoutRect[i][j].y=-1;
-			tempoutRect[i][j].width=-1;
-			tempoutRect[i][j].height=-1;
+			tempoutRect[i].rects[j].x=-1;
+			tempoutRect[i].rects[j].y=-1;
+			tempoutRect[i].rects[j].width=-1;
+			tempoutRect[i].rects[j].height=-1;
 		}
 	}
 
 for(int i=0;i<2;i++)
 {
-		enableMD[i]=false;
-		MDopen[i]=false;
+		enableMD[i]=true;
+		MDopen[i]=true;
 }
 		for(int i=0;i<CAM_COUNT;i++)
 		{
@@ -46,11 +46,7 @@ MvDetect::~MvDetect()
 
 void MvDetect::init(int w,int h)
 {
-	for(int i=0;i<CAM_COUNT;i++)
-	{
-		createDetect((unsigned char)i,w,h);
-	}
-
+		createDetect((unsigned char)CAM_COUNT,w,h);
 }
 void MvDetect::yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
 {
@@ -63,9 +59,9 @@ void MvDetect::yuyv2gray(unsigned char* src,unsigned char* dst,int width,int hei
 void MvDetect::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 {
 	yuyv2gray(inframe,grayFrame[idx]);
-	for(int i=0;i<6;i++)
+
 	{
-		mvDetect((unsigned char) idx, grayFrame[idx], w, h,&tempoutRect[idx][i]);
+		mvDetect((unsigned char) idx, grayFrame[idx], w, h,tempoutRect[idx].rects);
 	}
 	//mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
 }
@@ -189,9 +185,11 @@ void MvDetect::SetoutRect()
 		outRect[i].clear();
 		for(int j=0;j<6;j++)
 		{
-			if(tempoutRect[i][j].x>0)
+			if(tempoutRect[i].rects[j].x>0)
 			{
-				outRect[i].push_back(tempoutRect[i][j]);
+printf("CAM:%d,rect[%d] x=%d y=%d,w=%d h=%d\n",i,j,
+		tempoutRect[i].rects[j].x,tempoutRect[i].rects[j].y,tempoutRect[i].rects[j].width,tempoutRect[i].rects[j].height);
+				outRect[i].push_back(tempoutRect[i].rects[j]);
 			}
 		}
 	}
