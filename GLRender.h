@@ -465,7 +465,7 @@ private:
 	void SendtoTrack();
 	void RenderTriangleView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderChineseCharacterBillBoardAt(GLEnv &m_env,GLint x, GLint y,GLint w, GLint h);
-	void RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int direction,int mainOrsub=MAIN);
 	void RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 
 	void Show_first_mode(int read_mode);
@@ -516,7 +516,7 @@ private:
 	void GenerateVGAView();
 	void GenerateRender2FrontView();
 	void GenerateTargetFrameView();
-	void GeneratePanoTelView();
+	void GeneratePanoTelView(int mainOrsub=MAIN);
 	void GenerateTrack();
 
 	void GenerateLeftPanoView();
@@ -712,7 +712,7 @@ private:
 	float TrackSpeed;
 	GLFrame TriangleCameraFrame;
 	GLFrame CheckViewCameraFrame;
-	GLFrame PanoTelViewCameraFrame;//pano view_tel
+	GLFrame PanoTelViewCameraFrame[2];//pano view_tel
 	GLFrame  TrackCameraFrame;
 
 	GLFrame LeftPanoViewCameraFrame;//left pano view

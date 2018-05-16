@@ -426,6 +426,13 @@ typedef enum TelBreak
 	TEL_NOT_BREAK
 }telBreak;
 
+enum Direction
+{
+	FRONT,
+	RIGHT,
+	BACK,
+	LEFT
+};
 typedef enum Fore_Sight_Constitute
 {
 	pano_cross,

@@ -77,7 +77,7 @@ void Render::RenderSceneDS()
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_FRONT_MODE,SUB);
 			    RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
+				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,FRONT,SUB);
 #if			MVDECT
 				if(mv_detect.CanUseMD(SUB))
 				{
@@ -93,7 +93,7 @@ void Render::RenderSceneDS()
 		tIdle.threadIdle(SUB_CN);
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
+				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,RIGHT,SUB);
 #if			MVDECT
 				if(mv_detect.CanUseMD(SUB))
 						{
@@ -108,7 +108,7 @@ void Render::RenderSceneDS()
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
 		   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
-		   RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
+		   RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,BACK,SUB);
 #if			MVDECT
 		   if(mv_detect.CanUseMD(SUB))
 					{
@@ -125,7 +125,7 @@ void Render::RenderSceneDS()
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_LEFT_MODE,SUB);
 		  RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
+			RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,LEFT,SUB);
 #if			MVDECT
 			if(mv_detect.CanUseMD(SUB))
 					{

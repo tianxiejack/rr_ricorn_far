@@ -146,8 +146,8 @@ extern Point3f bar[CAM_COUNT*2];
 #define SMALL_PANO_VIEW_SCALE   1.45/3.0
 
 #define UP_DOWN_SCALE    1.4
-#define TEL_XSCALE 1//1.0/8.0*7.38
-#define TEL_XTRAS    0//3.182
+#define TEL_XSCALE 13.6/18.4//1.0/8.0*7.38
+#define TEL_XTRAS   12.83//3.182
 #define TEL_YSCALE 1/5.8*10//5.62
 #define TEL_YTRAS  1/2.7*2.8
 //vector<cv::Point2f> LeftpixleList,RightpixleList;
@@ -673,7 +673,7 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
 		fboMode(FBO_ALL_VIEW_MODE),
-		displayMode(ALL_VIEW_MODE),
+		displayMode(TELESCOPE_FRONT_MODE),
 		SecondDisplayMode(SECOND_ALL_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -983,7 +983,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		GeneratePanoView();
 
 		GenerateTriangleView();
-		GeneratePanoTelView();
+		GeneratePanoTelView(MAIN);
+		GeneratePanoTelView(SUB);
 		GenerateTrack();
 
 		GenerateLeftPanoView();
@@ -4041,13 +4042,17 @@ void Render::RenderTrackForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 }
 }
 
-void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
+void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int direction,int mainOrsub)
 {
 	int petal1[CAM_COUNT];
 	memset(petal1,-1,sizeof(petal1));
 	int petal2[CAM_COUNT];
 	memset(petal2,-1,sizeof(petal2));
 	int petaltest[12]={0,1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+	int petal3[CAM_COUNT];
+		memset(petal3,-1,sizeof(petal3));
+		int petal4[CAM_COUNT];
+		memset(petal4,-1,sizeof(petal4));
 	glViewport(x,y,w,h);
 	m_env.GetviewFrustum()->SetPerspective(20.6f, float(w) / float(h), 1.0f, 100.0f);
 	m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
@@ -4058,55 +4063,60 @@ void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 {
 		M3DMatrix44f mCamera;
 		repositioncamera();
-			PanoTelViewCameraFrame.GetCameraMatrix(mCamera);
+			PanoTelViewCameraFrame[mainOrsub].GetCameraMatrix(mCamera);
 		m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 }
-if(displayMode==TELESCOPE_LEFT_MODE
-		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+if(direction==LEFT)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(37.68+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Translate(37.68+TEL_XTRAS+0.5,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_BACK_MODE
-		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
+else if(direction==BACK)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(47.1+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Translate(47.1+13+0.3,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_FRONT_MODE
-		||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
+else if(direction==FRONT)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	static bool once=true;
-	m_env.GetmodelViewMatrix()->Translate(28.26+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Translate(28.26+13.34,0.0,-2.7*TEL_YTRAS);
 }
-else if(displayMode==TELESCOPE_RIGHT_MODE
-		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
+else if(direction==RIGHT)
 {
 	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(18.838+TEL_XTRAS,0.0,-2.7*TEL_YTRAS);
+	m_env.GetmodelViewMatrix()->Translate(15+17+0.2,0.0,-2.7*TEL_YTRAS);
 }
 			float Angle=RulerAngle;
-			if(displayMode==TELESCOPE_FRONT_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
+			if(direction==FRONT)
 			{
 				 i=0;
+				 for(int j=1;j<=3;j++)
+					 petal3[j]=j;
 			}
-			else if(displayMode==TELESCOPE_RIGHT_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
+			else if(direction==RIGHT)
 			{
 				i=3;
+					 petal3[1]=1;
+					 petal3[0]=0;
+					 petal3[9]=9;
+					 petal4[9]=9;
+					 petal4[8]=8;
 			}
-			else if(displayMode==TELESCOPE_BACK_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
+			else if(direction==BACK)
 			{
-				i=6;
+				 petal3[8]=8;
+				 petal3[7]=7;
+				 petal3[6]=6;
 			}
-			else if(displayMode==TELESCOPE_LEFT_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			else if(direction==LEFT)
 			{
 				i=9;
+				 petal3[6]=6;
+				 petal3[5]=5;
+				 petal3[4]=4;
+				 petal3[3]=3;
 			}
+			/*
 			int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
 			if((Angle<15.0)||(Angle>=345.0))
 			{
@@ -4189,11 +4199,11 @@ else if(displayMode==TELESCOPE_RIGHT_MODE
 					petal2[Cam_num[Telscenter_cam[mainOrsub]]]=Cam_num[Telscenter_cam[mainOrsub]];
 					petal2[Cam_num[Telscenter_cam[mainOrsub]]+1]=Cam_num[Telscenter_cam[mainOrsub]]+1;
 					petal2[Cam_num[Telscenter_cam[mainOrsub]]-1]=Cam_num[Telscenter_cam[mainOrsub]]-1;
-				}
-#if 1
+				}*/
+#if 0
 				if(RulerAngle<=270 ||RulerAngle>300)
 				{
-					DrawPanel(m_env,true,petal2,mainOrsub);
+					DrawPanel(m_env,false,petal2,mainOrsub);
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
 					DrawPanel(m_env,false,petal1,mainOrsub);
@@ -4201,7 +4211,7 @@ else if(displayMode==TELESCOPE_RIGHT_MODE
 				}
 				else if(RulerAngle<=300 && RulerAngle>270)
 				{
-					DrawPanel(m_env,true,petal1,mainOrsub);
+					DrawPanel(m_env,false,petal1,mainOrsub);
 					m_env.GetmodelViewMatrix()->PushMatrix();
 					m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 					DrawPanel(m_env,false,petal1,mainOrsub);
@@ -4209,9 +4219,9 @@ else if(displayMode==TELESCOPE_RIGHT_MODE
 				}
 
 #else
-				m_env.GetmodelViewMatrix()->PushMatrix();
+	/*			m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,true,NULL);
+				DrawPanel(m_env,false,NULL);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
@@ -4220,6 +4230,11 @@ else if(displayMode==TELESCOPE_RIGHT_MODE
 				m_env.GetmodelViewMatrix()->PushMatrix();
 				m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
 				DrawPanel(m_env,false,NULL);
+				m_env.GetmodelViewMatrix()->PopMatrix();*/
+				DrawPanel(m_env,false,petal3,mainOrsub);
+				m_env.GetmodelViewMatrix()->PushMatrix();
+				m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);
+				DrawPanel(m_env,false,petal4,mainOrsub);
 				m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
 
@@ -6548,7 +6563,7 @@ if(setpriorityOnce)
 		tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,FRONT);
 #if			MVDECT
 			if(mv_detect.CanUseMD(MAIN))
 			{
@@ -6566,7 +6581,7 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,RIGHT);
 #if MVDECT
 				if(mv_detect.CanUseMD(MAIN))
 						{
@@ -6584,7 +6599,7 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,BACK);
 #if MVDECT
 			   if(mv_detect.CanUseMD(MAIN))
 						{
@@ -6602,7 +6617,7 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0);
+			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,LEFT);
 #if MVDECT
 				if(mv_detect.CanUseMD(MAIN))
 						{
@@ -7331,21 +7346,21 @@ void Render::GenerateTrack()
 	TrackCameraFrame.SetOrigin(camTrackView);
 }
 
-void Render::GeneratePanoTelView()
+void Render::GeneratePanoTelView(int mainOrsub)
 {
 //	float inidelta=(p_LineofRuler->Load())/360.0*(render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x());
-	static M3DVector3f camPanoTelView;
-	static bool once =true;
-	if(once){
-		once = false;
-		PanoTelViewCameraFrame.RotateLocalX(-PI/2);
-		PanoTelViewCameraFrame.MoveForward(-39.0f);
-		PanoTelViewCameraFrame.MoveForward(-25.0f);
-		PanoTelViewCameraFrame.MoveUp((BowlLoader.Getextent_pos_z()-BowlLoader.Getextent_neg_z())/2);
-		PanoTelViewCameraFrame.MoveRight(0.0f);
-		PanoTelViewCameraFrame.GetOrigin(camPanoTelView);
+	static M3DVector3f camPanoTelView[2];
+	static bool once[2] ={true,true};
+	if(once[mainOrsub]){
+		once[mainOrsub] = false;
+		PanoTelViewCameraFrame[mainOrsub].RotateLocalX(-PI/2);
+		PanoTelViewCameraFrame[mainOrsub].MoveForward(-39.0f);
+		PanoTelViewCameraFrame[mainOrsub].MoveForward(-25.0f);
+		PanoTelViewCameraFrame[mainOrsub].MoveUp((BowlLoader.Getextent_pos_z()-BowlLoader.Getextent_neg_z())/2);
+		PanoTelViewCameraFrame[mainOrsub].MoveRight(0.0f);
+		PanoTelViewCameraFrame[mainOrsub].GetOrigin(camPanoTelView[mainOrsub]);
 	}
-	PanoTelViewCameraFrame.SetOrigin(camPanoTelView);
+	PanoTelViewCameraFrame[mainOrsub].SetOrigin(camPanoTelView[mainOrsub]);
 }
 
 void Render::GeneratePanoView()
@@ -10935,8 +10950,11 @@ void Render::repositioncamera()
 		PanoViewCameraFrame.MoveRight(4.0*last_pano_dis);
 		PanoViewCameraFrame.MoveRight(-4.0*pano_dis);
 
-		PanoTelViewCameraFrame.MoveRight(8.0*last_tel_pano_dis);
-			PanoTelViewCameraFrame.MoveRight(-8.0*tel_pano_dis);
+		for(int i=0;i<2;i++)
+		{
+		PanoTelViewCameraFrame[i].MoveRight(8.0*last_tel_pano_dis);
+			PanoTelViewCameraFrame[i].MoveRight(-8.0*tel_pano_dis);
+		}
 		last_tel_pano_dis=tel_pano_dis;
 
 		LeftSmallPanoViewCameraFrame.MoveRight(4.0*last_move_dis);
