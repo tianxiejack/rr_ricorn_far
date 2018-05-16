@@ -544,6 +544,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					 printf("now_pic_format=0,0 dev is not used!\n");
 					 assert(false);
 				 }
+				 static int mvDectCount=0;
 					int chid[2]={-1,-1};
 					int nowGrayidx=-1;
 					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
@@ -590,10 +591,27 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 					//		if(mv_detect.CanUseMD())
 						{
+			//				static timeval lasttime;
+				//			timeval nowtime;
+			//				static int count=0;
+			//				gettimeofday(&nowtime,0);
+				//			if(count==10)
+			//				{
+				//				count=0;
+			//					printf("%f ms\n",(nowtime.tv_sec-lasttime.tv_sec)*1000.0+(nowtime.tv_usec-lasttime.tv_usec)/1000.0);
+				//				lasttime=nowtime;
+			//				}
+			//				count++;
+
 						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
-							mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
-
+							if(mvDectCount<1)
+							{
+								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+							}
+							mvDectCount++;
+							if(mvDectCount==3)
+								mvDectCount=0;
 							#endif
 						}
 						}

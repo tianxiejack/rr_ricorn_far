@@ -4361,46 +4361,64 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		{
 			Angle-=360.0;
 		}
-			int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
-		if((Angle<15.0)||(Angle>=345.0))
+			int Cam_num[10]={2,1,0,9,8,7,6,5,4,3};
+
+//		if((Angle<18.0)||(Angle>=342.0))
+			if((Angle>=342.0-18))
 		{
 			center_cam[mainOrsub]=0;
 		}
 		else
 		{
-			temp_math[mainOrsub]=(Angle-15.0)/30.0;
+			temp_math[mainOrsub]=(Angle)/36.0;
 			center_cam[mainOrsub]=(int)temp_math[mainOrsub];
 			center_cam[mainOrsub]++;
 		}
-			if(Cam_num[center_cam[mainOrsub]]==11)
-			{
-				petal1[0]=0;
-				petal1[11]=11;
-				petal1[10]=10;
-				petal2[0]=0;
-				petal2[11]=11;
-				petal2[10]=10;
-			}
-			else if(Cam_num[center_cam[mainOrsub]]==0)
-			{
-				petal1[0]=0;
-				petal1[11]=11;
-				petal1[1]=1;
+		petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
+		petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
 
-				petal2[0]=0;
-				petal2[11]=11;
-				petal2[1]=1;
-			}
-			else
-			{
-				petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
-				petal1[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
-				petal1[Cam_num[center_cam[mainOrsub]]-1]=Cam_num[center_cam[mainOrsub]]-1;
+		if(Cam_num[center_cam[mainOrsub]]==9)
+		{
+			petal3[0]=0;
+			petal4[9]=9;
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			DrawPanel(m_env,false,petal4,mainOrsub);
+			m_env.GetmodelViewMatrix()->PopMatrix();
 
-				petal2[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
-				petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
-				petal2[Cam_num[center_cam[mainOrsub]]-1]=Cam_num[center_cam[mainOrsub]]-1;
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+			DrawPanel(m_env,false,petal3,mainOrsub);
+			DrawPanel(m_env,false,petal4,mainOrsub);
+			m_env.GetmodelViewMatrix()->PopMatrix();
+		}
+		else if (Cam_num[center_cam[mainOrsub]]==4)
+		{
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			if(panocamonforesight[mainOrsub].GetFront())
+			{
+				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 			}
+				DrawPanel(m_env,false,petal1,mainOrsub);
+				DrawPanel(m_env,false,petal2,mainOrsub);
+
+			m_env.GetmodelViewMatrix()->PopMatrix();
+		}
+		else if(Cam_num[center_cam[mainOrsub]]>=0&&Cam_num[center_cam[mainOrsub]]<4)
+		{
+			m_env.GetmodelViewMatrix()->PushMatrix();
+			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+			DrawPanel(m_env,false,petal1,mainOrsub);
+			DrawPanel(m_env,false,petal2,mainOrsub);
+			m_env.GetmodelViewMatrix()->PopMatrix();
+		}
+		else
+		{
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		DrawPanel(m_env,false,petal1,mainOrsub);
+		DrawPanel(m_env,false,petal2,mainOrsub);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+		}
+
 
 #if 0
 	if(RulerAngle<160.0 ||RulerAngle>=270.0)
@@ -4427,7 +4445,6 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 					DrawPanel(false,petal1);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 			}
-
 		}
 		else// if(p_LineofRuler->Load()<270.0)
 		{
@@ -4437,77 +4454,6 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 			DrawPanel(false,petal1);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 		}
-
-#else
-	//for(int i=4;i<10;i++)
-//	petal4[i]=i;
-//	for(int i=0;i<6;i++)
-//		petal3[i]=i;
-	//	petal3[9]=9;
-	petal3[2]=2;
-	petal3[3]=3;
-	m_env.GetmodelViewMatrix()->PushMatrix();
-//	DrawPanel(m_env,false,petal4,mainOrsub);
-	m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-	DrawPanel(m_env,false,petal3,mainOrsub);
-	m_env.GetmodelViewMatrix()->PopMatrix();
-
-
-#if 0
-	if(mainOrsub==MAIN)
-	{
-		for(int i=4;i<10;i++)
-		petal4[i]=i;
-		for(int i=0;i<6;i++)
-			petal3[i]=i;
-			petal3[9]=9;
-		m_env.GetmodelViewMatrix()->PushMatrix();
-		DrawPanel(m_env,false,petal4,mainOrsub);
-		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-		DrawPanel(m_env,false,petal3,mainOrsub);
-		m_env.GetmodelViewMatrix()->PopMatrix();
-		/*
-float nowposx=foresightPos[MAIN].GetAngle()[0];//todo
-//printf("nowposx=%f\n",nowposx);
-int array[10]={2,1,0,9,8,7,6,5,4,3};
-m_cam_pos=(nowposx)/(360/10);
-if(m_cam_pos==10)
-	m_cam_pos=0;
-m_cam_pos=array[m_cam_pos];
-
-petal3[m_cam_pos]=m_cam_pos;
-petal3[(m_cam_pos+1)%CAM_COUNT]=(m_cam_pos+1)%CAM_COUNT;
-				m_env.GetmodelViewMatrix()->PushMatrix();
-				m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-				DrawPanel(m_env,false,petal3,mainOrsub);
-			//	DrawPanel(m_env,false,petal3,mainOrsub);
-				m_env.GetmodelViewMatrix()->PopMatrix();*/
-	}
-	else if(mainOrsub==SUB)
-	{
-		for(int i=4;i<10;i++)
-				petal4[i]=i;
-				for(int i=0;i<6;i++)
-					petal3[i]=i;
-					petal3[9]=9;
-							m_env.GetmodelViewMatrix()->PushMatrix();
-							DrawPanel(m_env,false,petal4,mainOrsub);
-							m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-							DrawPanel(m_env,false,petal3,mainOrsub);
-							m_env.GetmodelViewMatrix()->PopMatrix();
-		/*
-		petal3[3]=3;
-		petal3[4]=4;
-		petal3[5]=5;
-
-		m_env.GetmodelViewMatrix()->PushMatrix();
-		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
-		DrawPanel(m_env,false,NULL,mainOrsub);
-		//DrawPanel(m_env,false,petal3,mainOrsub);
-		m_env.GetmodelViewMatrix()->PopMatrix();*/
-	}
-#endif
-#if 0
 				m_env.GetmodelViewMatrix()->PushMatrix();
 							m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0); //1
 							DrawPanel(m_env,false,NULL,mainOrsub);
@@ -4517,15 +4463,7 @@ petal3[(m_cam_pos+1)%CAM_COUNT]=(m_cam_pos+1)%CAM_COUNT;
 										DrawPanel(m_env,false,NULL,mainOrsub);
 										m_env.GetmodelViewMatrix()->PopMatrix();
 #endif
-		//		m_env.GetmodelViewMatrix()->PushMatrix();
-	//			m_env.GetmodelViewMatrix()->Translate(PanoLen,0.0,0.0);//2
-	//			DrawPanel(m_env,false,petal3,mainOrsub);
-	//			m_env.GetmodelViewMatrix()->PopMatrix();
-	//			m_env.GetmodelViewMatrix()->PushMatrix();
-	//			m_env.GetmodelViewMatrix()->Translate(0.0,0.0,0.0);//3
-	//			DrawPanel(m_env,false,petal3,mainOrsub);
-	//			m_env.GetmodelViewMatrix()->PopMatrix();
-#endif
+
 
 		{
 			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
@@ -8530,7 +8468,7 @@ GLEnv & env=env1;
 				else	if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 													||displayMode==PREVIEW_MODE)
 				{
-							p_ForeSightFacade[MAIN]->MoveLeft(-PanoLen*100.0);
+//							p_ForeSightFacade[MAIN]->MoveLeft(-PanoLen*100.0);
 					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
 				//			printf("POS_angle=%f\n",pano_pos2angle);
 				}
@@ -8604,8 +8542,8 @@ GLEnv & env=env1;
 													||displayMode==PREVIEW_MODE
 													)
 							{
-									p_ForeSightFacade[MAIN]->MoveRight(PanoLen*100.0);
-									pano_pos2angle=p_ForeSightFacade[MAIN]->GetForeSightPosX()/PanoLen*360.0;
+		//							p_ForeSightFacade[MAIN]->MoveRight(PanoLen*100.0);
+		//							pano_pos2angle=p_ForeSightFacade[MAIN]->GetForeSightPosX()/PanoLen*360.0;
 
 									//			printf("POS_angle=%f\n",pano_pos2angle);
 							}
