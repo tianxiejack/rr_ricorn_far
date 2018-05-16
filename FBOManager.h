@@ -33,7 +33,7 @@ class FBOManager
 	bool Init();
 	void PboDraw(InterfacepboDrawCB & icb);
 	void SetDrawBehaviour(p_InterFaceDrawBehaviour DrawBehaviour);
-	void DrawTex2Front(int mainOrsub=MAIN);
+	void DrawTex2Front(int mainOrsub,int w,int h);
 	bool IsFboUsed()
 	{
 		return fboUsed;

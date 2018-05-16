@@ -10,7 +10,7 @@ void PBO_FBO_Facade::DrawAndGet()
 	m_FBOMgr.PboDraw(m_PBORcr);
 }
 
-void PBO_FBO_Facade::Render2Front(int mainOrsub)
+void PBO_FBO_Facade::Render2Front(int mainOrsub,int w,int h)
 {
-	m_FBOMgr.DrawTex2Front(mainOrsub);
+	m_FBOMgr.DrawTex2Front(mainOrsub,w,h);
 }

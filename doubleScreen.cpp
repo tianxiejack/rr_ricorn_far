@@ -54,87 +54,87 @@ void Render::RenderSceneDS()
 		}
 #endif
 		tIdle.threadIdle(SUB_CN);
-		env.Getp_FboPboFacade()->Render2Front(SUB);
-		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,SUB);
-		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,SUB);
+		env.Getp_FboPboFacade()->Render2Front(SUB,g_subwindowWidth,g_subwindowHeight);
+		RenderRightForeSightView(env,0,g_subwindowHeight*538.0/768.0,g_subwindowWidth, g_subwindowHeight*116.0/768.0,SUB);
+		RenderLeftForeSightView(env,0,g_subwindowHeight*655.0/768.0,g_subwindowWidth, g_subwindowHeight*115.0/768.0,SUB);
 
 		glScissor(0,0,1024,538);
-			//glScissor(g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024,g_windowHeight*537);
+			//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
 #endif
-	//	RenderOnetimeView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*944.0/1920.0, g_windowHeight*537.0/1080,SUB);
-		RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,SUB);
+	//	RenderOnetimeView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*944.0/1920.0, g_subwindowHeight*537.0/1080,SUB);
+		RenderOnetimeView(env,0,0,g_subwindowWidth*944.0/1024.0, g_subwindowHeight*537.0/768.0,SUB);
 
 	break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
-	//	RenderChosenView(env,g_windowWidth*448.0/1920.0,g_windowHeight*156.0/1080.0,g_windowWidth*1024.0/1920.0, g_windowHeight*768.0/1920.0,true);
-		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,SUB,true);
+	//	RenderChosenView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024.0/1920.0, g_subwindowHeight*768.0/1920.0,true);
+		RenderChosenView(env,0,0,g_subwindowWidth, g_subwindowHeight,SUB,true);
 		break;
 	case 	SECOND_TELESCOPE_FRONT_MODE:
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_FRONT_MODE,SUB);
-			    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+			    RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
 #if			MVDECT
 				if(mv_detect.CanUseMD(SUB))
 				{
 					mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0,0,SUB);
-					TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1,1,SUB);
+					TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0,0,SUB);
+					TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1,1,SUB);
 				}
 #endif
-				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
 		tIdle.threadIdle(SUB_CN);
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
-			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
+				RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
 #if			MVDECT
 				if(mv_detect.CanUseMD(SUB))
 						{
 							mv_detect.SetoutRect();
-							TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-							TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+							TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0);
+							TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1);
 						}
 #endif
-				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 	break;
 	case	SECOND_TELESCOPE_BACK_MODE:
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
-		   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-		   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+		   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
+		   RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
 #if			MVDECT
 		   if(mv_detect.CanUseMD(SUB))
 					{
 						mv_detect.SetoutRect();
-						TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-						TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0);
+						TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1);
 					}
 #endif
-			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 
 
 	break;
 	case	SECOND_TELESCOPE_LEFT_MODE:
 		tIdle.threadIdle(SUB_CN);
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_LEFT_MODE,SUB);
-		  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,SUB);
+		  RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
+			RenderPanoTelView(env,0,g_subwindowHeight*478.0/1080,g_subwindowWidth, g_subwindowHeight*592.0/1080.0,SUB);
 #if			MVDECT
 			if(mv_detect.CanUseMD(SUB))
 					{
 						mv_detect.SetoutRect();
-						TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-						TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+						TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0);
+						TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1);
 					}
 #endif
-					RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+					RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 	break;
 	default :
 		break;
@@ -542,7 +542,7 @@ void Render::ReSizeGLSceneDS(int Width, int Height)
 {
 	if (Height==0)	/* Prevent A Divide By Zero If The Window Is Too Small*/
 		Height=1;
-	ChangeSize(Width, Height);
+	ChangeSizeDS(Width, Height);
 	comSecondSC.setUpdate(GL_YES);
 }
 void Render::keyPressedDS(GLEnv &m_env,unsigned char key, int x, int y)

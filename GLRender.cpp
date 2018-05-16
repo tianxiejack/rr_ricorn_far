@@ -666,7 +666,7 @@ void Render::readPixleFile(const char* file, int index)
 }
 
 //-------------------------GL-related function---------------
-Render::Render():g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
+Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_windowHeight(0),isFullscreen(FALSE),
 		g_nonFullwindowWidth(0),g_nonFullwindowHeight(0),bRotTimerStart(FALSE),
 		bControlViewCamera(FALSE),pVehicle(NULL),
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
@@ -1271,6 +1271,16 @@ void Render::ChangeSize(int w, int h)
 		g_nonFullwindowWidth = w;
 		g_nonFullwindowHeight = h;
 	}
+}
+void Render::ChangeSizeDS(int w, int h)
+{
+	//pVehicle->ChangeSize(w, h);
+	g_subwindowWidth = w;
+	g_subwindowHeight = h;
+	//if(!isFullscreen){
+//		g_nonFullwindowWidth = w;
+	//	g_nonFullwindowHeight = h;
+//	}
 }
 
 /* The function called when our window is resized  */
@@ -6497,7 +6507,7 @@ if(setpriorityOnce)
 		}
 #endif
 		tIdle.threadIdle(MAIN_CN);
-		env.Getp_FboPboFacade()->Render2Front();
+		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
 		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
 
@@ -6506,7 +6516,7 @@ if(setpriorityOnce)
 			break;
 	}
 	case TRIM_MODE:
-		env.Getp_FboPboFacade()->Render2Front();
+		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 		break;
 	case CHOSEN_VIEW_MODE:
 		tIdle.threadRun(MAIN_CN);

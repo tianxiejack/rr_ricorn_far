@@ -507,12 +507,12 @@ void FBOManager::initscreenQuad(GLuint imageWidth, GLuint imageHeight)
 	screenQuad.Vertex3f(right, top, 0.0f);
 	screenQuad.End();
 }
-void FBOManager::DrawTex2Front(int mainOrsub)
+void FBOManager::DrawTex2Front(int mainOrsub,int w,int h)
 {
 	GLEnv &env=env1;
-	glViewport(0, 0, SCREEN_W, SCREEN_H);
+	glViewport(0, 0, w, h);
 			glClear(GL_DEPTH_BUFFER_BIT);
-			env.GetviewFrustum()->SetPerspective(90.0f, float(SCREEN_W) / float(SCREEN_H), 1.0f, 4000.0f);
+			env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
 			env.GetprojectionMatrix()->LoadMatrix(env.GetviewFrustum()->GetProjectionMatrix());
 
 			env.GetmodelViewMatrix()->PushMatrix();
@@ -523,13 +523,13 @@ void FBOManager::DrawTex2Front(int mainOrsub)
 	//		render.getVGACameraFrame()->GetCameraMatrix(camera);
 			env.GetmodelViewMatrix()->PushMatrix(*(	render.getRender2FrontCameraFrame()));
 			env.GetmodelViewMatrix()->PopMatrix();
-			env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -SCREEN_H);//-h
-			env.GetmodelViewMatrix()->Scale(SCREEN_W, SCREEN_H, 1.0f);
+			env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
+			env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 			env.GetmodelViewMatrix()->Rotate(180.0f,0,0,1);////add render2front
 			env.GetmodelViewMatrix()->Rotate(180.0f,0,1,0);//
 
 			    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-				glViewport(0, 0, SCREEN_W, SCREEN_H);
+				glViewport(0, 0, w, h);
 
 				env.GetmodelViewMatrix()->PushMatrix();
 				env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);

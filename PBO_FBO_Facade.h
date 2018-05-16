@@ -10,7 +10,7 @@ public:
 	PBO_FBO_Facade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr);
 	~PBO_FBO_Facade(){};
 	void DrawAndGet();
-	void Render2Front(int mainOrsub=MAIN);
+	void Render2Front(int mainOrsub,int w,int h);
 	bool IsFboUsed(){return m_FBOMgr.IsFboUsed();};
 private:
 	FBOManager  &m_FBOMgr;

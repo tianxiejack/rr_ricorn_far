@@ -530,6 +530,7 @@ private:
 	void GetFPSDS();
 	void SetView(int Width, int Height);
 	void ChangeSize(int w, int h);
+	void ChangeSizeDS(int w, int h);
 	void calcCommonZone();
 	void InitBowl();
 	void InitBowlDS();
@@ -750,6 +751,10 @@ private:
 	STLASCIILoader BowlLoader;
 	STLASCIILoader PanelLoader;
 	GLMmodel *VehicleLoader;
+
+	int g_subwindowWidth ;
+	int  g_subwindowHeight ;
+
 	int g_windowWidth ;
 	int g_windowHeight ;
 	int g_nonFullwindowWidth;
