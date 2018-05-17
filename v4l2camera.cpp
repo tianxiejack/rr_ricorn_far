@@ -20,10 +20,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/core/ocl.hpp>
+#include<opencv2/opencv.hpp>
 #include "StlGlDefines.h"
 #include "thread.h"
 #include <osa_buf.h>
@@ -36,7 +33,6 @@
 #endif
 #define MEMCPY memcpy
 using namespace std;
-using namespace cv::ocl;
 static int once_buffer;
 int bufId[16]={0};
 extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);

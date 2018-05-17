@@ -1,14 +1,14 @@
 #include "buffer.h"
-#include "timing.h"
-#include "v4l2camera.h"
 #include "osa_que.h"
-#include <opencv2/imgproc.hpp>
 #include<sys/time.h>
 #if !NO_ARM_NEON
 #include <arm_neon.h>
 #endif
+#include<iostream>
+#include<assert.h>
+#include "StlGlDefines.h"
 using namespace std;
-using namespace cv;
+//using namespace cv;
 typedef unsigned char byte;
 
 Alg_Obj * queue_dis=NULL;
@@ -33,7 +33,7 @@ void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight,
 //	cvReleaseImage(&pic);
 //}
 char dev_name[16];
-
+#if !NO_ARM_NEON
 inline void deInterlace(byte * pCurLine, byte * pTopLine, byte * pBotLine, byte * pDstLine)
 {
     Mat img_tmp(1, IMAGE_WIDTH / 2, CV_32FC2, Scalar(0, 0));
@@ -76,7 +76,7 @@ inline void deInterLace2(byte* src, int width, int height, int stride)
 		img_tmp.convertTo(img_mid, CV_8UC2, 1/3.0);
 	}
 }
-
+#endif
 bool doValidate(unsigned char * pSrc, unsigned char * pDst, int i, int j){
 	if(pSrc[i]!=pDst[j]){
 	//	cout<<"~~Src["<<i<<"]("<<(int)pSrc[i]<<") != dst["<<j<<"]("<<(int)pDst[j]<<")"<<endl;
@@ -164,7 +164,8 @@ void expandYUVPAL(const unsigned char* lpYUVFrame, unsigned char* pRGB, int widt
 
 static void YUV2RGB(unsigned char *lpYUV, int width, int height)
 {
-	int i, j;
+	assert(false);
+/*	int i, j;
 	unsigned char *lpSrc, *lpDst;
 	int Y, U, V, R, G, B;
 	Mat RGBData(height, width, CV_8UC3);
@@ -190,6 +191,7 @@ static void YUV2RGB(unsigned char *lpYUV, int width, int height)
 		}
 	}
 	imwrite("RGB_1.bmp",RGBData);
+*/
 }
 
 void yuv2UYVx(const unsigned char *pYuvBuf,unsigned char* ptr, int width,int height,int chId)

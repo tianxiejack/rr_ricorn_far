@@ -9,7 +9,7 @@
 #define V4L2CAMERA_H_
 
 #include <sys/types.h>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
 #include "Camera.h"
 #include "timing.h"
 

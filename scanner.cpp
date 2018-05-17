@@ -1,9 +1,8 @@
 #include <opencv/cv.hpp>
-#include <opencv2/core/core.hpp>
+#include<opencv2/opencv.hpp>
 #include <unistd.h>
 #include <string.h>
 #include "main.h"
-#include "QRcode.h"
 #include "GLRender.h"
 #include "scanner.h"
 #include"GLEnv.h"

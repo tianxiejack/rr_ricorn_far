@@ -1,6 +1,5 @@
 #ifndef MVDETECT_HPP_
 #define MVDETECT_HPP_
-#include "opencv2/core/types.hpp"
 #include"StlGlDefines.h"
 #include<vector>
 using namespace std;

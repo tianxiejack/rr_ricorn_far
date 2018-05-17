@@ -14,7 +14,8 @@
 #include <GL/glu.h>  // GLU support library.
 #include <GL/glut.h> // GLUT support library.
 
-
+#include<opencv2/opencv.hpp>
+#include "cv_version.h"
 #include <stdio.h>
 #include <time.h>       /* For our FPS */
 #include <string.h>    /* for strcpy and relatives */
@@ -23,8 +24,6 @@
 #include "StlGlDefines.h"
 #include "ShaderParamArrays.h"
 #include <math.h>
-#include <opencv2/calib3d/calib3d.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <GLBatch.h>
 #include <GLShaderManager.h>
 #include <GLMatrixStack.h>

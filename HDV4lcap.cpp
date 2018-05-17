@@ -12,10 +12,7 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 #include <linux/videodev2.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/core/ocl.hpp>
+#include<opencv2/opencv.hpp>
 #include "StlGlDefines.h"
 #include "thread.h"
 #include <osa_buf.h>
@@ -41,7 +38,6 @@ extern Alg_Obj * queue_main_sub;
 #define INPUT_IMAGE_HEIGHT 1080
 
 using namespace std;
-using namespace cv::ocl;
 static bool Once_buffer=true;
 int m_bufId[QUE_CHID_COUNT]={0};
 extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);

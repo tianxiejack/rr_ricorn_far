@@ -9,13 +9,11 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/videoio.hpp>
+#include<opencv2/opencv.hpp>
 #include <GL/gl.h>
 #include <pthread.h>
 #include "StlGlDefines.h"
 #include <memory>
-#include "opencv2/highgui.hpp"
 #include <iostream>
 
 using namespace std;

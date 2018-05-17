@@ -1,10 +1,7 @@
-
+#include<opencv2/opencv.hpp>
 #include"MvDetect.hpp"
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/core/ocl.hpp>
 #include<string.h>
+#include<stdio.h>
 using namespace cv;
 Mat m4(1080,1920,CV_8UC4);
 Mat m6(1080,1920,CV_8UC4);

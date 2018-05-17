@@ -1,7 +1,7 @@
 #include "v4l2camera.h"
 #include <stdlib.h>
 #include <string.h>
-#include <opencv2/core/cvdef.h>
+#include<opencv2/opencv.hpp>
 #include <omp.h>
 #if  !NO_ARM_NEON
 #include <arm_neon.h>
