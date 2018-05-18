@@ -67,7 +67,7 @@ unsigned char * vga_data=NULL;
 #if MVDECT
  MvDetect mv_detect;
 #endif
-HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_USERPTR/*IO_METHOD_MMAP*/),imgwidth(width),
+HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_USERPTR),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
 force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 {
@@ -541,6 +541,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					 assert(false);
 				 }
 				 static int mvDectCount=0;
+				 static int mv_count=0;
 					int chid[2]={-1,-1};
 					int nowGrayidx=-1;
 					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
@@ -569,8 +570,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						//nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
 						chid[MAIN]=MAIN_1;
-						nowGrayidx=1;
-						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
+						nowGrayidx=mv_count;
+						transformed_src_main=&MVDECT_data_main[nowGrayidx];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -601,13 +602,16 @@ int HDv4l_cam::read_frame(int now_pic_format)
 
 						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
-							if(mvDectCount<1)
+					//		if(mvDectCount<1)
 							{
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 							}
-							mvDectCount++;
-							if(mvDectCount==3)
-								mvDectCount=0;
+							mv_count++;
+							if(mv_count==CAM_COUNT)
+								mv_count=0;
+					//		mvDectCount++;
+					//		if(mvDectCount==3)
+					//			mvDectCount=0;
 							#endif
 						}
 						}
@@ -622,8 +626,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
 #if MVDECT
-								if(mv_detect.MDisStart())
+							//	if(mv_detect.MDisStart())
 								{
+									mv_detect.SetoutRect(mv_count);
 									if(nowpicW==1280)
 									{
 										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);

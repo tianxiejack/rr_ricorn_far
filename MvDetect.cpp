@@ -58,7 +58,7 @@ void MvDetect::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 	yuyv2gray(inframe,grayFrame[idx]);
 
 	{
-		mvDetect((unsigned char) idx, grayFrame[idx], w, h,tempoutRect[idx].rects);
+		mvDetect((unsigned char) (idx+1), grayFrame[idx], w, h,tempoutRect[idx].rects);
 	}
 	//mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
 }
@@ -175,22 +175,32 @@ bool MvDetect::CanUseMD(int mainorsub)
 		return false;
 }
 
-void MvDetect::SetoutRect()
+void MvDetect::SetoutRect(int idx)
 {
+	outRect[idx].clear();
+	for(int j=0;j<6;j++)
+	{
+		if(tempoutRect[idx].rects[j].x>0)
+		{
+			outRect[idx].push_back(tempoutRect[idx].rects[j]);
+		}
+	}
+#if 0
 	for(int i=0;i<CAM_COUNT;i++)
 	{
 		outRect[i].clear();
 		for(int j=0;j<6;j++)
 		{
+
+//printf("CAM:%d,rect[%d] x=%d y=%d,w=%d h=%d\n",i,j,
+//tempoutRect[i].rects[j].x,tempoutRect[i].rects[j].y,tempoutRect[i].rects[j].width,tempoutRect[i].rects[j].height);
 			if(tempoutRect[i].rects[j].x>0)
 			{
-printf("CAM:%d,rect[%d] x=%d y=%d,w=%d h=%d\n",i,j,
-		tempoutRect[i].rects[j].x,tempoutRect[i].rects[j].y,tempoutRect[i].rects[j].width,tempoutRect[i].rects[j].height);
 				outRect[i].push_back(tempoutRect[i].rects[j]);
 			}
 		}
 	}
-
+#endif
 }
 void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {
