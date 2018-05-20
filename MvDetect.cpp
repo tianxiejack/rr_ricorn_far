@@ -3,7 +3,7 @@
 #include<string.h>
 #include<stdio.h>
 using namespace cv;
-Mat m4(1080,1920,CV_8UC4);
+Mat m4(1080,1280,CV_8UC4);
 Mat m6(1080,1920,CV_8UC4);
 #if  MVDECT
 MvDetect::MvDetect()
@@ -185,37 +185,17 @@ void MvDetect::SetoutRect(int idx)
 			outRect[idx].push_back(tempoutRect[idx].rects[j]);
 		}
 	}
-#if 0
-	for(int i=0;i<CAM_COUNT;i++)
-	{
-		outRect[i].clear();
-		for(int j=0;j<6;j++)
-		{
-
-//printf("CAM:%d,rect[%d] x=%d y=%d,w=%d h=%d\n",i,j,
-//tempoutRect[i].rects[j].x,tempoutRect[i].rects[j].y,tempoutRect[i].rects[j].width,tempoutRect[i].rects[j].height);
-			if(tempoutRect[i].rects[j].x>0)
-			{
-				outRect[i].push_back(tempoutRect[i].rects[j]);
-			}
-		}
-	}
-#endif
 }
 void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {
 	int cc=4;
 	std::vector<cv::Rect> tempRecv[CAM_COUNT];
-#if 1
 	if(capidx==MAIN_FPGA_SIX)
 	{
 		m6.data=src;
-		for(int i=0;i<6;i++)
-		{
+		for(int i=0;i<6;i++)                        //0  1  2
+		{															//3  4  5
 			tempRecv[i].assign(outRect[i].begin(),outRect[i].end());
-		}
-		for(int i=0;i<6;i++)
-		{
 			if(tempRecv[i].size()!=0)//容器dix不为空
 			{
 				for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
@@ -234,134 +214,23 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 	if(capidx==MAIN_FPGA_FOUR)
 		{
 		m4.data=src;
-		tempRecv[0].assign(outRect[6].begin(),outRect[6].end());
-		tempRecv[1].assign(outRect[7].begin(),outRect[7].end());
-		tempRecv[3].assign(outRect[8].begin(),outRect[8].end());
-		tempRecv[4].assign(outRect[9].begin(),outRect[9].end());
-			for(int i=0;i<6;i++)
-			{
-				if(i==2||i==5)
-				{
-					continue;
-				}
+			for(int i=6;i<10;i++)						//6   7
+			{															//8	 9
+				tempRecv[i].assign(outRect[i].begin(),outRect[i].end());
 				if(tempRecv[i].size()!=0)//容器dix不为空
 				{
 					for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
 					{
-						int startx=tempRecv[i][rectIdx].x/3+(640*(i%3));
-						int starty=tempRecv[i][rectIdx].y/2+(540*(i/3));
-						int w=tempRecv[i][rectIdx].width/3;
+						int startx=tempRecv[i][rectIdx].x/2+(640*((i-6)%2));
+						int starty=tempRecv[i][rectIdx].y/2+(540*((i-6)/2));
+						int w=tempRecv[i][rectIdx].width/2;
 						int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
 						int endx=startx+w;
 						int endy=starty+h;
-						cv::rectangle(m4,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),1);
+						cv::rectangle(m4,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),3);
 					}
 				}
 			}
 		}
-#else
-	if(capidx==MAIN_FPGA_SIX)
-	{
-		for(int i=0;i<6;i++)
-		{
-			tempRecv[i].assign(outRect[i].begin(),outRect[i].end());
-		}
-		for(int i=0;i<6;i++)//6个图
-		{
-			if(tempRecv[i].size()!=0)//容器dix不为空
-			{
-				for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
-				{
-					int x=tempRecv[i][rectIdx].x/3;
-					int y=tempRecv[i][rectIdx].y/2;
-					int w=tempRecv[i][rectIdx].width/3;
-					int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
-					for(int j=y*1920*1080*cc+(640*(i%3)+x)*cc;
-							j<y*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-							j++)
-					{
-						src[j]=0;
-					}//横第一行
-					for(int j=(y+h)*1920*1080*cc+(640*(i%3)+x)*cc;
-							j<(y+h)*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-							j++)
-					{
-						src[j]=0;
-					}//横第二行
-
-					for(int k=0;k<h-2;k++)
-					{
-						for(int j=(y+1)*1920*1080*cc+(640*(i%3)+x)*cc;
-								j<(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+1*cc;
-							j+=1920*1080*cc)
-						{
-							src[j]=0;
-						}//竖第一行，除去两行横的第一个像素
-					}
-					for(int k=0;k<h-2;k++)
-					{
-						for(int j=(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-								j<(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+1*cc;
-							j+=1920*1080*cc)
-						{
-							src[j]=0;
-						}//竖第二行，除去两行横的第一个像素
-					}
-				}
-			}
-		}
-	}
-	else if (capidx==MAIN_FPGA_FOUR)
-	{
-			tempRecv[0].assign(outRect[6].begin(),outRect[6].end());
-			tempRecv[1].assign(outRect[7].begin(),outRect[7].end());
-			tempRecv[3].assign(outRect[8].begin(),outRect[8].end());
-			tempRecv[4].assign(outRect[9].begin(),outRect[9].end());
-		for(int i=0;i<6;i++)//6个图
-				{
-					if(tempRecv[i].size()!=0)//容器dix不为空
-					{
-						for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
-						{
-							int x=tempRecv[i][rectIdx].x/3;
-							int y=tempRecv[i][rectIdx].y/2;
-							int w=tempRecv[i][rectIdx].width/3;
-							int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
-							for(int j=y*1920*1080*cc+(640*(i%3)+x)*cc;
-									j<y*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-									j++)
-							{
-								src[j]=0;
-							}//横第一行
-							for(int j=(y+h)*1920*1080*cc+(640*(i%3)+x)*cc;
-									j<(y+h)*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-									j++)
-							{
-								src[j]=0;
-							}//横第二行
-
-							for(int k=0;k<h-2;k++)
-							{
-								for(int j=(y+1)*1920*1080*cc+(640*(i%3)+x)*cc;
-										j<(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+1*cc;
-									j+=1920*1080*cc)
-								{
-									src[j]=0;
-								}//竖第一行，除去两行横的第一个像素
-							}
-							for(int k=0;k<h-2;k++)
-							{
-								for(int j=(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+w*cc;
-										j<(y+1)*1920*1080*cc+(640*(i%3)+x)*cc+1*cc;
-									j+=1920*1080*cc)
-								{
-									src[j]=0;
-								}//竖第二行，除去两行横的第一个像素
-							}
-						}
-					}
-				}
-	}
-#endif
 }
 
