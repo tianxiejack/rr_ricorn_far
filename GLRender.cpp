@@ -4599,7 +4599,8 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 			float pos2[20]={1.615,1.54,1.47,1.408,1.35,1.298,1.25,1.2055,1.16,1.12,1.08};
 			float pos3[5]={1.7,1.615,1.53,1.46,1.39};
 
-			if(fboMode==FBO_ALL_VIEW_559_MODE)
+			if(fboMode==FBO_ALL_VIEW_559_MODE
+					||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 			{
 				if(g_windowWidth==1024)
 				{
@@ -4788,7 +4789,10 @@ void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 				memset(petal1,-1,sizeof(petal1));
 				int petal2[CAM_COUNT];
 				memset(petal2,-1,sizeof(petal2));
-				int petaltest[12]={0,1,2,-1,-1,-1,-1,-1,-1,-1,-1,-1};
+				int petal3[CAM_COUNT];
+				memset(petal3,-1,sizeof(petal3));
+				int petal4[CAM_COUNT];
+				memset(petal4,-1,sizeof(petal4));
 		glViewport(x,y,w,h);
 		m_env.GetviewFrustum()->SetPerspective(40.0f, float(w) / float(h), 1.0f, 100.0f);
 		m_env.GetprojectionMatrix()->LoadMatrix(m_env.GetviewFrustum()->GetProjectionMatrix());
@@ -4800,16 +4804,17 @@ void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 			{
 				once = false;
 			}
-			if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
+#if 1
+	/*		if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 					||displayMode==ALL_VIEW_MODE
-					||SecondDisplayMode==SECOND_TOTAL_MODE_COUNT)
+					||SecondDisplayMode==SECOND_TOTAL_MODE_COUNT)*/
 			{
 				if(panocamonforesight[mainOrsub].GetFront())
 					panocamonforesight[mainOrsub].getTwoTimesCam().GetCameraMatrix(mCamera);
 				else
 					panocamonforesight[mainOrsub].getTwoTimesCam2().GetCameraMatrix(mCamera);
 				}
-			else if(displayMode==TELESCOPE_FRONT_MODE)
+		/*	else if(displayMode==TELESCOPE_FRONT_MODE)
 			{
 				telcamonforesight[mainOrsub].getTwoTimesCamTelF().GetCameraMatrix(mCamera);
 			}
@@ -4819,55 +4824,76 @@ void Render::RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 				telcamonforesight[mainOrsub].getTwoTimesCamTelB().GetCameraMatrix(mCamera);
 			else if(displayMode==TELESCOPE_LEFT_MODE)
 				telcamonforesight[mainOrsub].getTwoTimesCamTelL().GetCameraMatrix(mCamera);
-
+*/
+#endif
 			m_env.GetmodelViewMatrix()->PushMatrix(mCamera);
 	}
 
-if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
+//if(fboMode==FBO_ALL_VIEW_559_MODE)
 {
-	float FXangle=foresightPos[MAIN].GetAngle()[0];//todo
+	float FXangle=foresightPos[mainOrsub].GetAngle()[0];//todo
 	float Angle=FXangle+RulerAngle;
 		while(Angle>360)
 		{
 			Angle-=360.0;
 		}
-	//	printf("F:%f\tA:%f\n",FXangle,Angle);
-		int Cam_num[12]={3,2,1,0,11,10,9,8,7,6,5,4};
+		int Cam_num[10]={2,1,0,9,8,7,6,5,4,3};
+		if((Angle>=342.0-18))
+	{
+		center_cam[mainOrsub]=0;
+	}
+	else
+	{
+		temp_math[mainOrsub]=(Angle)/36.0;
+		center_cam[mainOrsub]=(int)temp_math[mainOrsub];
+		center_cam[mainOrsub]++;
+	}
+	petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
+	petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
 
-		if((Angle<15.0-8.0)||(Angle>=345.0-8.0))
+	if(Cam_num[center_cam[mainOrsub]]==9)
+	{
+		petal3[0]=0;
+		petal4[9]=9;
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		DrawPanel(m_env,false,petal4,mainOrsub);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+		DrawPanel(m_env,false,petal3,mainOrsub);
+		DrawPanel(m_env,false,petal4,mainOrsub);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+	}
+	else if (Cam_num[center_cam[mainOrsub]]==4)
+	{
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		if(panocamonforesight[mainOrsub].GetFront())
 		{
-			Twotimescenter_cam[mainOrsub]=0;
+			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
 		}
-		else
-		{
-			Twotimestemp_math[mainOrsub]=(Angle-15.0+8.0)/30.0;
-			Twotimescenter_cam[mainOrsub]=(int)Twotimestemp_math[mainOrsub];
-			Twotimescenter_cam[mainOrsub]++;
-		}
-		//printf("now Center_cam= %d\n",Cam_num[Twotimescenter_cam]);
-			if(Cam_num[Twotimescenter_cam[mainOrsub]]==11)
-			{
-				petal1[0]=0;
-				petal1[11]=11;
-				petal2[0]=0;
-				petal2[11]=11;
-			}
-			else if(Cam_num[Twotimescenter_cam[mainOrsub]]==0)
-			{
-				petal1[0]=0;
-				petal1[1]=1;
-				petal2[0]=0;
-				petal2[1]=1;
-			}
-			else
-			{
-				petal1[Cam_num[Twotimescenter_cam[mainOrsub]]]=Cam_num[Twotimescenter_cam[mainOrsub]];
-				petal1[Cam_num[Twotimescenter_cam[mainOrsub]]+1]=Cam_num[Twotimescenter_cam[mainOrsub]]+1;
-				petal2[Cam_num[Twotimescenter_cam[mainOrsub]]]=Cam_num[Twotimescenter_cam[mainOrsub]];
-				petal2[Cam_num[Twotimescenter_cam[mainOrsub]]+1]=Cam_num[Twotimescenter_cam[mainOrsub]]+1;
-			}
+			DrawPanel(m_env,false,petal1,mainOrsub);
+			DrawPanel(m_env,false,petal2,mainOrsub);
+
+		m_env.GetmodelViewMatrix()->PopMatrix();
+	}
+	else if(Cam_num[center_cam[mainOrsub]]>=0&&Cam_num[center_cam[mainOrsub]]<4)
+	{
+		m_env.GetmodelViewMatrix()->PushMatrix();
+		m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0); //1
+		DrawPanel(m_env,false,petal1,mainOrsub);
+		DrawPanel(m_env,false,petal2,mainOrsub);
+		m_env.GetmodelViewMatrix()->PopMatrix();
+	}
+	else
+	{
+	m_env.GetmodelViewMatrix()->PushMatrix();
+	DrawPanel(m_env,false,petal1,mainOrsub);
+	DrawPanel(m_env,false,petal2,mainOrsub);
+	m_env.GetmodelViewMatrix()->PopMatrix();
+	}
 }
-
+#if 0
 else if(displayMode==TELESCOPE_FRONT_MODE
 		||displayMode==TELESCOPE_RIGHT_MODE
 		||displayMode==TELESCOPE_BACK_MODE
@@ -5003,6 +5029,7 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 					DrawPanel(m_env,false,NULL,mainOrsub);
 					m_env.GetmodelViewMatrix()->PopMatrix();
 	}
+#endif
 		{
 			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
@@ -5233,9 +5260,11 @@ void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 				||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_559_MODE
 				||displayMode==ALL_VIEW_MODE
 				||displayMode==TRIM_MODE
-				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 		{
 			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5266,7 +5295,9 @@ else if(displayMode==TWO_HALF_PANO_VIEW_MODE)
 }
 else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
@@ -5400,7 +5431,9 @@ if(displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 }
 else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 		for(int i=0;i<5;i++)
@@ -5528,9 +5561,11 @@ void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLi
 				||displayMode==FRONT_BACK_PANO_ADD_SMALLMONITOR_VIEW_MODE
 				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_559_MODE
 				||displayMode==TRIM_MODE
 				||displayMode==ALL_VIEW_MODE
-				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 		{
 			LeftSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5538,7 +5573,9 @@ void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLi
 	}
  if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
@@ -5567,8 +5604,10 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 			||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 			||displayMode==ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_MODE
+			||fboMode==FBO_ALL_VIEW_559_MODE
 			||displayMode==TRIM_MODE
 			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+			||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 			)
 	{
 		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
@@ -5583,8 +5622,10 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||displayMode==ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_559_MODE
 				||displayMode==TRIM_MODE
-				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 		{
 			RightSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5593,7 +5634,9 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 
  if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
@@ -5629,8 +5672,10 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 			||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 			||displayMode==ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_MODE
+			||fboMode==FBO_ALL_VIEW_559_MODE
 			||displayMode==TRIM_MODE
 			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+			||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 			)
 	{
 		m_env.GetviewFrustum()->SetPerspective(40.0, float(w) / float(h), 1.0f, 100.0f);
@@ -5651,8 +5696,10 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 				displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||displayMode==ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
+				||fboMode==FBO_ALL_VIEW_559_MODE
 				||displayMode==TRIM_MODE
-				||SecondDisplayMode==SECOND_ALL_VIEW_MODE)
+				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 		{
 			RightSmallPanoViewCameraFrame.GetCameraMatrix(mCamera);
 		}
@@ -5671,7 +5718,9 @@ if(displayMode==FRONT_BACK_PANO_ADD_MONITOR_VIEW_MODE
 }
 else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
@@ -5688,7 +5737,9 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
  if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
+		||fboMode==FBO_ALL_VIEW_559_MODE
 		||displayMode==TRIM_MODE)
 {
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
@@ -5697,7 +5748,9 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
  if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_ALL_VIEW_MODE
+		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 	||fboMode==FBO_ALL_VIEW_MODE
+	||fboMode==FBO_ALL_VIEW_559_MODE
 	||displayMode==TRIM_MODE)
 {
 	for(int i=5;i<10;i++)
@@ -6942,7 +6995,7 @@ if(setpriorityOnce)
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 
 	}
-	else if(fboMode==	FBO_ALL_VIEW_559_MODE)
+	else if(displayMode==	ALL_VIEW_MODE)
 	{
 		p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
@@ -6951,7 +7004,6 @@ if(setpriorityOnce)
 
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
-
 		//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
 		//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 

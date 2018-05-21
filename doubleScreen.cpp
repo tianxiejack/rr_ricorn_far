@@ -66,8 +66,23 @@ void Render::RenderSceneDS()
 #endif
 	//	RenderOnetimeView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*944.0/1920.0, g_subwindowHeight*537.0/1080,SUB);
 		RenderOnetimeView(env,0,0,g_subwindowWidth*944.0/1024.0, g_subwindowHeight*537.0/768.0,SUB);
-
 	break;
+	case SECOND_559_ALL_VIEW_MODE:
+		tIdle.threadIdle(SUB_CN);
+		env.Getp_FboPboFacade()->Render2Front(SUB,g_subwindowWidth,g_subwindowHeight);
+		RenderRightForeSightView(env,0,g_subwindowHeight*538.0/768.0,g_subwindowWidth, g_subwindowHeight*116.0/768.0,SUB);
+		RenderLeftForeSightView(env,0,g_subwindowHeight*655.0/768.0,g_subwindowWidth, g_subwindowHeight*115.0/768.0,SUB);
+
+		glScissor(0,0,1920,380);
+			//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
+		glEnable(GL_SCISSOR_TEST);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_SCISSOR_TEST);
+		RenderOnetimeView(env,g_windowWidth*6.0/1024,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
+		RenderTwotimesView(env,g_windowWidth*(354.0+6)/1024.0,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
+		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
+
+		break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
 	//	RenderChosenView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024.0/1920.0, g_subwindowHeight*768.0/1920.0,true);
@@ -139,6 +154,70 @@ void Render::RenderSceneDS()
 	default :
 		break;
 	}
+		 if(SecondDisplayMode==	SECOND_559_ALL_VIEW_MODE)
+		{
+			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
+			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+
+			//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
+			//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+
+		}
+
+		else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+		{
+			/*
+		p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+
+			p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+	*/
+		p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+
+			 if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
+			{
+				p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
+			//	if(mv_detect.CanUseMD())
+			//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			//	else
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			}
+			else if(SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
+			{
+					p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
+					//	if(mv_detect.CanUseMD())
+							//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+							//	else
+								RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			}
+			else if(displayMode==SECOND_TELESCOPE_BACK_MODE)
+			{
+				p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
+				//	if(mv_detect.CanUseMD())
+						//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+						//	else
+							RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			}
+			else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			{
+			p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
+			//	if(mv_detect.CanUseMD())
+					//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+					//	else
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			}
+	}
+
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
 {
@@ -475,23 +554,27 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			}
 				break;
 			case '1':
-					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+							||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 						p_ForeSightFacade[SUB]->MoveLeft(-PanoLen*100.0,SUB);
 				//	else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 
 						break;
 				case '2':
-					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+							||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 						p_ForeSightFacade[SUB]->MoveRight(PanoLen*100.0,SUB);
 			//		else if(SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
 									break;
 				case '3':
-					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+							||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 						p_ForeSightFacade[SUB]->MoveUp(PanoHeight/(5.7-2.7),SUB);
 				//	else if(SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
 									break;
 				case '4':
-					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE)
+					if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+							||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 						p_ForeSightFacade[SUB]->MoveDown(-PanoHeight/(5.7-2.7),SUB);
 			//		else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 									break;
