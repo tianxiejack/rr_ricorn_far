@@ -18,7 +18,7 @@
 #if MVDETECTOR_MODE
 #include "mvDetector.hpp"
 #endif
-#include"MvDetect.hpp"
+#include"MvDetect.h"
 
 
 #include "BMPCaptureGroup.h"

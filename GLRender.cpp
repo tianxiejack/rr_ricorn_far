@@ -60,7 +60,7 @@
 #include"Cap_Spi_Message.h"
 #endif
 #include"Thread_Priority.h"
-#include"MvDetect.hpp"
+#include"MvDetect.h"
 #include "thread_idle.h"
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];

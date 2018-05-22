@@ -4,7 +4,7 @@
 #include "GLEnv.h"
 #include"Thread_Priority.h"
 #include "thread_idle.h"
-#include"MvDetect.hpp"
+#include"MvDetect.h"
 extern thread_idle tIdle;
 extern Render render;
 extern MvDetect mv_detect;
@@ -97,8 +97,8 @@ void Render::RenderSceneDS()
 				if(mv_detect.CanUseMD(SUB))
 				{
 			//		mv_detect.SetoutRect();
-				//	TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0,0,SUB);
-			//		TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1,1,SUB);
+					TargectTelView(env,g_subwindowWidth*60/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,0,0,0,SUB);
+					TargectTelView(env,g_subwindowWidth*560/1920.0,g_subwindowHeight*39.0/1080.0,g_subwindowWidth*480.0/1920.0, g_subwindowHeight*400.0/1080.0,1,1,1,SUB);
 				}
 #endif
 				RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);

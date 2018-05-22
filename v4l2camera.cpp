@@ -53,7 +53,7 @@ fd(-1),n_buffers(0),Id(devId),CorrespondCamNum(childSumCam)
 	if(once_buffer == 0)
 	{
 		once_buffer = 1;
-		init_buffer();
+		//init_buffer();
 	}
 }
 

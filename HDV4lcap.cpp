@@ -28,8 +28,9 @@
 #include <malloc.h>
 #include <omp.h>
 #include"Thread_Priority.h"
-#include"MvDetect.hpp"
+#include"MvDetect.h"
 #include "thread_idle.h"
+#include"MvDrawRect.h"
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
@@ -48,7 +49,9 @@ unsigned char * target_data[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
-
+extern MotionDetectorROI   mdRoi_main,mdRoi_sub;
+extern MotionDetectorROI   mdRoi_mainA0,mdRoi_subA0;
+extern MotionDetectorROI   mdRoi_mainA1,mdRoi_subA1;
 
 
 
@@ -80,7 +83,24 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			bufferCount = 6;
 			if(Once_buffer)
 			{
-				init_buffer();
+#if MVDECT
+				init_buffer(&mv_detect,
+						&mdRoi_main,
+						&mdRoi_sub,
+						&mdRoi_mainA0,
+						&mdRoi_mainA1,
+						&mdRoi_subA0,
+						&mdRoi_subA1);
+#else
+				init_buffer(NULL,
+						NULL,
+						NULL,
+						NULL,
+						NULL,
+						NULL,
+						NULL);
+#endif
+
 				Once_buffer=false;
 				for(int i=0;i<CAM_COUNT;i++){
 					target_data[i]=(unsigned char *)malloc(1920*1080*4);
@@ -152,49 +172,13 @@ void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int
 }
 void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
-#if 1
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
 			RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换
 		}
-#if 0
-	if(ImgWidth==FPGA_SCREEN_WIDTH)
-		{
-		static int a=0;
-			if(a++==50)
-			{
-				save_SDIyuyv_pic(src,ImgWidth,ImgHeight);
-			}
-		}
-#endif
-#endif
 	YUVquar(dst,src,ImgWidth,ImgHeight);
-#if 0
-	unsigned char pp[1280*1080*4];
-	if(ImgWidth==FPGA_SCREEN_WIDTH)
-	{
-		for(int i=0;i<1280*1080*4;i++)
-			pp[i]=i;
-		memcpy(dst,pp,1280*1080*4);
-	}
-
-#endif
-#if 0
-	int t[10]={0};
- timeval startT[20]={0};
-	gettimeofday(&startT[4],0);
-	ImgHeight/=4;
-#pragma omp parallel for
-for(int i=0;i<4;i++)
-{
-	YUVquar(dst+4*i*ImgWidth*ImgHeight,src+2*i*ImgWidth*ImgHeight,ImgWidth,ImgHeight);
-}
-	gettimeofday(&startT[5],0);
-			t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
-			printf("YUYV->UYVX=%d ms    \n",t[2]);
-#endif
 }
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
@@ -586,32 +570,15 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
-					//		if(mv_detect.CanUseMD())
 						{
-			//				static timeval lasttime;
-				//			timeval nowtime;
-			//				static int count=0;
-			//				gettimeofday(&nowtime,0);
-				//			if(count==10)
-			//				{
-				//				count=0;
-			//					printf("%f ms\n",(nowtime.tv_sec-lasttime.tv_sec)*1000.0+(nowtime.tv_usec-lasttime.tv_usec)/1000.0);
-				//				lasttime=nowtime;
-			//				}
-			//				count++;
-
 						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
-					//		if(mvDectCount<1)
 							{
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 							}
 							mv_count++;
 							if(mv_count==CAM_COUNT)
 								mv_count=0;
-					//		mvDectCount++;
-					//		if(mvDectCount==3)
-					//			mvDectCount=0;
 							#endif
 						}
 						}
@@ -625,20 +592,12 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							{
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
-#if MVDECT
-							//	if(mv_detect.MDisStart())
+								//	if(mv_detect.MDisStart())
 								{
+#if MVDECT
 									mv_detect.SetoutRect(mv_count);
-									if(nowpicW==1280)
-									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
-									}
-									else if (nowpicW==1920)
-									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
-									}
-								}
 #endif
+								}
 							}
 								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
 						}

@@ -1,10 +1,15 @@
 #include<opencv2/opencv.hpp>
-#include"MvDetect.hpp"
+#include"MvDetect.h"
 #include<string.h>
 #include<stdio.h>
+#include"MvDrawRect.h"
 using namespace cv;
 Mat m4(1080,1280,CV_8UC4);
 Mat m6(1080,1920,CV_8UC4);
+
+MotionDetectorROI   mdRoi_main,mdRoi_sub;
+MotionDetectorROI   mdRoi_mainA0,mdRoi_subA0;
+MotionDetectorROI   mdRoi_mainA1,mdRoi_subA1;
 #if  MVDECT
 MvDetect::MvDetect()
 {
@@ -190,8 +195,11 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {
 	int cc=4;
 	std::vector<cv::Rect> tempRecv[CAM_COUNT];
+	MotionDetectorROI mdRoi;
 	if(capidx==MAIN_FPGA_SIX)
 	{
+		mdRoi_main.SettempSrc6(src);  //todo
+		mdRoi_sub.SettempSrc6(src);
 		m6.data=src;
 		for(int i=0;i<6;i++)                        //0  1  2
 		{															//3  4  5
@@ -213,9 +221,11 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 	}
 	if(capidx==MAIN_FPGA_FOUR)
 		{
+		mdRoi_main.SettempSrc4(src);
+		mdRoi_sub.SettempSrc6(src);//todo
 		m4.data=src;
 			for(int i=6;i<10;i++)						//6   7
-			{															//8	 9
+			{													//8	 9
 				tempRecv[i].assign(outRect[i].begin(),outRect[i].end());
 				if(tempRecv[i].size()!=0)//容器dix不为空
 				{
@@ -232,5 +242,64 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 				}
 			}
 		}
+
+	for(int mOs=0;mOs<2;mOs++)
+	{
+		if(mOs==MAIN)
+			mdRoi=mdRoi_main;
+		else if(mOs==SUB)
+			mdRoi=mdRoi_sub;
+	for(int targetidx=0;targetidx<2;targetidx++)
+	{
+		if(mdRoi.IsChooseN(targetidx))
+		{
+			mdRoi.resetChooseN(targetidx);
+			mdRoi.RankVectorClear(targetidx);
+			float range_start=mdRoi.GetRange(START)/360.0*10.0;
+			int cam_idx_start=(int)range_start;
+			float range_end=mdRoi.GetRange(END)/360.0*10.0;
+			int cam_idx_end=(int)range_end;
+			if(range_start>270.0){  //跨过相机0
+				for(int i=cam_idx_start;i<CAM_COUNT;i++)
+									mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+				for(int i=0;i<cam_idx_end;i++)
+									mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+			}
+			else{
+				for(int i=cam_idx_start;i<cam_idx_end;i++)
+					mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+			}
+			mdRoi.SetlastRect(targetidx,mdRoi.Rank(targetidx,BIG));
+			mdRoi.drawRect(targetidx,src,capidx);
+
+		}
+
+
+
+		if(mdRoi.IsChooseP(targetidx))
+				{
+					mdRoi.resetChooseP(targetidx);
+					mdRoi.RankVectorClear(targetidx);
+					float range_start=mdRoi.GetRange(START)/360.0*10.0;
+					int cam_idx_start=(int)range_start;
+					float range_end=mdRoi.GetRange(END)/360.0*10.0;
+					int cam_idx_end=(int)range_end;
+					if(range_start>270.0){  //跨过相机0
+						for(int i=cam_idx_start;i<CAM_COUNT;i++)
+											mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+						for(int i=0;i<cam_idx_end;i++)
+											mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+					}
+					else{
+						for(int i=cam_idx_start;i<cam_idx_end;i++)
+							mdRoi.put2RankVector(targetidx,&tempRecv[i],i);
+					}
+					mdRoi.SetlastRect(targetidx,mdRoi.Rank(targetidx,SMALL));
+					mdRoi.drawRect(targetidx,src,capidx);
+
+				}
+	}
+	}
+
 }
 

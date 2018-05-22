@@ -275,6 +275,7 @@ void HDVCap::YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h)
 
 void HDVCap::Capture(char* ptr){
 	get_buffer((unsigned char *)ptr,m_qid);
+
 #if 0
 	int t[10]={0};
 	 timeval startT[20]={0};

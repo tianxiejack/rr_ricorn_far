@@ -11,6 +11,13 @@ using namespace std;
 //using namespace cv;
 typedef unsigned char byte;
 
+static IF_MotionDect *pbeh=NULL;
+static 	IF_MotionDetectorROI *p_Tel_roi_M=NULL;
+static	IF_MotionDetectorROI *p_Tel_roi_S=NULL;
+static	IF_MotionDetectorROI *p_All_roi_M_0=NULL;
+static	IF_MotionDetectorROI *p_All_roi_M_1=NULL;
+static	IF_MotionDetectorROI *p_All_roi_S_0=NULL;
+static	IF_MotionDetectorROI *p_All_roi_S_1=NULL;
 Alg_Obj * queue_dis=NULL;
 Alg_Obj * queue_main_sub=NULL;
 void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
@@ -241,7 +248,48 @@ void get_buffer(unsigned char* ptr, int chId)
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
 #else
 	static int a=0;
+	if(pbeh!=NULL)
+	{
+								if(pbeh->MDisStart())
+								{
+									if(w==1280)
+									{
+										p_Tel_roi_M->SettempSrc4(bufdata);
+										p_Tel_roi_S->SettempSrc4(bufdata);
+										p_All_roi_M_0->SettempSrc4(bufdata);
+										p_All_roi_M_1->SettempSrc4(bufdata);
+										p_All_roi_S_0->SettempSrc4(bufdata);
+										p_All_roi_S_1->SettempSrc4(bufdata);
+									}
+									else if (w==1920)
+									{
+										p_Tel_roi_M->SettempSrc6(bufdata);
+										p_Tel_roi_S->SettempSrc6(bufdata);
+										p_All_roi_M_0->SettempSrc6(bufdata);
+										p_All_roi_M_1->SettempSrc6(bufdata);
+										p_All_roi_S_0->SettempSrc6(bufdata);
+										p_All_roi_S_1->SettempSrc6(bufdata);
+									}
+								}
+	}
+
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*4);
+#if 1
+	if(pbeh!=NULL)
+	{
+								if(pbeh->MDisStart())
+								{
+									if(w==1280)
+									{
+										pbeh->DrawRectOnpic(ptr,MAIN_FPGA_FOUR);
+									}
+									else if (w==1920)
+									{
+										pbeh->DrawRectOnpic(ptr,MAIN_FPGA_SIX);
+									}
+								}
+	}
+#endif
 #endif
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
@@ -277,8 +325,21 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
 
-void init_buffer()
+void init_buffer(IF_MotionDect *p,
+		IF_MotionDetectorROI *pTel_roi_M,
+		IF_MotionDetectorROI *pTel_roi_S,
+		IF_MotionDetectorROI *pAll_roi_M_0,
+		IF_MotionDetectorROI *pAll_roi_M_1,
+		IF_MotionDetectorROI *pAll_roi_S_0,
+		IF_MotionDetectorROI *pAll_roi_S_1)
 {
+	pbeh=p;
+	p_Tel_roi_M=pTel_roi_M;
+	p_Tel_roi_S=pTel_roi_S;
+	p_All_roi_M_0	=pAll_roi_M_0;
+	p_All_roi_M_1=pAll_roi_M_1;
+	p_All_roi_S_0=pAll_roi_S_0;
+	p_All_roi_S_1	=pAll_roi_S_1;
 	queue_main_sub = (Alg_Obj *)alg_buf_init();
 	alg_obj_init(queue_main_sub);
 }
