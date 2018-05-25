@@ -62,14 +62,23 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
+#if MVDECT
+#include"MvDrawRect.h"
+#include"MvModeSwith.h"
+extern MVModeSwith   mvSwitch;
+extern MotionDetectorROI
+mdRoi_mainT,
+mdRoi_subT,
+mdRoi_mainA,
+mdRoi_subA;
+ extern MvDetect mv_detect;
+#endif
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 
 
 
-#if MVDECT
- extern MvDetect mv_detect;
-#endif
+
 int m_cam_pos=-1;
 
 extern GLEnv env1;
@@ -172,7 +181,7 @@ float Fourtimestemp_math[2]={0};
 int Telscenter_cam[2]={0};
 float Teltemp_math[2]={0};
 extern float track_pos[4];
-float  canshu[8]={0,0,0,0,0,0,0,0};
+float  canshu[16]={0};
 #if TRACK_MODE
 CVideoProcess* trackMode=CVideoProcess::getInstance();
 #endif
@@ -188,7 +197,7 @@ void readcanshu()
 		fp=fopen("./data/AAAreadfile.txt","r");
 		if(fp!=NULL)
 		{
-			for(i=0;i<8;i++)
+			for(i=0;i<16;i++)
 			{
 				fscanf(fp,"%f\n",&canshu[i]);
 				printf("%f\n",canshu[i]);
@@ -672,9 +681,9 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_ALL_VIEW_MODE),
+		fboMode(FBO_ALL_VIEW_559_MODE),
 		displayMode(ALL_VIEW_MODE),
-		SecondDisplayMode(SECOND_ALL_VIEW_MODE),
+		SecondDisplayMode(SECOND_559_ALL_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
 		send_follow_angle_enable(false),p_CompassBillBoard(NULL),p_LineofRuler(NULL),refresh_ruler(true),
@@ -694,7 +703,6 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 	PANx = 0, PANy = 0;
 	scale = 0;
 	oScale = 1.0f;
-
 	GenerateGLTextureIds();
 	for(int i = 0 ; i < CORNER_COUNT; i++){
 		pConerMarkerColors[i] = NULL;
@@ -804,28 +812,77 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 	env.GetPanoCaptureGroup()->captureCam(ptr,index);
 }
 
+static void TargetORI(GLubyte *ptr, int index,GLEnv &env)
+{
+	index-=MAGICAL_NUM;
+#if MVDECT
+	switch (index)
+				{
+				case MAIN_TARGET_A0:
+					ptr=mdRoi_mainT.GetRoiSrc(0);
+									break;
+				case MAIN_TARGET_A1:
+					ptr=mdRoi_mainT.GetRoiSrc(1);
+													break;
+				case MAIN_TARGET_A2:
+					ptr=mdRoi_mainT.GetRoiSrc(2);
+									break;
+				case MAIN_TARGET_A3:
+					ptr=mdRoi_mainT.GetRoiSrc(2);
+							break;
+				case SUB_TARGET_A0:
+					ptr=mdRoi_subA.GetRoiSrc(0);
+								break;
+				case SUB_TARGET_A1:
+					ptr=mdRoi_subA.GetRoiSrc(1);
+								break;
+				case			SUB_TARGET_A2:
+					ptr=mdRoi_subA.GetRoiSrc(2);
+								break;
+				case		SUB_TARGET_A3:
+					ptr=mdRoi_subA.GetRoiSrc(3);
+								break;
+
+				case		MAIN_TARGET_T0:
+					ptr=mdRoi_mainT.GetRoiSrc(0);
+							break;
+				case			MAIN_TARGET_T1:
+					ptr=mdRoi_mainT.GetRoiSrc(1);
+								break;
+				case			SUB_TARGET_T0:
+					ptr=mdRoi_subT.GetRoiSrc(0);
+								break;
+				case		SUB_TARGET_T1:
+					ptr=mdRoi_subT.GetRoiSrc(1);
+									break;
+							}
+#else
+	memset(ptr,0xff,ROIW*ROIH*4);
+#endif
+}
+
 static void mainTarget0(GLubyte *ptr, int index,GLEnv &env)
 {
 #if MVDECT
-	mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_0,index);
+	//mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_0,index);
 #endif
 }
 static void mainTarget1(GLubyte *ptr, int index,GLEnv &env)
 {
 #if MVDECT
-	mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_1,index);
+	//mv_detect.selectFrame(ptr,target_data[index],MAIN_TARGET_1,index);
 #endif
 }
 static void subTarget0(GLubyte *ptr, int index,GLEnv &env)
 {
 #if MVDECT
-	mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_0,index);
+	//mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_0,index);
 #endif
 }
 static void subTarget1(GLubyte *ptr, int index,GLEnv &env)
 {
 #if MVDECT
-	mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_1,index);
+	//mv_detect.selectFrame(ptr,target_data[index],SUB_TARGET_1,index);
 #endif
 }
 
@@ -929,7 +986,9 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
 #endif
-
+#if MVDECT
+	mv_detect.ReadConfig();
+#endif
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
 		exit(1);
@@ -1099,7 +1158,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-				glTexImage2D(GL_TEXTURE_2D,0,nComponents,FPGA_SINGLE_PIC_W, FPGA_SINGLE_PIC_H, 0,
+				glTexImage2D(GL_TEXTURE_2D,0,nComponents,ROIW, ROIH, 0,
 						format, GL_UNSIGNED_BYTE, 0);
 			}
 #else
@@ -1322,7 +1381,7 @@ void Render::GenerateGLTextureIds()
 	}
 */
 	textureCount = sizeof(GL_TargetTextureIDs)/sizeof(GL_TargetTextureIDs[0]);
-	GL_TargetTextureIDs[0] = GL_TEXTURE26;
+	GL_TargetTextureIDs[0] = GL_TEXTURE4;
 	for(int i = 1; i < textureCount; i++){
 		GL_TargetTextureIDs[i] = GL_TargetTextureIDs[i-1] + 1;
 	}
@@ -2312,39 +2371,21 @@ void Render::DrawIndividualVideo(GLEnv &m_env,bool needSendData)
 	}
 }
 
-void Render::DrawTargetVideo(GLEnv &m_env,int  targetIdx,int camIdx,bool needSendData)
+void Render::DrawTargetVideo(GLEnv &m_env,int  targetIdx,bool needSendData)
 {
 			m_env.GetmodelViewMatrix()->PushMatrix();
 			m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
 			m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 			glActiveTexture(GL_TargetTextureIDs[targetIdx]);
 			if(needSendData){
-				switch (targetIdx)
-				{
-				case MAIN_TARGET_0:
-					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)mainTarget0,camIdx);
-					break;
-				case MAIN_TARGET_1:
-					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)mainTarget1,camIdx);
-
-					break;
-				case SUB_TARGET_0:
-					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)subTarget0,camIdx);
-
-					break;
-				case SUB_TARGET_1:
-					m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)subTarget1,camIdx);
-
-					break;
-							}
+				m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)TargetORI,targetIdx+MAGICAL_NUM);
 			}
 			else{
 				glBindTexture(GL_TEXTURE_2D, GL_TargetTextureIDs[targetIdx]);
 			}
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), targetIdx+28);
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), targetIdx+4);
 			m_env.Getp_shadowBatch()->Draw();
 			m_env.GetmodelViewMatrix()->PopMatrix();
-	//todo
 }
 void Render::DrawVGAVideo(GLEnv &m_env,bool needSendData)
 {
@@ -4064,23 +4105,34 @@ void Render::RenderPanoTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 }
 if(direction==LEFT)
 {
-	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(37.68+TEL_XTRAS+0.5,0.0,-2.7*TEL_YTRAS);
+	//m_env.GetmodelViewMatrix()->Scale(canshu[0],1.0,canshu[1]);
+	//m_env.GetmodelViewMatrix()->Translate(canshu[2],0.0,canshu[3]);
+
+	m_env.GetmodelViewMatrix()->Scale(8.2,1.0,10.0);
+	m_env.GetmodelViewMatrix()->Translate(36.8,0.0,-2.8);
 }
 else if(direction==BACK)
 {
-	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(47.1+13+0.3,0.0,-2.7*TEL_YTRAS);
+//	m_env.GetmodelViewMatrix()->Scale(canshu[4],1.0,canshu[5]);
+//	m_env.GetmodelViewMatrix()->Translate(canshu[6],0.0,canshu[7]);
+
+	m_env.GetmodelViewMatrix()->Scale(8.2,1.0,10.0);
+	m_env.GetmodelViewMatrix()->Translate(46.0,0.0,-2.8);
 }
 else if(direction==FRONT)
 {
-	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(28.26+13.34,0.0,-2.7*TEL_YTRAS);
+//	m_env.GetmodelViewMatrix()->Scale(canshu[8],1.0,canshu[9]);
+//	m_env.GetmodelViewMatrix()->Translate(canshu[10],0.0,canshu[11]);
+
+	m_env.GetmodelViewMatrix()->Scale(8.2,1.0,10.0);
+	m_env.GetmodelViewMatrix()->Translate(27.35,0.0,-2.8);
 }
 else if(direction==RIGHT)
 {
-	m_env.GetmodelViewMatrix()->Scale(8*TEL_XSCALE,1.0,5.8*TEL_YSCALE);
-	m_env.GetmodelViewMatrix()->Translate(15+17+0.2,0.0,-2.7*TEL_YTRAS);
+//	m_env.GetmodelViewMatrix()->Scale(canshu[12],1.0,canshu[13]);
+//	m_env.GetmodelViewMatrix()->Translate(canshu[14],0.0,canshu[15]);
+	m_env.GetmodelViewMatrix()->Scale(8.2,1.0,10.0);
+	m_env.GetmodelViewMatrix()->Translate(18.0,0.0,-2.8);
 }
 			float Angle=RulerAngle;
 			if(direction==FRONT)
@@ -4344,7 +4396,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-3.0);
 	delete(rect1);
 }
 
-void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
+void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub,myMode nowMode)
 {
 			int petal1[CAM_COUNT];
 			memset(petal1,-1,sizeof(petal1));
@@ -4392,9 +4444,20 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		else
 		{
 			temp_math[mainOrsub]=(Angle)/36.0;
+	/*		if(temp_math[mainOrsub]<=5.99999999
+					&&temp_math[mainOrsub]>=5.937)
+			{
+				temp_math[mainOrsub]=6;
+			}
+			else if(temp_math[mainOrsub]<=0.9999
+							&&temp_math[mainOrsub]>=0.937)
+			{
+				temp_math[mainOrsub]=0;
+			}*/
 			center_cam[mainOrsub]=(int)temp_math[mainOrsub];
 			center_cam[mainOrsub]++;
 		}
+		//	printf("center_cam=%d\n",center_cam[MAIN]);
 		petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
 		petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
 
@@ -5036,9 +5099,8 @@ else if(displayMode==TELESCOPE_FRONT_MODE
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
-void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int targetIdx,int camIdx,int enlarge,int mainOrsub)
+void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int targetIdx,int enlarge)
 {
-#if MVDECT
 		glViewport(x,y,w,h);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		m_env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
@@ -5055,11 +5117,8 @@ void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int 
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
 		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
-		DrawTargetVideo(m_env,targetIdx,camIdx,true);
+		DrawTargetVideo(m_env,targetIdx,true);
 		m_env.GetmodelViewMatrix()->PopMatrix();
-#else
-		RenderSDIView(m_env,x,y,w,h,true);
-#endif
 }
 
 
@@ -6565,15 +6624,46 @@ if(setpriorityOnce)
 	case ALL_VIEW_MODE:
 	{
 #if		MVDECT
-		if(mv_detect.CanUseMD(MAIN))
+	//	if(mv_detect.CanUseMD(MAIN))
 		{
 		//	mv_detect.SetoutRect();
 		}
 #endif
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
-		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
-		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
+#if			MVDECT
+	/*		if(mv_detect.CanUseMD(MAIN))
+			{
+				glScissor(0,0,1920,563);
+					//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
+				glEnable(GL_SCISSOR_TEST);
+				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+				glDisable(GL_SCISSOR_TEST);
+
+								//		mv_detect.SetoutRect();
+			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
+			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
+			TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
+
+			}
+			else*/
+					{
+				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+					}
+#else
+			if(g_windowHeight==768)
+			{
+			RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
+			RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
+			}
+			else
+			{
+				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+			}
+			#endif
 
 		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
 	//	RenderLeftPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
@@ -6612,13 +6702,13 @@ if(setpriorityOnce)
 		tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,FRONT);
+			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,FRONT);
 #if			MVDECT
 			if(mv_detect.CanUseMD(MAIN))
 			{
 			//		mv_detect.SetoutRect();
-		//		TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-		//		TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
+				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
+				TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
 			}
 #endif
 			//	RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6630,14 +6720,14 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-				RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,RIGHT);
+				RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,RIGHT);
 #if MVDECT
-				if(mv_detect.CanUseMD(MAIN))
+	/*			if(mv_detect.CanUseMD(MAIN))
 						{
 			//			mv_detect.SetoutRect();
-			//				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-			//				TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
-						}
+					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
+					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
+						}*/
 #endif
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6648,14 +6738,14 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			   RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,BACK);
+			   RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,BACK);
 #if MVDECT
-			   if(mv_detect.CanUseMD(MAIN))
+	/*		   if(mv_detect.CanUseMD(MAIN))
 						{
 			//			mv_detect.SetoutRect();
-			//				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-			//				TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
-						}
+					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
+					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
+						}*/
 #endif
 			   //		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6666,14 +6756,14 @@ if(setpriorityOnce)
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
-			RenderPanoTelView(env,0,g_windowHeight*478.0/1080,g_windowWidth, g_windowHeight*592.0/1080.0,LEFT);
+			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,LEFT);
 #if MVDECT
-				if(mv_detect.CanUseMD(MAIN))
+	/*			if(mv_detect.CanUseMD(MAIN))
 						{
 			//		mv_detect.SetoutRect();
-			//				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,0,0);
-				//			TargectTelView(env,g_windowWidth*560/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*480.0/1920.0, g_windowHeight*400.0/1080.0,1,1);
-						}
+					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
+					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
+						}*/
 #endif
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 				//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -7480,7 +7570,8 @@ void  Render::GenerateOnetimeView(int mainOrsub)
 		panocamonforesight[mainOrsub].getOneTimeCam().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
 		panocamonforesight[mainOrsub].getOneTimeCam().MoveRight(-inidelta);
 		panocamonforesight[mainOrsub].getOneTimeCam().MoveForward(-0.16*leftandrightdis/2);
-			panocamonforesight[mainOrsub].getOneTimeCam().GetOrigin(OnetimeCamView);
+		panocamonforesight[mainOrsub].getOneTimeCam().MoveForward(0.15);
+		panocamonforesight[mainOrsub].getOneTimeCam().GetOrigin(OnetimeCamView);
 	}
 	panocamonforesight[mainOrsub].getOneTimeCam().SetOrigin(OnetimeCamView);
 }
@@ -7506,8 +7597,9 @@ void  Render::GenerateOnetimeView2(int mainOrsub)
 		panocamonforesight[mainOrsub].getOneTimeCam2().MoveRight(-(PanelLoader.Getextent_pos_x()-PanelLoader.Getextent_neg_x())*(1/4.0));
 			panocamonforesight[mainOrsub].getOneTimeCam2().MoveRight(-inidelta);
 			panocamonforesight[mainOrsub].getOneTimeCam2().MoveForward(0.16*leftandrightdis/2);
+			panocamonforesight[mainOrsub].getOneTimeCam2().MoveForward(-0.15);
 			panocamonforesight[mainOrsub].getOneTimeCam2().RotateLocalY(-PI);
-		panocamonforesight[mainOrsub].getOneTimeCam2().GetOrigin(OnetimeCamView2);
+			panocamonforesight[mainOrsub].getOneTimeCam2().GetOrigin(OnetimeCamView2);
 	}
 	panocamonforesight[mainOrsub].getOneTimeCam2().SetOrigin(OnetimeCamView2);
 }
@@ -7928,9 +8020,6 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
-#if MVDECT
-			mv_detect.CloseMD(MAIN);
-#endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
 		//case 'b':
@@ -7940,10 +8029,22 @@ GLEnv & env=env1;
 		case '1':
 			displayMode=ALL_VIEW_MODE;
 			break;
+#if MVDECT
 		case '2':
+			mvSwitch.CloseSwitch(MIAN_MV_TEL_VIEW_SWITCH);
+			mvSwitch.OpenSwitch(MIAN_MV_ALL_VIEW_SWITCH);
+			break;
 		case '3':
+			mvSwitch.CloseSwitch(MIAN_MV_ALL_VIEW_SWITCH);
+			mvSwitch.OpenSwitch(MIAN_MV_TEL_VIEW_SWITCH);
+			break;
 		case '4':
+			mvSwitch.CloseSwitch(MIAN_MV_ALL_VIEW_SWITCH);
+			break;
 		case '5':
+			mvSwitch.CloseSwitch(MIAN_MV_TEL_VIEW_SWITCH);
+			break;
+#endif
 		case '6':
 		case '7':
 			blendMode = key-'0';
@@ -7973,8 +8074,9 @@ GLEnv & env=env1;
 			DISPLAYMODE nextMode = DISPLAYMODE(((int)displayMode+1) % TOTAL_MODE_COUNT);
 			//cout<<"NEXTMODE=="<<nextMode<<endl;
 
-			if(nextMode==PREVIEW_MODE)
+			if(nextMode==TRIM_MODE)
 			{
+				nextMode=ALL_VIEW_MODE;
 			//	 nextMode = DISPLAYMODE(((int)displayMode+15) % TOTAL_MODE_COUNT);
 			}
 			bool isEnterringBackView = (nextMode == BACK_VIEW_MODE);
@@ -8041,8 +8143,8 @@ GLEnv & env=env1;
 			break;
 		case	'n':
 		{
-			FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
-			fboMode = nextMode;
+			//FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
+			//fboMode = nextMode;
 		}
 		break;
 		case 'L':
@@ -8071,9 +8173,7 @@ GLEnv & env=env1;
 			break;
 		//case 'c':
 		case 'C':
-#if MVDECT
-			mv_detect.OpenMD(MAIN);
-#endif
+
 	//		if(isCalibTimeOn){
 		//		RememberTime();
 	//		}
@@ -8532,7 +8632,7 @@ GLEnv & env=env1;
 				if(displayMode==ALL_VIEW_MODE)
 				{
 							p_ForeSightFacade[MAIN]->MoveLeft(-PanoLen*100.0);
-							printf("m_cam_pos=%d\n",m_cam_pos);
+						//	printf("m_cam_pos=%d\n",m_cam_pos);
 						//	foresightPos.GetAngle()[0];
 					//		foresightPos.ShowPosX();
 					//		pano_pos2angle=p_ForeSightFacade->GetForeSightPosX()/PanoLen*360.0;
@@ -8624,7 +8724,7 @@ GLEnv & env=env1;
 				{
 					p_ForeSightFacade[MAIN]->MoveRight(PanoLen*100.0);
 			//		foresightPos.GetAngle()[0];
-					printf("m_cam_pos=%d\n",m_cam_pos);
+				//	printf("m_cam_pos=%d\n",m_cam_pos);
 				//	foresightPos.ShowPosX();
 				}
 							else if(displayMode==TELESCOPE_FRONT_MODE
@@ -11768,7 +11868,7 @@ void Render::GenerateTargetFrameView()
 	static bool once =true;
 	if(once){
 		once = false;
-for(int i=0;i<2;i++)
+for(int i=0;i<TARGET_CAM_COUNT;i++)
 {
 		targetFrame[i].RotateLocalX(0.0);
 		targetFrame[i].MoveForward(0.0);
