@@ -573,7 +573,10 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
 							{
-								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								if(mv_detect.MDisStart())
+								{
+									mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								}
 							}
 							mv_count++;
 							if(mv_count==CAM_COUNT)
@@ -591,9 +594,10 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							{
 								YUYV2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
-								//	if(mv_detect.MDisStart())
-								{
+
 #if MVDECT
+								if(mv_detect.MDisStart())
+								{
 									mv_detect.SetoutRect(mv_count);
 									if(nowpicW==1280)
 									{
@@ -603,8 +607,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 									{
 										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
 									}
-#endif
 								}
+#endif
+
 							}
 								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
 						}

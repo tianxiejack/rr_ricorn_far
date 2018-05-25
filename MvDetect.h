@@ -41,17 +41,20 @@ public:
 	void ReadConfig();
 	bool GetMD(int mainorsub){return  enableMD[mainorsub];};
 	void SetMD(bool tof,int mainorsub){enableMD[mainorsub]=tof;};
-	//void OpenMD(int mainorsub){MDopen[mainorsub]=true;};
-	//void CloseMD(int mainorsub){MDopen[mainorsub]=false;};
+	void OpenMD(int mainorsub){MDopen[mainorsub]=true;};
+	void CloseMD(int mainorsub){MDopen[mainorsub]=false;};
 	bool CanUseMD(int mainorsub);
-	bool MDisStart(){if(enableMD[MAIN]==true && enableMD[SUB]==true)
-												return true;};
+	bool MDisStart(){
+		if(enableMD[MAIN]==true &&MDopen[MAIN]==true)///*&& enableMD[SUB]==true*/)
+			return true;
+	else if(enableMD[MAIN]==true&&MDopen[SUB]==true)
+			return true;};
 
 	std::vector<mvRect> * GetWholeRect();//取得全图的rect
 	void SetoutRect(int idx);//将检测到的每个通道里6个rect放入对应的6个容器里
 private:
 	bool enableMD[2];
-//	bool MDopen[2];
+	bool MDopen[2];
 	static const int MAX_RECT_COUNT=6;
 	typedef struct{cv::Rect rects[MAX_RECT_COUNT];}RECT_Array;
 	RECT_Array tempoutRect[CAM_COUNT];

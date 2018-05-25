@@ -8020,6 +8020,9 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
+#if MVDECT
+			mv_detect.OpenMD(MAIN);
+#endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
 		//case 'b':
@@ -8290,6 +8293,9 @@ GLEnv & env=env1;
 			DISPLAYMODE_SWITCH_TO(PANO_VIEW_MODE);
 			break;
 		case 'o'://high definition pano view
+#if MVDECT
+			mv_detect.CloseMD(MAIN);
+#endif
 			break;
 		case 'p'://high definition pano add pano view
 			break;

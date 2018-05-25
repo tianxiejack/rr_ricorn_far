@@ -626,6 +626,16 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 		case '8':
 			mvSwitch.CloseSwitch(SUB_MV_TEL_VIEW_SWITCH);
 			break;
+		case 'O':
+		{
+			mv_detect.OpenMD(SUB);
+			break;
+		}
+		case 'o':
+		{
+			mv_detect.CloseMD(SUB);
+					break;
+		}
 #endif
 			default:
 		break;
