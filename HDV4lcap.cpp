@@ -49,9 +49,11 @@ unsigned char * target_data[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
-extern MotionDetectorROI   mdRoi_main,mdRoi_sub;
-extern MotionDetectorROI   mdRoi_mainA0,mdRoi_subA0;
-extern MotionDetectorROI   mdRoi_mainA1,mdRoi_subA1;
+extern MotionDetectorROI
+		mdRoi_mainT,
+		mdRoi_subT,
+		mdRoi_mainA,
+		mdRoi_subA;
 
 
 
@@ -85,20 +87,17 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			{
 #if MVDECT
 				init_buffer(&mv_detect,
-						&mdRoi_main,
-						&mdRoi_sub,
-						&mdRoi_mainA0,
-						&mdRoi_mainA1,
-						&mdRoi_subA0,
-						&mdRoi_subA1);
+						&mdRoi_mainT,
+						&mdRoi_subT,
+						&mdRoi_mainA,
+						&mdRoi_subA);
 #else
 				init_buffer(NULL,
 						NULL,
 						NULL,
 						NULL,
-						NULL,
-						NULL,
-						NULL);
+						NULL
+						);
 #endif
 
 				Once_buffer=false;
@@ -596,6 +595,14 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								{
 #if MVDECT
 									mv_detect.SetoutRect(mv_count);
+									if(nowpicW==1280)
+									{
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
+									}
+									else if (nowpicW==1920)
+									{
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
+									}
 #endif
 								}
 							}

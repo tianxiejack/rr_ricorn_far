@@ -7,17 +7,22 @@
 #include<iostream>
 #include<assert.h>
 #include "StlGlDefines.h"
+#include"MvModeSwith.h"
 using namespace std;
+extern MVModeSwith   mvSwitch;
 //using namespace cv;
 typedef unsigned char byte;
 
+
+
+
+
 static IF_MotionDect *pbeh=NULL;
-static 	IF_MotionDetectorROI *p_Tel_roi_M=NULL;
-static	IF_MotionDetectorROI *p_Tel_roi_S=NULL;
-static	IF_MotionDetectorROI *p_All_roi_M_0=NULL;
-static	IF_MotionDetectorROI *p_All_roi_M_1=NULL;
-static	IF_MotionDetectorROI *p_All_roi_S_0=NULL;
-static	IF_MotionDetectorROI *p_All_roi_S_1=NULL;
+static 	IF_MotionDetectorROI *mp_mdRoi_mainT=NULL;
+static	IF_MotionDetectorROI *mp_mdRoi_subT=NULL;
+static	IF_MotionDetectorROI *mp_mdRoi_mainA=NULL;
+static	IF_MotionDetectorROI *mp_mdRoi_subA=NULL;
+
 Alg_Obj * queue_dis=NULL;
 Alg_Obj * queue_main_sub=NULL;
 void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
@@ -248,47 +253,91 @@ void get_buffer(unsigned char* ptr, int chId)
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
 #else
 	static int a=0;
+#if 0
 	if(pbeh!=NULL)
 	{
 								if(pbeh->MDisStart())
 								{
 									if(w==1280)
 									{
-										p_Tel_roi_M->SettempSrc4(bufdata);
-										p_Tel_roi_S->SettempSrc4(bufdata);
-										p_All_roi_M_0->SettempSrc4(bufdata);
-										p_All_roi_M_1->SettempSrc4(bufdata);
-										p_All_roi_S_0->SettempSrc4(bufdata);
-										p_All_roi_S_1->SettempSrc4(bufdata);
+						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
+						//					mp_mdRoi_mainT->SettempSrc4(bufdata);
+					//					if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
+					//						mp_mdRoi_subT->SettempSrc4(bufdata);
+						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
+							//				mp_mdRoi_mainA->SettempSrc4(bufdata);
+					//					if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
+					//						mp_mdRoi_subA->SettempSrc4(bufdata);
 									}
 									else if (w==1920)
 									{
-										p_Tel_roi_M->SettempSrc6(bufdata);
-										p_Tel_roi_S->SettempSrc6(bufdata);
-										p_All_roi_M_0->SettempSrc6(bufdata);
-										p_All_roi_M_1->SettempSrc6(bufdata);
-										p_All_roi_S_0->SettempSrc6(bufdata);
-										p_All_roi_S_1->SettempSrc6(bufdata);
+							//			if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
+								//			mp_mdRoi_mainT->SettempSrc6(bufdata);
+						//				if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
+						//				mp_mdRoi_subT->SettempSrc6(bufdata);
+						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
+						//					mp_mdRoi_mainA->SettempSrc6(bufdata);
+						//				if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
+							//				mp_mdRoi_subA->SettempSrc6(bufdata);
 									}
 								}
+	}
+#endif
+	memcpy(ptr,bufdata,w*SDI_HEIGHT*4);
+#if 0
+	if(pbeh!=NULL)
+	{
+		if(pbeh->MDisStart())
+		{
+					if(w==1280)
+			{
+				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
+				{
+					mp_mdRoi_mainA->SetM4data(ptr);
+					mp_mdRoi_mainA->DrawAllRectOri( MAIN_FPGA_FOUR);
+				}
+				if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
+					{
+						mp_mdRoi_mainT->SetM4data(ptr);
+						mp_mdRoi_mainT->DrawAllRectOri( MAIN_FPGA_FOUR);
+					}
+					if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
+					{
+						mp_mdRoi_subA->SetM4data(ptr);
+						mp_mdRoi_subA->DrawAllRectOri( MAIN_FPGA_FOUR);
+					}
+					if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
+					{
+						mp_mdRoi_subT->SetM4data(ptr);
+						mp_mdRoi_subT->DrawAllRectOri( MAIN_FPGA_FOUR);
+					}*/
+			}
+			else if (w==1920)
+			{
+							if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
+				{
+					mp_mdRoi_mainA->SetM6data(ptr);
+					mp_mdRoi_mainA->DrawAllRectOri( MAIN_FPGA_FOUR);
+				}
+			if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
+				{
+					mp_mdRoi_mainT->SetM6data(ptr);
+					mp_mdRoi_mainT->DrawAllRectOri( MAIN_FPGA_FOUR);
+				}
+				if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
+				{
+					mp_mdRoi_subA->SetM6data(ptr);
+					mp_mdRoi_subA->DrawAllRectOri( MAIN_FPGA_FOUR);
+				}
+				if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
+				{
+					mp_mdRoi_subT->SetM6data(ptr);
+					mp_mdRoi_subT->DrawAllRectOri( MAIN_FPGA_FOUR);
+				}
+			}
+		}
 	}
 
-	memcpy(ptr,bufdata,w*SDI_HEIGHT*4);
-#if 1
-	if(pbeh!=NULL)
-	{
-								if(pbeh->MDisStart())
-								{
-									if(w==1280)
-									{
-										pbeh->DrawRectOnpic(ptr,MAIN_FPGA_FOUR);
-									}
-									else if (w==1920)
-									{
-										pbeh->DrawRectOnpic(ptr,MAIN_FPGA_SIX);
-									}
-								}
-	}
 #endif
 #endif
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
@@ -326,20 +375,17 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 }
 
 void init_buffer(IF_MotionDect *p,
-		IF_MotionDetectorROI *pTel_roi_M,
-		IF_MotionDetectorROI *pTel_roi_S,
-		IF_MotionDetectorROI *pAll_roi_M_0,
-		IF_MotionDetectorROI *pAll_roi_M_1,
-		IF_MotionDetectorROI *pAll_roi_S_0,
-		IF_MotionDetectorROI *pAll_roi_S_1)
+		IF_MotionDetectorROI *p_mdRoi_mainT,
+		IF_MotionDetectorROI *p_mdRoi_subT,
+		IF_MotionDetectorROI *p_mdRoi_mainA,
+		IF_MotionDetectorROI *p_mdRoi_subA)
 {
 	pbeh=p;
-	p_Tel_roi_M=pTel_roi_M;
-	p_Tel_roi_S=pTel_roi_S;
-	p_All_roi_M_0	=pAll_roi_M_0;
-	p_All_roi_M_1=pAll_roi_M_1;
-	p_All_roi_S_0=pAll_roi_S_0;
-	p_All_roi_S_1	=pAll_roi_S_1;
+	mp_mdRoi_mainT=p_mdRoi_mainT;
+	mp_mdRoi_subT=p_mdRoi_subT;
+	mp_mdRoi_mainA	=p_mdRoi_mainA;
+	mp_mdRoi_subA=p_mdRoi_subA;
+
 	queue_main_sub = (Alg_Obj *)alg_buf_init();
 	alg_obj_init(queue_main_sub);
 }

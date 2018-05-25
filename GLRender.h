@@ -123,14 +123,13 @@ private:
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
 		ALL_VIEW_MODE,
-		CHOSEN_VIEW_MODE,
-		TRIM_MODE,
-		TELESCOPE_FRONT_MODE,
 		TELESCOPE_RIGHT_MODE,
-		TELESCOPE_BACK_MODE,
 		TELESCOPE_LEFT_MODE,
+		TELESCOPE_FRONT_MODE,
+		TELESCOPE_BACK_MODE,
+		TRIM_MODE,
 
-
+		CHOSEN_VIEW_MODE,
 		PREVIEW_MODE,
 		FREE_VIEW_MODE,
 
@@ -177,19 +176,19 @@ private:
 		} displayMode; 
 
 		enum SECOND_DISPLAY{
-			SECOND_ALL_VIEW_MODE,
 			SECOND_559_ALL_VIEW_MODE,
-			SECOND_CHOSEN_VIEW_MODE,
 			SECOND_TELESCOPE_FRONT_MODE,
 			SECOND_TELESCOPE_RIGHT_MODE,
 			SECOND_TELESCOPE_BACK_MODE,
 			SECOND_TELESCOPE_LEFT_MODE,
+			SECOND_ALL_VIEW_MODE,
+			SECOND_CHOSEN_VIEW_MODE,
 			SECOND_TOTAL_MODE_COUNT
 		}SecondDisplayMode;
 
 		 enum FBO_MODE {
-			 FBO_ALL_VIEW_MODE,
 			 FBO_ALL_VIEW_559_MODE,
+			 FBO_ALL_VIEW_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
 
@@ -404,7 +403,7 @@ private:
 	void DrawSDIVideo(GLEnv &m_env,bool needSendData);
 	void DrawChosenVideo(GLEnv &m_env,bool needSendData,int mainorsub=MAIN);
 
-	void DrawTargetVideo(GLEnv &m_env, int targetIdx,int camIdx,bool needSendData);
+	void DrawTargetVideo(GLEnv &m_env, int targetIdx,bool needSendData);
 	int GetCurrentVGAVideoId(){return m_VGAVideoId;};
 	int GetCurrentSDIVideoId(){return m_SDIVideoId;};
 	int GetCurrentChosenVideoId(){return m_ChosenVideoId;};
@@ -485,14 +484,14 @@ private:
 	void ChangeMainChosenCamidx(char idx);
 	void ChangeSubChosenCamidx(char idx);
 	void RenderChosenView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h, int mainorsub=MAIN,bool needSendData=true);
-	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
+	void RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN,myMode nowMode=MY_EMPTY_MODE);
 	void RenderTwotimesView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderOnetimeView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderTwotimesView2(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderFourtimesTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub=MAIN);
 	void RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
 	void RenderCheckMyselfView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h);
-	void TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int camidx,int targetIdx,int enlarge=0,int mainOrsub=MAIN);
+	void TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int targetIdx,int enlarge=0);
 
 
 
@@ -727,15 +726,15 @@ private:
 	GLFrame	SDICameraFrame;
 	GLFrame Render2FrontCameraFrame;
 	GLFrame ChosenCameraFrame;
-	GLFrame targetFrame[2];
+	GLFrame targetFrame[TARGET_CAM_COUNT];
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
-#define PETAL_TEXTURE_COUNT (CAM_COUNT+3)
+#define PETAL_TEXTURE_COUNT (1+3)
 
-#define ALPHA_TEXTURE_IDX0	(CAM_COUNT)
-#define ALPHA_TEXTURE_IDX	(CAM_COUNT+1)
-#define ALPHA_TEXTURE_IDX1	(CAM_COUNT+2)
+#define ALPHA_TEXTURE_IDX0	(1)
+#define ALPHA_TEXTURE_IDX	(1+1)
+#define ALPHA_TEXTURE_IDX1	(1+2)
 
 	GLuint textures[PETAL_TEXTURE_COUNT];
 	GLuint GL_TextureIDs[PETAL_TEXTURE_COUNT];

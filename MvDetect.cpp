@@ -1,4 +1,5 @@
 #include<opencv2/opencv.hpp>
+#include"StlGlDefines.h"
 #include"MvDetect.h"
 #include<string.h>
 #include<stdio.h>
@@ -6,11 +7,12 @@
 using namespace cv;
 Mat m4(1080,1280,CV_8UC4);
 Mat m6(1080,1920,CV_8UC4);
-
-MotionDetectorROI   mdRoi_main,mdRoi_sub;
-MotionDetectorROI   mdRoi_mainA0,mdRoi_subA0;
-MotionDetectorROI   mdRoi_mainA1,mdRoi_subA1;
 #if  MVDECT
+extern MvDetect mv_detect;
+MotionDetectorROI   mdRoi_mainT(4,&mv_detect),mdRoi_subT(4,&mv_detect);
+MotionDetectorROI   mdRoi_mainA(2,&mv_detect),mdRoi_subA(2,&mv_detect);
+
+
 MvDetect::MvDetect()
 {
 	for(int i=0;i<CAM_COUNT;i++)
@@ -26,15 +28,12 @@ MvDetect::MvDetect()
 
 for(int i=0;i<2;i++)
 {
-		enableMD[i]=true;
-		MDopen[i]=true;
+		enableMD[i]=false;
+	//	MDopen[i]=false;
 }
 		for(int i=0;i<CAM_COUNT;i++)
 		{
-			targetnum[i]=0;
 			grayFrame[i]=(unsigned char *)malloc(MAX_SCREEN_WIDTH*MAX_SCREEN_HEIGHT*1);
-			for(int j=0;j<4;j++)
-				targetidx[i][j]=0;
 		}
 }
 MvDetect::~MvDetect()
@@ -98,6 +97,7 @@ void myRect(unsigned char *dst,unsigned char *src,int x,int y,int w,int h)
 }
 void MvDetect::selectFrame(unsigned char *dst,unsigned char *src,int targetId,int camIdx)
 {
+#if 0
 	int startx=0;
 	int starty=0;
 	int w=640;
@@ -146,7 +146,7 @@ void MvDetect::selectFrame(unsigned char *dst,unsigned char *src,int targetId,in
 		starty=midy-540/2;
 		myRect(dst,src,startx,starty,640,540);
 	}
-
+#endif
 
 }
 void MvDetect::ReadConfig()
@@ -174,12 +174,18 @@ void MvDetect::ReadConfig()
 }
 bool MvDetect::CanUseMD(int mainorsub)
 {
-	if(enableMD[mainorsub]==true &&MDopen[mainorsub]==true)
+	if(enableMD[mainorsub]==true)
 		return true;
 	else
 		return false;
 }
-
+std::vector<mvRect> *  MvDetect::GetWholeRect()
+{
+	m_WholeRect.clear();
+	for(int i=0;i<CAM_COUNT;i++)
+		m_WholeRect.insert(m_WholeRect.end(),m_outRect[i].begin(),m_outRect[i].end());
+	return &m_WholeRect;
+}
 void MvDetect::SetoutRect(int idx)
 {
 	outRect[idx].clear();
@@ -190,16 +196,33 @@ void MvDetect::SetoutRect(int idx)
 			outRect[idx].push_back(tempoutRect[idx].rects[j]);
 		}
 	}
+#if 0
+	m_outRect[idx].clear();
+	for(int j=0;j<6;j++)
+	{
+		if(tempoutRect[idx].rects[j].x>0)
+		{
+			mvRect mr;
+			mr.outRect=tempoutRect[idx].rects[j];
+			mr.camIdx=idx;
+			mr.x_angle=((float)(tempoutRect[idx].rects[j].x))/1920.0*PER_CAM_ANGLE+idx*PER_CAM_ANGLE;
+			mr.y_angle=((float)(tempoutRect[idx].rects[j].y))/1080.0;
+			m_outRect[idx].push_back(mr);
+		}
+	}
+#endif
 }
 void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {
+#if 1
 	int cc=4;
 	std::vector<cv::Rect> tempRecv[CAM_COUNT];
-	MotionDetectorROI mdRoi;
+//	MotionDetectorROI mdRoi;
+
 	if(capidx==MAIN_FPGA_SIX)
 	{
-		mdRoi_main.SettempSrc6(src);  //todo
-		mdRoi_sub.SettempSrc6(src);
+//		mdRoi_main.SettempSrc6(src);  //todo
+//		mdRoi_sub.SettempSrc6(src);
 		m6.data=src;
 		for(int i=0;i<6;i++)                        //0  1  2
 		{															//3  4  5
@@ -219,10 +242,11 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 			}
 		}
 	}
+
 	if(capidx==MAIN_FPGA_FOUR)
 		{
-		mdRoi_main.SettempSrc4(src);
-		mdRoi_sub.SettempSrc6(src);//todo
+	//	mdRoi_main.SettempSrc4(src);
+	//	mdRoi_sub.SettempSrc6(src);//todo
 		m4.data=src;
 			for(int i=6;i<10;i++)						//6   7
 			{													//8	 9
@@ -237,12 +261,12 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 						int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
 						int endx=startx+w;
 						int endy=starty+h;
-						cv::rectangle(m4,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),3);
+						cv::rectangle(m4,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),1);
 					}
 				}
 			}
 		}
-
+#if 0
 	for(int mOs=0;mOs<2;mOs++)
 	{
 		if(mOs==MAIN)
@@ -298,8 +322,10 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 					mdRoi.drawRect(targetidx,src,capidx);
 
 				}
-	}
-	}
 
+	}
+	}
+#endif
+#endif
 }
 

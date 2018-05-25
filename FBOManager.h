@@ -30,6 +30,11 @@ class FBOManager
 	public:
 	FBOManager(int TextureW,int TextureH,GLenum format=GL_BGR,GLenum internalFormat=GL_RGB8);
 	~FBOManager();
+	void ResetWH(int w,int h)
+	{
+		TextureWidth=w;
+		TextureHeight=h;
+	}
 	bool Init();
 	void PboDraw(InterfacepboDrawCB & icb);
 	void SetDrawBehaviour(p_InterFaceDrawBehaviour DrawBehaviour);

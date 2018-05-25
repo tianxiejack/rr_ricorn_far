@@ -9,6 +9,7 @@ GLenum iniformat=GL_BGRA;
 GLenum internalFormat=GL_RGBA8;
 static int iniCC=4;
 #endif
+
 GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc):
 m_panoCaptureGroup(p_pano),
 m_chosenCaptureGroup(p_chosen),
@@ -20,7 +21,7 @@ PBOExtMgr(PBOSender(MAGICAL_NUM+EXT_CAM_COUNT,PAL_WIDTH,PAL_HEIGHT,iniCC,iniform
 PBOVGAMgr(PBOSender(MAGICAL_NUM+VGA_CAM_COUNT,VGA_WIDTH,VGA_HEIGHT,iniCC,iniformat)),
 PBOSDIMgr(PBOSender(MAGICAL_NUM+SDI_CAM_COUNT,SDI_WIDTH,SDI_HEIGHT,iniCC,iniformat)),
 PBOChosenMgr(PBOSender(MAGICAL_NUM+CHOSEN_CAM_COUNT,SDI_WIDTH,SDI_HEIGHT,iniCC,iniformat)),
-PBOTargetMgr(PBOSender(MAGICAL_NUM+TARGET_CAM_COUNT,FPGA_SINGLE_PIC_W,FPGA_SINGLE_PIC_H,iniCC,iniformat))
+PBOTargetMgr(PBOSender(MAGICAL_NUM+TARGET_CAM_COUNT,ROIW,ROIH,iniCC,iniformat))
 {
 
 }

@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../MvModeSwith.cpp\
 ../MvDrawRect.cpp\
 ../MvDetect.cpp\
 ../thread_idle.cpp\
@@ -65,6 +66,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./MvModeSwith.o\
 ./MvDrawRect.o\
 ./MvDetect.o\
 ./thread_idle.o\
@@ -123,6 +125,7 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./MvModeSwith.d\
 ./MvDrawRect.d\
 ./MvDetect.d\
 ./thread_idle.d\
