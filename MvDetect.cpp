@@ -5,8 +5,8 @@
 #include<stdio.h>
 #include"MvDrawRect.h"
 using namespace cv;
-Mat m4(1080,1280,CV_8UC4);
-Mat m6(1080,1920,CV_8UC4);
+Mat m4(2160,640,CV_8UC4);
+Mat m6(3240,640,CV_8UC4);
 #if  MVDECT
 extern MvDetect mv_detect;
 MotionDetectorROI   mdRoi_mainT(4,&mv_detect),mdRoi_subT(4,&mv_detect);
@@ -231,8 +231,8 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 			{
 				for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
 				{
-					int startx=tempRecv[i][rectIdx].x/3+(640*(i%3));
-					int starty=tempRecv[i][rectIdx].y/2+(540*(i/3));
+					int startx=tempRecv[i][rectIdx].x/3;
+					int starty=tempRecv[i][rectIdx].y/2+540*i;
 					int w=tempRecv[i][rectIdx].width/3;
 					int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
 					int endx=startx+w;
@@ -255,8 +255,8 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 				{
 					for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
 					{
-						int startx=tempRecv[i][rectIdx].x/2+(640*((i-6)%2));
-						int starty=tempRecv[i][rectIdx].y/2+(540*((i-6)/2));
+						int startx=tempRecv[i][rectIdx].x/2;
+						int starty=tempRecv[i][rectIdx].y/2+540*i;
 						int w=tempRecv[i][rectIdx].width/2;
 						int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
 						int endx=startx+w;

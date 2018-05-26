@@ -173,11 +173,15 @@ void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, i
 {
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
-			RectFromPixels(src);
+		//	RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换
+		YUVquar(dst,src,FPGA_SINGLE_PIC_W,FPGA_SINGLE_PIC_H*4);
 		}
-	YUVquar(dst,src,ImgWidth,ImgHeight);
+	else
+	{
+		YUVquar(dst,src,ImgWidth,ImgHeight);
+	}
 }
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
