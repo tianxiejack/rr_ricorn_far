@@ -29,7 +29,7 @@ MvDetect::MvDetect()
 for(int i=0;i<2;i++)
 {
 		enableMD[i]=false;
-	//	MDopen[i]=false;
+		MDopen[i]=false;
 }
 		for(int i=0;i<CAM_COUNT;i++)
 		{

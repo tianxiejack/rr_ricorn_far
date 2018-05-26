@@ -48,7 +48,9 @@ public:
 		if(enableMD[MAIN]==true &&MDopen[MAIN]==true)///*&& enableMD[SUB]==true*/)
 			return true;
 	else if(enableMD[MAIN]==true&&MDopen[SUB]==true)
-			return true;};
+			return true;
+	else
+	return false;};
 
 	std::vector<mvRect> * GetWholeRect();//取得全图的rect
 	void SetoutRect(int idx);//将检测到的每个通道里6个rect放入对应的6个容器里
