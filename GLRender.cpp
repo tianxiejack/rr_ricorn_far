@@ -75,8 +75,8 @@ mdRoi_subA;
 #endif
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
-
-
+bool saveSinglePic[CAM_COUNT]={false};
+char chosenCam[2]={0,0};
 
 
 int m_cam_pos=-1;
@@ -6678,15 +6678,12 @@ if(setpriorityOnce)
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
 				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
-
-
-
 	case CHECK_MYSELF:
 	{
 		static bool Once=true;
 		if(Once)
 		{
-		//	start_SelfCheck_thread();
+			start_SelfCheck_thread();
 			Once=false;
 		}
 		//Show_first_mode(readFirstMode());
@@ -8054,6 +8051,10 @@ GLEnv & env=env1;
 			break;
 		case	'n':
 		{
+#if USE_CAP_SPI
+			chosenCam[MAIN]=(chosenCam[MAIN]+1)%CAM_COUNT;
+			ChangeMainChosenCamidx(chosenCam[MAIN]);
+#endif
 			//FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
 			//fboMode = nextMode;
 		}
@@ -8188,7 +8189,13 @@ GLEnv & env=env1;
 					}
 				}
 					break;
-		case 'r'://PTZ view
+		case 'r':
+			if(EnablePanoFloat==true&&TRIM_MODE==displayMode)
+			{
+					shaderManager.ResetTrimColor();
+					testPanoNumber=(CAM_COUNT-testPanoNumber-1)%CAM_COUNT;
+					shaderManager.SetTrimColor(testPanoNumber);
+			}
 			break;
 		case 't'://PANO add PTZ view
 			break;
@@ -8236,6 +8243,7 @@ GLEnv & env=env1;
 								setCrossCenterPos(cross_pos);
 							}
 						}
+
 
 						if((INIT_VIEW_MODE==displayMode)&&(EnterSinglePictureSaveMode==true))
 						{
@@ -8821,6 +8829,12 @@ GLEnv & env=env1;
 			break;
 			case '~':
 			{
+				if(CHOSEN_VIEW_MODE==displayMode)
+				{
+				#if USE_CAP_SPI
+					saveSinglePic[chosenCam[MAIN]]=true;
+				#endif
+				}
 				if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
 				{
 					SendBackXY(p_ForeSightFacade[MAIN]->GetMil());

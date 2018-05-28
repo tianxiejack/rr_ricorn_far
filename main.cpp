@@ -8,7 +8,7 @@
 #if USE_CAP_SPI
 #include "Cap_Spi_Message.h"
 #endif
-
+#include "Zodiac_GPIO_Message.h"
 
 
 #if TRACK_MODE
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 
 
 #if USE_GPIO
-	InitIPCModule();
+//	InitIPCModule();
 	init_GPIO_IPCMessage();
 #endif
 	start_stitch();
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 
 	mainWin.start(argc, argv);
 #if USE_GPIO
-	IPC_Destroy();
+//	IPC_Destroy();
 	delete_GPIO_IPCMessage();
 #endif
 	//gpio_deinit();
