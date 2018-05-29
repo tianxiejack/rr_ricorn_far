@@ -4489,6 +4489,8 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 			m_env.GetmodelViewMatrix()->PopMatrix();//pop camera matrix
 		}
 		m_env.GetmodelViewMatrix()->PopMatrix();
+		  char zhou[8];
+		  char pao[8];
 		    char text[8];
 			char text2[8];
 			char text3[8];
@@ -6996,6 +6998,12 @@ if(setpriorityOnce)
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+/*
+				p_ChineseCBillBoard->ChooseTga=TURRET_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*100.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+					p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*100.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+*/
 
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
@@ -7009,6 +7017,11 @@ if(setpriorityOnce)
 			||displayMode==TELESCOPE_BACK_MODE
 			||displayMode==TELESCOPE_LEFT_MODE)
 	{
+		p_ChineseCBillBoard->ChooseTga=TURRET_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+		p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+
 		/*
 	p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
@@ -9945,6 +9958,9 @@ void Render::CompassBillBoard::DoTextureBinding()
 Render::ChineseCharacterBillBoard::ChineseCharacterBillBoard(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr)
 :BaseBillBoard((modelViewMat),(projectionMat),(mgr))
 {
+	strcpy( ChineseC_TextureFileName[TURRET_T], TURRET_TGA);
+	strcpy( ChineseC_TextureFileName[PANORAMIC_MIRROR_T], PANORAMIC_MIRROR_TGA);
+
 	strcpy( ChineseC_TextureFileName[ONEX_REALTIME_T], ONEX_REALTIME_TGA);
 		strcpy( ChineseC_TextureFileName[TWOX_REALTIME_T], TWOX_REALTIME_TGA);
 		strcpy( ChineseC_TextureFileName[FOURX_REALTIME_T], FOURX_REALTIME_TGA);
@@ -11029,7 +11045,7 @@ void Render::repositioncamera()
 		for(int i=0;i<2;i++)
 		{
 		PanoTelViewCameraFrame[i].MoveRight(8.0*last_tel_pano_dis);
-			PanoTelViewCameraFrame[i].MoveRight(-8.0*tel_pano_dis);
+		PanoTelViewCameraFrame[i].MoveRight(-8.0*tel_pano_dis);
 		}
 		last_tel_pano_dis=tel_pano_dis;
 

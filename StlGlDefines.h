@@ -356,6 +356,7 @@ static const float vRed[]       = {109/255.0,10/255.0,12/255.0,1.0f};//{ 0.7f, 0
 static const float vBRed[]       = {1.0,0.0,0.0,1.0f};//{ 0.7f, 0.0f, 0.0f, 1.0f };
 static const float *DEFAULT_TEXT_COLOR = vWhite;
 
+
 #define VERSION_STRING		       "v0.18"
 #define DEFAULT_FRONT_TGA         "lable_00.tga"
 #define DEFAULT_REAR_TGA           "lable_03.tga"
@@ -369,6 +370,8 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 #define DEFAULT_EXT_WG712_TGA	"wg712.tga"
 
 
+#define TURRET_TGA			"paota.tga"
+#define PANORAMIC_MIRROR_TGA "zhoushijing.tga"
 #if USE_12
 #define ONEX_REALTIME_TGA     "1X.tga"
 #define TWOX_REALTIME_TGA     "2X.tga"
@@ -441,6 +444,9 @@ enum CCT_COUNT {
 		FINE_T,
 		WRONG_T,
 		IDLE_T,
+
+		TURRET_T,
+		PANORAMIC_MIRROR_T,
 		CCT_COUNT
 		};
 

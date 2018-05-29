@@ -191,6 +191,11 @@ void Render::RenderSceneDS()
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
+				p_ChineseCBillBoard->ChooseTga=TURRET_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
