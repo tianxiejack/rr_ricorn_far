@@ -49,7 +49,7 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 unsigned char * target_data[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
-
+extern bool Enable_MV;
 extern MotionDetectorROI
 		mdRoi_mainT,
 		mdRoi_subT,
@@ -497,7 +497,7 @@ int HDv4l_cam::ChangeIdx2chid(int idx)
 	//return picidx;
 	return 0;
 }
-
+/*
 void save_yuyv(char *filename,void *pic,int w,int h)
 {
 	FILE * fp;
@@ -505,7 +505,7 @@ void save_yuyv(char *filename,void *pic,int w,int h)
 	fp=fopen(filename,"w");
 	fwrite(pic,w*h*2,1,fp);
 	fclose(fp);
-}
+}*/
 void save_rgb(char *filename,void *pic,int w,int h)
 {
 	Mat Pic(h,w,CV_8UC3,pic);
@@ -650,7 +650,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								//todo //４副　６副
 
 #if MVDECT
-								if(mv_detect.MDisStart())
+							//	if(mv_detect.MDisStart())
+								if(Enable_MV)
 								{
 									mv_detect.SetoutRect(mv_count);
 									if(nowpicW==1280)

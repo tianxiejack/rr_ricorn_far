@@ -83,8 +83,8 @@ int m_cam_pos=-1;
 
 extern GLEnv env1;
 extern GLEnv env2;
-bool enable_hance=false;
 
+bool Enable_MV=false;
 bool isTracking=false;
 
 PanoCamOnForeSight  panocamonforesight[2];
@@ -188,6 +188,9 @@ CVideoProcess* trackMode=CVideoProcess::getInstance();
 #if MVDETECTOR_MODE
 mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
+
+extern bool enable_hance;
+
 void readcanshu()
 {
 
@@ -983,8 +986,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
 	GLenum format= GL_BGR;
 #else
-	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
-	GLenum format= GL_BGRA;
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
+	GLenum format= GL_BGR;
 #endif
 #if MVDECT
 	mv_detect.ReadConfig();
@@ -2355,7 +2358,7 @@ void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData,int mainorsub)
 #if USE_CPU
 			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #else
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
+			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #endif
 			m_env.Getp_shadowBatch()->Draw();
 		m_env.GetmodelViewMatrix()->PopMatrix();
@@ -2378,7 +2381,7 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 #if USE_GAIN
 #if WHOLE_PIC
 #define USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
-                                               shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
+                                               shaderManager.UseStockShader(GLT_SHADER_ORI_BLENDING, \
                                                    m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
@@ -2477,7 +2480,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 	#if USE_CPU
 					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 	 #else
-					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				 (*m_env.GetPanel_Petal(i)).Draw();
@@ -2500,7 +2503,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 							shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
 	#else
-						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
@@ -7938,8 +7941,12 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
+			if(Enable_MV)
+				Enable_MV=false;
+			else
+				Enable_MV=true;
 #if MVDECT
-			mv_detect.OpenMD(MAIN);
+			//mv_detect.OpenMD(MAIN);
 #endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
@@ -9228,7 +9235,10 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 
 		break;
 	case 7:
+		enable_hance=true;
+		break;
 	case 8:
+		enable_hance=false;
 		break;
 	case 9:
 		scan_angle=getScanRegionAngle();
@@ -12034,7 +12044,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 #if USE_CPU
 	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 #else
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 #endif
 	switch(type)
 	{

@@ -114,6 +114,7 @@ public:
 	void SavePic(const char* name);
 	void saveOverLap();
 private:
+	void trueYUV2RGB(unsigned char * ptr,unsigned char * src,int dev_num);
 	int m_chId;
 	unsigned char *m_buffer;
 	Mat yuvImg;
@@ -130,6 +131,7 @@ public:
 	void SavePic(const char* name);
 	void saveOverLap(){};
 	void YUYVEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h);
+	void UYVXEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h);
 	void YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h);
 private:
 	int m_qid;

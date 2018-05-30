@@ -22,7 +22,7 @@ extern RecordHandle * record_handle;
 #if USE_CPU
 static int iniCC=3;
 #else
-static int iniCC=4;
+static int iniCC=3;
 #endif
 
 void *pbo_process_thread(void *arg)
@@ -33,7 +33,7 @@ void *pbo_process_thread(void *arg)
 #if USE_CPU
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #else
-    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
+    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #endif
 #if GSTREAM_CAP
  initGstCap();

@@ -17,6 +17,7 @@ extern float forward_data;
 extern GLEnv env2,env1;
 extern ForeSightPos foresightPos[MS_COUNT];
 extern char chosenCam[2];
+extern bool Enable_MV;
 void InitBowlDS()
 {
 
@@ -641,7 +642,11 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			break;
 		case 'O':
 		{
-			mv_detect.OpenMD(SUB);
+			if(Enable_MV)
+				Enable_MV=false;
+			else
+				Enable_MV=true;
+			//mv_detect.OpenMD(SUB);
 			break;
 		}
 		case 'o':
