@@ -17,7 +17,7 @@ extern float forward_data;
 extern GLEnv env2,env1;
 extern ForeSightPos foresightPos[MS_COUNT];
 extern char chosenCam[2];
-extern bool Enable_MV;
+static float delayT=20.0;
 void InitBowlDS()
 {
 
@@ -26,6 +26,9 @@ void InitBowlDS()
 
 void Render::RenderSceneDS()
 {
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 #if MVDECT
 	if(mv_detect.CanUseMD(SUB) ||mv_detect.CanUseMD(MAIN))
 	{
@@ -47,8 +50,8 @@ void Render::RenderSceneDS()
 
 	//GLEnv &env=env2;
 	GLEnv &env=env1;
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-	switch(SecondDisplayMode)
+
+		switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:
 #if 1
@@ -577,6 +580,14 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	switch(key)
 		{
+	case'+':
+		delayT+=1;
+		printf("delayT=%f\n",delayT);
+		break;
+	case '-':
+		delayT-=1;
+		printf("delayT=%f\n",delayT);
+		break;
 	case '(':
 				foresightPos[SUB].SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
 					break;
@@ -642,11 +653,7 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			break;
 		case 'O':
 		{
-			if(Enable_MV)
-				Enable_MV=false;
-			else
-				Enable_MV=true;
-			//mv_detect.OpenMD(SUB);
+			mv_detect.OpenMD(SUB);
 			break;
 		}
 		case 'o':
@@ -678,8 +685,25 @@ void Render::GetFPSDS()
 void Render::DrawGLSceneDS()
 {
 	char arg1[128],arg2[128];
+	static struct timeval mt;
+	struct timeval tv2;
+	memset(&tv2,0,sizeof(timeval));
+	gettimeofday(&tv2,NULL);
+	float deltatime= (1000000.0*(tv2.tv_sec - mt.tv_sec) +(tv2.tv_usec - mt.tv_usec))/1000.0;
+	//printf("deltatime=%f\n",deltatime);
+
+	if(deltatime>delayT)
+	{
+		//printf("deltatime=%f\n",deltatime);
+		mt=tv2;
+
 		RenderSceneDS();
 		glutSwapBuffers();
+	}
+	else
+	{
+		return;
+	}
 		glFinish();
 		GetFPSDS();  /* Get frame rate stats */
 

@@ -55,14 +55,14 @@ public:
 		bool IsAllReady();
 private:
 		self_check_state m_CheckResult[SELFCHECK_ITEM_COUNT];
-		self_check_state capture_state[CAM_COUNT+4];
+		self_check_state capture_state[CAM_COUNT];
 		time_t nowtime;
 		time_t lasttime;
 		bool Onesec;
 		time_t NowCheckTime;
 		time_t LastCheckTime;
 		bool Ischeck;
-		int BrokenCam[CAM_COUNT+4];
+		int BrokenCam[CAM_COUNT];
 };
 void SendBackBrokenCam(int *CamN);
 

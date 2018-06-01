@@ -14,6 +14,7 @@ SelfCheck selfcheck;
 
 void   SelfCheck::CheckBrokenCam()
 {
+#if USE_GPIO
 	BrokenCam[0]=get_gpioNum_Value(GPIO_FAR_0_NUM);
 	BrokenCam[1]=get_gpioNum_Value(GPIO_FAR_1_NUM);
 	BrokenCam[2]=get_gpioNum_Value(GPIO_FAR_2_NUM);
@@ -25,14 +26,18 @@ void   SelfCheck::CheckBrokenCam()
 	BrokenCam[8]=get_gpioNum_Value(GPIO_FAR_8_NUM);
 	BrokenCam[9]=get_gpioNum_Value(GPIO_FAR_9_NUM);
 	BrokenCam[10]=get_gpioNum_Value(GPIO_NEAR_0_NUM);
-	BrokenCam[11]=get_gpioNum_Value(GPIO_NEAR_1_NUM);
-	BrokenCam[12]=get_gpioNum_Value(GPIO_NEAR_2_NUM);
-	BrokenCam[13]=get_gpioNum_Value(GPIO_NEAR_3_NUM);
+#else
+for(int i=0;i<CAM_COUNT;i++)
+	BrokenCam[i]=1;
+#endif
+//	BrokenCam[11]=get_gpioNum_Value(GPIO_NEAR_1_NUM);
+//	BrokenCam[12]=get_gpioNum_Value(GPIO_NEAR_2_NUM);
+//	BrokenCam[13]=get_gpioNum_Value(GPIO_NEAR_3_NUM);
 }
 
 self_check_state  SelfCheck::IsIDLE()
 {
-	for(int i=0;i<CAM_COUNT+4;i++)
+	for(int i=0;i<CAM_COUNT;i++)
 	{
 		if(BrokenCam[i]==-1)
 		{
@@ -79,7 +84,7 @@ SelfCheck::SelfCheck()
 	m_CheckResult[CHECK_ITEM_CAPTURE]=SELFCHECK_IDLE;
 	m_CheckResult[CHECK_ITEM_COMMUNICATION]=SELFCHECK_PASS;
 	m_CheckResult[CHECK_ITEM_BOARD]=SELFCHECK_PASS;
-	for(int i=0;i<CAM_COUNT+2+2;i++)
+	for(int i=0;i<CAM_COUNT;i++)
 	{
 		capture_state[i]=SELFCHECK_IDLE;
 		BrokenCam[i]=-1;

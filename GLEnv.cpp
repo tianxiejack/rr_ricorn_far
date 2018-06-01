@@ -5,9 +5,9 @@ GLenum iniformat=GL_BGR;
 GLenum internalFormat=GL_RGB8;
 static int iniCC=3;
 #else
-GLenum iniformat=GL_BGR;
-GLenum internalFormat=GL_RGB8;
-static int iniCC=3;
+GLenum iniformat=GL_BGRA;
+GLenum internalFormat=GL_RGBA8;
+static int iniCC=4;
 #endif
 
 GLEnv::GLEnv(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_misc):

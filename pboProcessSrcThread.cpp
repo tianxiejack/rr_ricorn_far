@@ -22,9 +22,9 @@ extern RecordHandle * record_handle;
 #if USE_CPU
 static int iniCC=3;
 #else
-static int iniCC=3;
+static int iniCC=4;
 #endif
-
+extern bool IsgstCap;
 void *pbo_process_thread(void *arg)
 {
 	GLEnv &env=env1;
@@ -33,7 +33,7 @@ void *pbo_process_thread(void *arg)
 #if USE_CPU
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #else
-    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
+    Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
 #endif
 #if GSTREAM_CAP
  initGstCap();
@@ -43,15 +43,34 @@ void *pbo_process_thread(void *arg)
 		OSA_semWait(render.GetPBORcr(env)->getSemPBO(),100000);
 		int processId=render.GetPBORcr(env)->getCurrentPBOIdx();
 #if GSTREAM_CAP
+		if(IsgstCap)
 		gstCapturePushData(record_handle, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId) , CURRENT_SCREEN_WIDTH*CURRENT_SCREEN_HEIGHT*iniCC);
+
 		#else
 		static int a=0;
 		a++;
 					if(a==20)
 					{
 						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*iniCC);
-						imwrite("./data/50TEST_PBO.bmp",testData);
+						imwrite("./data/20TEST_PBO.bmp",testData);
 					}
+					if(a==100)
+					{
+						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*iniCC);
+						imwrite("./data/100TEST_PBO.bmp",testData);
+					}
+
+					if(a==200)
+					{
+						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*iniCC);
+						imwrite("./data/200TEST_PBO.bmp",testData);
+					}
+					if(a==400)
+					{
+						memcpy(testData.data, (char *)*render.GetPBORcr(env)->getPixelBuffer(processId),CURRENT_SCREEN_HEIGHT*CURRENT_SCREEN_WIDTH*iniCC);
+						imwrite("./data/400TEST_PBO.bmp",testData);
+					}
+
 #endif
 	}
 }

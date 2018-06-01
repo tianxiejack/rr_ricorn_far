@@ -16,6 +16,7 @@ typedef unsigned char byte;
 
 
 
+
 static IF_MotionDect *pbeh=NULL;
 static 	IF_MotionDetectorROI *mp_mdRoi_mainT=NULL;
 static	IF_MotionDetectorROI *mp_mdRoi_subT=NULL;
@@ -211,14 +212,6 @@ void yuv2UYVx(const unsigned char *pYuvBuf,unsigned char* ptr, int width,int hei
 }
 
 
-void save_yuyv(char *filename,void *pic,int w,int h)
-{
-	FILE * fp;
-	char buf[30];
-	fp=fopen(filename,"w");
-	fwrite(pic,w*h*2,1,fp);
-	fclose(fp);
-}
 
 void get_buffer(unsigned char* ptr, int chId)
 {
@@ -291,7 +284,6 @@ void get_buffer(unsigned char* ptr, int chId)
 	}
 #endif
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*4);
-
 #if 0
 	if(pbeh!=NULL)
 	{

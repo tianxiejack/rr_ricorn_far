@@ -11,16 +11,16 @@ extern SelfCheck selfcheck;
 
 void *SelfCheck_thread(void *arg)
 {
-	sleep(10);
+	sleep(2);
+	selfcheck.initState();
 	while(1)
 	{
-		selfcheck.initState();
 		selfcheck.CheckBrokenCam();
 		//selfcheck.Check12CAM();
 		//selfcheck.CheckExtra2CAM();
 	//	selfcheck.Check2HD();
 	//	selfcheck.CaptureCheckAll();
-		selfcheck.SendBrokenCAM();
+		//selfcheck.SendBrokenCAM();
 	 sleep(10);
 	}
 	return 0;

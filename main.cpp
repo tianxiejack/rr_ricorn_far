@@ -92,11 +92,15 @@ int main(int argc, char** argv)
 #else
 
 	env1.init(PanoCaptureGroup::GetMainInstance(),
-			ChosenCaptureGroup::GetMainInstance(),
-			ChosenCaptureGroup::GetMvDetectInstance(),
+			BMPMiscGroup::GetInstance(),
+			BMPMiscGroup::GetInstance(),
+			//ChosenCaptureGroup::GetMainInstance(),
+			//ChosenCaptureGroup::GetMvDetectInstance(),
 		BMPMiscGroup::GetInstance());
 	env2.init(PanoCaptureGroup::GetSubInstance(),
-			ChosenCaptureGroup::GetSubInstance(),
+			BMPMiscGroup::GetInstance(),
+			BMPMiscGroup::GetInstance(),
+			//ChosenCaptureGroup::GetSubInstance(),
 			NULL,
 			BMPMiscGroup::GetInstance()
 			);
@@ -110,7 +114,8 @@ int main(int argc, char** argv)
 
 #if USE_GPIO
 //	InitIPCModule();
-	init_GPIO_IPCMessage();
+	//init_GPIO_IPCMessage();
+	gpio_init()
 #endif
 	start_stitch();
 	#if TRACK_MODE
@@ -133,7 +138,7 @@ int main(int argc, char** argv)
 	mainWin.start(argc, argv);
 #if USE_GPIO
 //	IPC_Destroy();
-	delete_GPIO_IPCMessage();
+//	delete_GPIO_IPCMessage();
 #endif
 	//gpio_deinit();
 

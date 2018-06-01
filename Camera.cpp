@@ -24,12 +24,12 @@
 #include <omp.h>
 #define MEMCPY memcpy
 
-	unsigned char *test_ptr=NULL;
+
 using namespace std;
 using namespace cv;
 unsigned char * temp_data_main[MAX_CC];
 unsigned char * temp_data_sub[MAX_CC];
-bool enable_hance=false;
+extern bool enable_hance;
 #if ENABLE_ENHANCE_FUNCTION
 extern void cuHistEnh(cv::Mat src, cv::Mat dst);
 
@@ -164,6 +164,10 @@ static void UYVx2RGB(unsigned char *lpYUV, int width, int height, Mat* RGBData)
 	}
 }
 
+
+
+
+
 void SmallVCap::SavePic(const char* name)
 {
 	get_buffer(m_buffer, m_chId);
@@ -241,58 +245,18 @@ void HDVCap::YUYVEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h
 				}
 				once=false;
 			}
-			//cudaMemcpy(gpu_yuyv,temp_data,w*h*2,cudaMemcpyHostToDevice);
+			cudaMemcpy(gpu_yuyv,temp_data,w*h*2,cudaMemcpyHostToDevice);
 #if ENABLE_ENHANCE_FUNCTION
 			yuyv2bgr_(gpu_rgb,gpu_yuyv,w,h,m_cuStream[0]);
 
 			Mat dst1(h,w,CV_8UC3,gpu_enh);
 			Mat src1(h,w,CV_8UC3,gpu_rgb);
-			cuClahe( src1,dst1);// 4,4,4.5,0);
+			cuClahe( src1,dst1, 4,4,4.5,0);
 
 			cudaMemcpy(ptr,gpu_enh,w*h*3,cudaMemcpyDeviceToHost);
 #endif
 #endif
 }
-
-void HDVCap::UYVXEnhance(unsigned char *ptr,unsigned char *temp_data,int w,int h)
-{
-#if 1
-	static unsigned char * gpu_yuyv;
-			static unsigned char * gpu_rgb;
-			static unsigned char * gpu_enh;
-			static unsigned char * cpu_rgb;
-
-			static bool once =true;
-			static cudaStream_t m_cuStream[2];
-			if(once)
-			{
-				cudaMalloc((void **)&gpu_yuyv,w*h*2);
-				cudaMalloc((void **)&gpu_rgb,w*h*3);
-				cudaMalloc((void **)&gpu_enh,(w)*(h)*3);
-
-				cpu_rgb=(unsigned char *)malloc(SDI_WIDTH*SDI_HEIGHT*3);
-
-				for(int i=0; i<2; i++){
-					cudaStreamCreate(&m_cuStream[i]);
-				}
-				once=false;
-			}
-			//cudaMemcpy(gpu_yuyv,temp_data,w*h*2,cudaMemcpyHostToDevice);
-#if ENABLE_ENHANCE_FUNCTION
-			Mat mat_rgb(h,w,CV_8UC3,cpu_rgb);
-			UYVx2RGB(temp_data,w,h,&mat_rgb);
-			cudaMemcpy(gpu_rgb,cpu_rgb,w*h*3,cudaMemcpyHostToDevice);
-			//yuyv2bgr_(gpu_rgb,gpu_yuyv,w,h,m_cuStream[0]);
-
-			Mat dst1(h,w,CV_8UC3,gpu_enh);
-			Mat src1(h,w,CV_8UC3,gpu_rgb);
-			cuClahe( src1,dst1);// 4,4,4.5,0);
-
-			cudaMemcpy(ptr,gpu_enh,w*h*3,cudaMemcpyDeviceToHost);
-#endif
-#endif
-}
-
 void HDVCap::YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h)
 {
 #if 1
@@ -310,51 +274,7 @@ void HDVCap::YUYV2RGB(unsigned char*dst,unsigned char *src,int w,int h)
 }
 
 void HDVCap::Capture(char* ptr){
-#if 1//!USE_BMPCAP
-	static unsigned char * data_uyvx;
-	static bool once=true;
-	int w=0;
-	int h=0;
-	if(m_qid==MAIN_ONE_OF_TEN
-			||m_qid==SUB_ONE_OF_TEN
-			)
-	{
-		w=SDI_WIDTH;
-		h=SDI_HEIGHT;
-	}
-	else if(m_qid==MAIN_FPGA_SIX)
-	{
-		w=FPGA_SINGLE_PIC_W;
-		h=FPGA_SINGLE_PIC_H*6;
-	}
-	else if (m_qid==MAIN_FPGA_FOUR)
-	{
-		w=FPGA_SINGLE_PIC_W;
-		h=FPGA_SINGLE_PIC_H*4;
-	}
-
-	Mat mat_rgb(h,w,CV_8UC3,ptr);
-
-	if(once)
-	{
-		once=false;
-		data_uyvx=(unsigned char * )malloc(1920*1080*4);
-	}
-	get_buffer((unsigned char *)data_uyvx,m_qid);
-
-	if(enable_hance)
-	{
-#if ENABLE_ENHANCE_FUNCTION
-		UYVXEnhance((unsigned char *)ptr,(unsigned char *)data_uyvx,w,h);
-#else
-		UYVx2RGB(data_uyvx,w,h,&mat_rgb);
-#endif
-	}
-	else
-	{
-		UYVx2RGB(data_uyvx,w,h,&mat_rgb);
-	}
-#endif
+	get_buffer((unsigned char *)ptr,m_qid);
 }
 
 
@@ -522,6 +442,10 @@ bool BMPVcap::Open()
 	if(pic)
 		cvReleaseImage(&pic);
 	pic = cvLoadImage(pFileName);
+	if(strcmp(pFileName,"45.bmp")==0)
+	{
+		printf("0\n");
+	}
 	if(pic == NULL)
 	{
 		cerr<<"failed 2 load "<<pFileName<<".bmp filled with color bar"<<endl;
@@ -538,7 +462,7 @@ bool BMPVcap::Open()
 	else{
 		Mat ycrcb;
 		Mat im=cvarrToMat(pic);
-#if 1
+#if USE_CPU
 		cvtColor( im,yuv_alpha,CV_RGB2BGR); //RGB->RGB
 		memcpy(yuv_alpha.data,im.data,im.rows*im.cols*3);
 #else

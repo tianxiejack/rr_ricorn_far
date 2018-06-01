@@ -38,6 +38,7 @@ extern Alg_Obj * queue_main_sub;
 #define INPUT_IMAGE_WIDTH 1920
 #define INPUT_IMAGE_HEIGHT 1080
 
+bool IsMvDetect=false;
 using namespace std;
 static bool Once_buffer=true;
 int m_bufId[QUE_CHID_COUNT]={0};
@@ -49,7 +50,7 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 unsigned char * target_data[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
-extern bool Enable_MV;
+
 extern MotionDetectorROI
 		mdRoi_mainT,
 		mdRoi_subT,
@@ -497,7 +498,7 @@ int HDv4l_cam::ChangeIdx2chid(int idx)
 	//return picidx;
 	return 0;
 }
-/*
+
 void save_yuyv(char *filename,void *pic,int w,int h)
 {
 	FILE * fp;
@@ -505,7 +506,7 @@ void save_yuyv(char *filename,void *pic,int w,int h)
 	fp=fopen(filename,"w");
 	fwrite(pic,w*h*2,1,fp);
 	fclose(fp);
-}*/
+}
 void save_rgb(char *filename,void *pic,int w,int h)
 {
 	Mat Pic(h,w,CV_8UC3,pic);
@@ -536,10 +537,6 @@ void save_single_pic(char *filename,void *pic,int w,int h)
 
 int HDv4l_cam::read_frame(int now_pic_format)
 {
-	int t[10]={0};
- timeval startT[20]={0};
-
-
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -618,7 +615,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							#if MVDECT
 							{
-								if(mv_detect.MDisStart())
+							//	if(mv_detect.MDisStart())
+							if(IsMvDetect)
 								{
 									mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 								}
@@ -651,7 +649,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 
 #if MVDECT
 							//	if(mv_detect.MDisStart())
-								if(Enable_MV)
+								if(IsMvDetect)
 								{
 									mv_detect.SetoutRect(mv_count);
 									if(nowpicW==1280)

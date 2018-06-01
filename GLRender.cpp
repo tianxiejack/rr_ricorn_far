@@ -78,13 +78,13 @@ extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
 char chosenCam[2]={0,0};
 
-
+bool IsgstCap=false;
 int m_cam_pos=-1;
 
 extern GLEnv env1;
 extern GLEnv env2;
+bool enable_hance=false;
 
-bool Enable_MV=false;
 bool isTracking=false;
 
 PanoCamOnForeSight  panocamonforesight[2];
@@ -188,9 +188,6 @@ CVideoProcess* trackMode=CVideoProcess::getInstance();
 #if MVDETECTOR_MODE
 mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
-
-extern bool enable_hance;
-
 void readcanshu()
 {
 
@@ -685,7 +682,7 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
 		fboMode(FBO_ALL_VIEW_559_MODE),
-		displayMode(ALL_VIEW_MODE),
+		displayMode(CHECK_MYSELF),
 		SecondDisplayMode(SECOND_559_ALL_VIEW_MODE),
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -986,8 +983,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
 	GLenum format= GL_BGR;
 #else
-	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
-	GLenum format= GL_BGR;
+	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
+	GLenum format= GL_BGRA;
 #endif
 #if MVDECT
 	mv_detect.ReadConfig();
@@ -2358,7 +2355,7 @@ void Render::DrawChosenVideo(GLEnv &m_env,bool needSendData,int mainorsub)
 #if USE_CPU
 			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #else
-			shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+22);// VGA texture start from 15
 #endif
 			m_env.Getp_shadowBatch()->Draw();
 		m_env.GetmodelViewMatrix()->PopMatrix();
@@ -2381,7 +2378,7 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
 #if USE_GAIN
 #if WHOLE_PIC
 #define USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
-                                               shaderManager.UseStockShader(GLT_SHADER_ORI_BLENDING, \
+                                               shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
                                                    m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
                                                   0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                                                        }
@@ -2480,7 +2477,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 	#if USE_CPU
 					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 	 #else
-					shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				 (*m_env.GetPanel_Petal(i)).Draw();
@@ -2503,7 +2500,7 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 							shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 						}
 	#else
-						shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
 	#endif
 				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
@@ -6952,7 +6949,7 @@ if(setpriorityOnce)
 	//RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.1, billBoardy-g_windowHeight*1/3, g_windowHeight*1/2, g_windowHeight*1/2);
 
 
-		selfcheck.CalculateTime(1);
+
 		#if USE_UART
 		if(zodiac_msg.CheckFine()==SELFCHECK_IDLE)
 		{
@@ -6975,9 +6972,39 @@ if(setpriorityOnce)
 			Show_first_mode(readFirstMode());
 		}
 #else
-		p_ChineseCBillBoard->ChooseTga=IDLE_T;
+		selfcheck.CalculateTime(1);
+		if(selfcheck.IsIDLE()==SELFCHECK_IDLE)
+		{
+			if(selfcheck.IsOnesec())
+			{
+				p_ChineseCBillBoard->ChooseTga=IDLE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+			}
+		}
+		else 	if(selfcheck.IsIDLE()==SELFCHECK_PASS)
+		{
+			p_ChineseCBillBoard->ChooseTga=FINE_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+			static int a=0;
+			if(a++==50)
+			{
+			displayMode=ALL_VIEW_MODE;
+			a=0;
+			}
+		}
+		else if(selfcheck.IsIDLE()==SELFCHECK_FAIL)
+		{
+				p_ChineseCBillBoard->ChooseTga=WRONG_T;
 		RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
-#endif
+		static int b=0;
+				if(b++==50)
+				{
+					displayMode=ALL_VIEW_MODE;
+				b=0;
+				}
+
+		}
+		#endif
 	}
 
 	else if(displayMode==	ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE)
@@ -7941,12 +7968,8 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
-			if(Enable_MV)
-				Enable_MV=false;
-			else
-				Enable_MV=true;
 #if MVDECT
-			//mv_detect.OpenMD(MAIN);
+			mv_detect.OpenMD(MAIN);
 #endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
@@ -8373,6 +8396,14 @@ GLEnv & env=env1;
 		case 'G'://PTZ--CCD
 			break;
 		case 'g'://PTZ--FIR
+			if(IsgstCap==false)
+			{
+				IsgstCap=true;
+			}
+			else
+			{
+				IsgstCap=false;;
+			}
 			break;
 		case 'z'://steady on
 			break;
@@ -9235,10 +9266,7 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 
 		break;
 	case 7:
-		enable_hance=true;
-		break;
 	case 8:
-		enable_hance=false;
 		break;
 	case 9:
 		scan_angle=getScanRegionAngle();
@@ -12044,7 +12072,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 #if USE_CPU
 	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 #else
-	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
+	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 #endif
 	switch(type)
 	{
