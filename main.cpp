@@ -99,7 +99,6 @@ int main(int argc, char** argv)
 		BMPMiscGroup::GetInstance());
 	env2.init(PanoCaptureGroup::GetSubInstance(),
 			BMPMiscGroup::GetInstance(),
-			BMPMiscGroup::GetInstance(),
 			//ChosenCaptureGroup::GetSubInstance(),
 			NULL,
 			BMPMiscGroup::GetInstance()
