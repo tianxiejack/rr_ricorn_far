@@ -69,7 +69,10 @@ void mvDetectorDraw(std::vector<TRK_RECT_INFO> &resTarget,int chId)
 #endif
 int main(int argc, char** argv)
 {
-
+#if USE_CAP_SPI
+	SpiSet();
+	//InitIPCModule();
+#endif
 #if MVDECT
 	mv_detect.init(1920,1080);
 #endif
@@ -77,7 +80,7 @@ int main(int argc, char** argv)
 	if(!param.readParams("./Param.yml"))
 		printf("read param error\n");
 #if USE_CAP_SPI
-	InitIPCModule();
+	//InitIPCModule();
 #endif
 
 #if USE_BMPCAP
@@ -92,14 +95,11 @@ int main(int argc, char** argv)
 #else
 
 	env1.init(PanoCaptureGroup::GetMainInstance(),
-			BMPMiscGroup::GetInstance(),
-			BMPMiscGroup::GetInstance(),
-			//ChosenCaptureGroup::GetMainInstance(),
-			//ChosenCaptureGroup::GetMvDetectInstance(),
+			ChosenCaptureGroup::GetMainInstance(),
+			ChosenCaptureGroup::GetMvDetectInstance(),
 		BMPMiscGroup::GetInstance());
 	env2.init(PanoCaptureGroup::GetSubInstance(),
-			BMPMiscGroup::GetInstance(),
-			//ChosenCaptureGroup::GetSubInstance(),
+			ChosenCaptureGroup::GetSubInstance(),
 			NULL,
 			BMPMiscGroup::GetInstance()
 			);
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 #if USE_GPIO
 //	InitIPCModule();
 	//init_GPIO_IPCMessage();
-	gpio_init()
+//	gpio_init()
 #endif
 	start_stitch();
 	#if TRACK_MODE

@@ -30,14 +30,12 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
-#include"MvDrawRect.h"
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
 
 #define INPUT_IMAGE_WIDTH 1920
 #define INPUT_IMAGE_HEIGHT 1080
-
 bool IsMvDetect=false;
 using namespace std;
 static bool Once_buffer=true;
@@ -51,11 +49,7 @@ unsigned char * target_data[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
-extern MotionDetectorROI
-		mdRoi_mainT,
-		mdRoi_subT,
-		mdRoi_mainA,
-		mdRoi_subA;
+
 
 
 
@@ -87,21 +81,7 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			bufferCount = 8;
 			if(Once_buffer)
 			{
-#if MVDECT
-				init_buffer(&mv_detect,
-						&mdRoi_mainT,
-						&mdRoi_subT,
-						&mdRoi_mainA,
-						&mdRoi_subA);
-#else
-				init_buffer(NULL,
-						NULL,
-						NULL,
-						NULL,
-						NULL
-						);
-#endif
-
+				init_buffer(NULL,NULL,NULL,NULL,NULL);
 				Once_buffer=false;
 				for(int i=0;i<CAM_COUNT;i++){
 					target_data[i]=(unsigned char *)malloc(1920*1080*4);
@@ -153,44 +133,6 @@ void save_SDIyuyv_pic(void *pic,int w,int h)
 	fclose(fp);
 }
 
-void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
-{
-	for(int j =0;j<ImgHeight;j++)
-		{
-			for(int i=0;i<ImgWidth*2/4;i++)
-			{
-				*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4);
-				*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+1);
-				*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+3);
-				*(dst+j*ImgWidth*4+i*8+3)=0;
-
-				*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+2);
-				*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+1);
-				*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+3);
-				*(dst+j*ImgWidth*4+i*8+7)=0;
-			}
-		}
-}
-
-void HDv4l_cam::UYVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
-{
-	for(int j =0;j<ImgHeight;j++)
-	{
-		for(int i=0;i<ImgWidth*2/4;i++)
-		{
-			*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4+1);
-			*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+0);
-			*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+2);
-			*(dst+j*ImgWidth*4+i*8+3)=0;
-
-			*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+3);
-			*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+0);
-			*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+2);
-			*(dst+j*ImgWidth*4+i*8+7)=0;
-		}
-	}
-}
-
 void HDv4l_cam::UYVnoXquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
 	for(int j =0;j<ImgHeight;j++)
@@ -230,6 +172,26 @@ void HDv4l_cam::UYVY2UYV(unsigned char *dst,unsigned char *src, int ImgWidth, in
 	}
 }
 
+
+
+void HDv4l_cam::UYVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
+{
+	for(int j =0;j<ImgHeight;j++)
+	{
+		for(int i=0;i<ImgWidth*2/4;i++)
+		{
+			*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4+1);
+			*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+0);
+			*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+2);
+			*(dst+j*ImgWidth*4+i*8+3)=0;
+
+			*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+3);
+			*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+0);
+			*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+2);
+			*(dst+j*ImgWidth*4+i*8+7)=0;
+		}
+	}
+}
 void HDv4l_cam::UYVY2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
@@ -241,19 +203,75 @@ void HDv4l_cam::UYVY2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, i
 		UYVquar(dst,src,ImgWidth,ImgHeight);
 	}
 }
+
+void HDv4l_cam::YUVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
+{
+	for(int j =0;j<ImgHeight;j++)
+		{
+			for(int i=0;i<ImgWidth*2/4;i++)
+			{
+				*(dst+j*ImgWidth*4+i*8+1)=*(src+j*ImgWidth*2+i*4);
+				*(dst+j*ImgWidth*4+i*8+0)=*(src+j*ImgWidth*2+i*4+1);
+				*(dst+j*ImgWidth*4+i*8+2)=*(src+j*ImgWidth*2+i*4+3);
+				*(dst+j*ImgWidth*4+i*8+3)=0;
+
+				*(dst+j*ImgWidth*4+i*8+5)=*(src+j*ImgWidth*2+i*4+2);
+				*(dst+j*ImgWidth*4+i*8+4)=*(src+j*ImgWidth*2+i*4+1);
+				*(dst+j*ImgWidth*4+i*8+6)=*(src+j*ImgWidth*2+i*4+3);
+				*(dst+j*ImgWidth*4+i*8+7)=0;
+			}
+		}
+}
 void HDv4l_cam::YUYV2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
+#if 1
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
 		{
+		YUVquar(dst,src,FPGA_SINGLE_PIC_W,FPGA_SINGLE_PIC_H*4);
 		//	RectFromPixels(src);
 			//如果w=1280 h=1080,则进行截取
 			//否则直接转换
-		YUVquar(dst,src,FPGA_SINGLE_PIC_W,FPGA_SINGLE_PIC_H*4);
 		}
 	else
 	{
 		YUVquar(dst,src,ImgWidth,ImgHeight);
 	}
+#if 0
+	if(ImgWidth==FPGA_SCREEN_WIDTH)
+		{
+		static int a=0;
+			if(a++==50)
+			{
+				save_SDIyuyv_pic(src,ImgWidth,ImgHeight);
+			}
+		}
+#endif
+#endif
+	//YUVquar(dst,src,ImgWidth,ImgHeight);
+#if 0
+	unsigned char pp[1280*1080*4];
+	if(ImgWidth==FPGA_SCREEN_WIDTH)
+	{
+		for(int i=0;i<1280*1080*4;i++)
+			pp[i]=i;
+		memcpy(dst,pp,1280*1080*4);
+	}
+
+#endif
+#if 0
+	int t[10]={0};
+ timeval startT[20]={0};
+	gettimeofday(&startT[4],0);
+	ImgHeight/=4;
+#pragma omp parallel for
+for(int i=0;i<4;i++)
+{
+	YUVquar(dst+4*i*ImgWidth*ImgHeight,src+2*i*ImgWidth*ImgHeight,ImgWidth,ImgHeight);
+}
+	gettimeofday(&startT[5],0);
+			t[2]=((startT[5].tv_sec-startT[4].tv_sec)*1000000+(startT[5].tv_usec-startT[4].tv_usec))/1000.0;
+			printf("YUYV->UYVX=%d ms    \n",t[2]);
+#endif
 }
 void HDv4l_cam::YUYV2RGB(unsigned char * src,unsigned char * dst,int w,int h)
 {
@@ -533,9 +551,10 @@ int HDv4l_cam::GetNowPicIdx(unsigned char *src)
 	return picIdx;
 }
 int HDv4l_cam::ChangeIdx2chid(int idx)
-{//1~10
-	idx+=1;
-	return idx;
+{//0~9
+	//int picidx=(GetNowPicIdx()+2);
+	//return picidx;
+	return 0;
 }
 
 void save_yuyv(char *filename,void *pic,int w,int h)
@@ -552,6 +571,14 @@ void save_rgb(char *filename,void *pic,int w,int h)
 	imwrite(filename,Pic);
 }
 
+void save_single_pic(char *filename,void *pic,int w,int h)
+{
+	unsigned char dst[SDI_WIDTH*SDI_HEIGHT*3];
+	Mat Src(h,w,CV_8UC2,pic);
+	Mat Dst(h,w,CV_8UC3,dst);
+	cvtColor(Src,Dst,CV_YUV2BGR_UYVY);
+	imwrite(filename,Dst);
+}
 void save_yuyv2rgb(char *filename,void *pic,int w,int h)
 {
 	char bmp[1920*1080*4];
@@ -565,17 +592,12 @@ void save_gray(char *filename,void *pic,int w,int h)
 	imwrite(filename,Pic);
 }
 
-void save_single_pic(char *filename,void *pic,int w,int h)
-{
-	unsigned char dst[SDI_WIDTH*SDI_HEIGHT*3];
-	Mat Src(h,w,CV_8UC2,pic);
-	Mat Dst(h,w,CV_8UC3,dst);
-	cvtColor(Src,Dst,CV_YUV2BGR_UYVY);
-	imwrite(filename,Dst);
-}
-
 int HDv4l_cam::read_frame(int now_pic_format)
 {
+	int t[10]={0};
+ timeval startT[20]={0};
+
+
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -630,8 +652,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
+					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
-						chid[MAIN]=ChangeIdx2chid(nowGrayidx);
+			//todo  change
+						chid[MAIN]=nowGrayidx+1;
+						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
 						break;
 					case FPGA_SIX_CN:
@@ -648,15 +673,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
 						{
-									#if MVDECT
-							{
-							//	if(mv_detect.MDisStart())
+							#if MVDECT
+							//if(mv_detect.MDisStart())
 							if(IsMvDetect)
-								{
-								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
+							{
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
-								mv_detect.SetTempSrcptr(*transformed_src_main,nowGrayidx-1);
-								}
 							}
 							#endif
 						}
@@ -680,12 +701,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							{
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
-
 #if MVDECT
 							//	if(mv_detect.MDisStart())
 								if(IsMvDetect)
 								{
-									mv_detect.SetoutRect(mv_count);
+									mv_detect.SetoutRect();
 									if(nowpicW==1280)
 									{
 										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
@@ -696,7 +716,6 @@ int HDv4l_cam::read_frame(int now_pic_format)
 									}
 								}
 #endif
-
 							}
 								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
 						}

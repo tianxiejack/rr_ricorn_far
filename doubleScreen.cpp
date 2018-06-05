@@ -127,11 +127,11 @@ void Render::RenderSceneDS()
 				if(mv_detect.CanUseMD(SUB))
 				{
 			//		mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
-					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
+//					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
+//					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
 				}
 #endif
-				RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
+			//RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
@@ -196,12 +196,12 @@ void Render::RenderSceneDS()
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*180.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*970.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
 			//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
 			//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -213,15 +213,20 @@ void Render::RenderSceneDS()
 				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
 				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 		{
-			/*
-		p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 
-			p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
-			RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-	*/
-		p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-		RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+				/*
+			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
+			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+
+				p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		*/
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
 
 			 if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 			{
@@ -604,10 +609,10 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 				break;
 			case	'n':
 			{
-#if USE_CAP_SPI
-				chosenCam[SUB]=(chosenCam[SUB]+1)%CAM_COUNT;
-				ChangeMainChosenCamidx(chosenCam[SUB]);
-#endif
+				chosenCam[SUB]=chosenCam[SUB]+1;
+				if(chosenCam[SUB]==11)
+					chosenCam[SUB]=1;
+				ChangeSubChosenCamidx(chosenCam[SUB]);
 			}
 			break;
 			case '1':

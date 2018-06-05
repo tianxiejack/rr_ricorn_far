@@ -34,7 +34,10 @@ public:
 	~SelfCheck(){};
 	void CheckBrokenCam();
 	self_check_state IsIDLE();
-
+	int *GetBrokenCam()
+	{
+		return BrokenCam;
+	};
 
 	void CheckCaptureState(GLubyte *ptr,int index,int imgWidth,int ingHeight);
 	void CaptureCheckAll();

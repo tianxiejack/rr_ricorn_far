@@ -1,6 +1,6 @@
 #include "MvDrawRect.h"
 #include"StlGlDefines.h"
-
+#if 0
 
 MotionDetectorROI::MotionDetectorROI(int sumTarget,MvDetect *pmv):
 m_pmv(pmv),m_sumTarget(sumTarget)
@@ -455,4 +455,4 @@ mvRect *MotionDetectorROI::Rank(int targetidx,int bigOrsmall)
 //		return ;
 	}
 }
-
+#endif

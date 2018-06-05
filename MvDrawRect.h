@@ -9,7 +9,7 @@ using namespace cv;
 #include"MvDetect.h"
 #define MAX_TARGET_NUM 4
 #define CC 3
-
+#if 0
 enum{
 	BIG,
 	SMALL
@@ -18,6 +18,7 @@ enum{
 	START,
 	END
 };
+
 class MotionDetectorROI:public IF_MotionDetectorROI
 {
 public :
@@ -108,5 +109,5 @@ private:
 	MvDetect *m_pmv;
 };
 
-
+#endif
 #endif

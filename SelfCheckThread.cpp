@@ -7,11 +7,13 @@
 #include"CaptureGroup.h"
 #include"SelfCheckThread.h"
 #include"CheckMyself.h"
+#include "Zodiac_GPIO_Message.h"
 extern SelfCheck selfcheck;
 
 void *SelfCheck_thread(void *arg)
 {
 	sleep(2);
+	gpio_init();
 	selfcheck.initState();
 	while(1)
 	{
