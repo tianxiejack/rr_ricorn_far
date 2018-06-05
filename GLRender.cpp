@@ -4618,8 +4618,7 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 					int brokenSum=0;
 					for(int i=0;i<CAM_COUNT;i++)
 						{
-						//if(selfcheck.GetBrokenCam()[i]==0)
-						if(1)
+						if(selfcheck.GetBrokenCam()[i]==0)
 						{
 							sprintf(temp2[i],"Q_%d",i);
 							  i++;
