@@ -5,8 +5,8 @@
 #include<stdio.h>
 #include"MvDrawRect.h"
 using namespace cv;
-Mat m4(2160,640,CV_8UC4);
-Mat m6(3240,640,CV_8UC4);
+Mat m4(2160,640,CV_8UC3);
+Mat m6(3240,640,CV_8UC3);
 #if  MVDECT
 extern MvDetect mv_detect;
 MotionDetectorROI   mdRoi_mainT(4,&mv_detect),mdRoi_subT(4,&mv_detect);
@@ -19,10 +19,10 @@ MvDetect::MvDetect()
 	{
 		for(int j=0;j<6;j++)
 		{
-			tempoutRect[i].rects[j].x=-1;
-			tempoutRect[i].rects[j].y=-1;
-			tempoutRect[i].rects[j].width=-1;
-			tempoutRect[i].rects[j].height=-1;
+			tempRect_Srcptr[i].tempoutRect.rects[j].x=-1;
+			tempRect_Srcptr[i].tempoutRect.rects[j].y=-1;
+			tempRect_Srcptr[i].tempoutRect.rects[j].width=-1;
+			tempRect_Srcptr[i].tempoutRect.rects[j].height=-1;
 		}
 	}
 
@@ -49,20 +49,20 @@ void MvDetect::init(int w,int h)
 {
 		createDetect((unsigned char)CAM_COUNT,w,h);
 }
-void MvDetect::yuyv2gray(unsigned char* src,unsigned char* dst,int width,int height)
+void MvDetect::uyvy2gray(unsigned char* src,unsigned char* dst,int width,int height)
 {
 	for(int i=0;i<width*height;i++)
 		{
-	    *(dst++) =*(src) ;
-	    src+=2;
+	    *(dst++) =*(++src) ;
+	    src+=1;
 		}
 }
 void MvDetect::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 {
-	yuyv2gray(inframe,grayFrame[idx]);
-
+	idx-=1;
+	uyvy2gray(inframe,grayFrame[idx]);
 	{
-		mvDetect((unsigned char) (idx+1), grayFrame[idx], w, h,tempoutRect[idx].rects);
+		mvDetect((unsigned char) (idx+1), grayFrame[idx], w, h,tempRect_Srcptr[idx].tempoutRect.rects);
 	}
 	//mvDetect((unsigned char) idx, grayFrame[idx], w, h,&outRect[idx]);
 }
@@ -189,11 +189,14 @@ std::vector<mvRect> *  MvDetect::GetWholeRect()
 void MvDetect::SetoutRect(int idx)
 {
 	outRect[idx].clear();
+	Out_Rect_Srcptr tempOut;
 	for(int j=0;j<6;j++)
 	{
-		if(tempoutRect[idx].rects[j].x>0)
+		if(tempRect_Srcptr[idx].tempoutRect.rects[j].x>0)
 		{
-			outRect[idx].push_back(tempoutRect[idx].rects[j]);
+			tempOut.srcptr=tempRect_Srcptr[idx].srcptr;
+			tempOut.m_outRect=tempRect_Srcptr[idx].tempoutRect.rects[j];
+			outRect[idx].push_back(tempOut);
 		}
 	}
 #if 0
@@ -215,8 +218,7 @@ void MvDetect::SetoutRect(int idx)
 void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 {
 #if 1
-	int cc=4;
-	std::vector<cv::Rect> tempRecv[CAM_COUNT];
+	std::vector<Out_Rect_Srcptr> tempRecv[CAM_COUNT];
 //	MotionDetectorROI mdRoi;
 
 	if(capidx==MAIN_FPGA_SIX)
@@ -231,10 +233,10 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 			{
 				for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
 				{
-					int startx=tempRecv[i][rectIdx].x/3;
-					int starty=tempRecv[i][rectIdx].y/2+540*i;
-					int w=tempRecv[i][rectIdx].width/3;
-					int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
+					int startx=tempRecv[i][rectIdx].m_outRect.x/3;
+					int starty=tempRecv[i][rectIdx].m_outRect.y/2+540*i;
+					int w=tempRecv[i][rectIdx].m_outRect.width/3;
+					int h=tempRecv[i][rectIdx].m_outRect.height/2;//取出容器中rect的值
 					int endx=startx+w;
 					int endy=starty+h;
 					cv::rectangle(m6,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),1);
@@ -255,10 +257,10 @@ void MvDetect::DrawRectOnpic(unsigned char *src,int capidx)
 				{
 					for(int rectIdx=0;rectIdx<tempRecv[i].size();rectIdx++)//从容器中一个一个取出
 					{
-						int startx=tempRecv[i][rectIdx].x/2;
-						int starty=tempRecv[i][rectIdx].y/2+540*i;
-						int w=tempRecv[i][rectIdx].width/2;
-						int h=tempRecv[i][rectIdx].height/2;//取出容器中rect的值
+						int startx=tempRecv[i][rectIdx].m_outRect.x/2;
+						int starty=tempRecv[i][rectIdx].m_outRect.y/2+540*i;
+						int w=tempRecv[i][rectIdx].m_outRect.width/2;
+						int h=tempRecv[i][rectIdx].m_outRect.height/2;//取出容器中rect的值
 						int endx=startx+w;
 						int endy=starty+h;
 						cv::rectangle(m4,cvPoint(startx,starty),cvPoint(endx,endy),cvScalar(0,0,0),1);

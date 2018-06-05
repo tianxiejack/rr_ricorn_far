@@ -14,7 +14,7 @@ extern void mvDetect(unsigned char index,unsigned char* inframe,int width,int he
 //index 代表第几个 检测OBJ 执行，boundRect 输出 目标的矩形框参数
 //extern void mvDetect(unsigned char index,unsigned char* inframe,int width,int height,vector<cv::Rect> *boundRect);
 
-
+#define  MAX_RECT_COUNT 6
 struct mvRect
 {
 	cv::Rect outRect;
@@ -24,6 +24,20 @@ struct mvRect
 	float y_angle;
 };
 
+typedef struct{
+	cv::Rect rects[MAX_RECT_COUNT];
+}RECT_Array;
+typedef struct Rect_Srcptr
+{
+	void *srcptr;
+	RECT_Array tempoutRect;
+}*pRect_Srcptr;
+
+typedef struct Out_Rect_Srcptr
+{
+	void *srcptr;
+	cv::Rect m_outRect;
+}*pOut_Rect_Srcptr;
 class MvDetect:public IF_MotionDect   //采集里面做
 {
 public:
@@ -34,7 +48,7 @@ public:
 	void selectFrame(unsigned char *dst,unsigned char *src,int targetId,int camIdx);
 
 
-	void yuyv2gray(unsigned char* src,unsigned char* dst,int width=MAX_SCREEN_WIDTH,int height=MAX_SCREEN_HEIGHT);
+	void uyvy2gray(unsigned char* src,unsigned char* dst,int width=MAX_SCREEN_WIDTH,int height=MAX_SCREEN_HEIGHT);
 	void init(int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
 	void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
 	void saveConfig();
@@ -54,15 +68,21 @@ public:
 
 	std::vector<mvRect> * GetWholeRect();//取得全图的rect
 	void SetoutRect(int idx);//将检测到的每个通道里6个rect放入对应的6个容器里
+void SetTempSrcptr(void *ptr,int camidx)
+{
+	tempRect_Srcptr[camidx].srcptr=ptr;
+}
+std::vector<Out_Rect_Srcptr> *GetOut_Rect_Srcptr(int camidx)
+{
+return &outRect[camidx];
+}
 private:
 	bool enableMD[2];
 	bool MDopen[2];
-	static const int MAX_RECT_COUNT=6;
-	typedef struct{cv::Rect rects[MAX_RECT_COUNT];}RECT_Array;
-	RECT_Array tempoutRect[CAM_COUNT];
+	Rect_Srcptr  tempRect_Srcptr[CAM_COUNT];
 	std::vector<mvRect> m_outRect[CAM_COUNT];
 	std::vector<mvRect> m_WholeRect;
 	unsigned char* grayFrame[CAM_COUNT];
-	std::vector<cv::Rect> outRect[CAM_COUNT];
+	std::vector<Out_Rect_Srcptr> outRect[CAM_COUNT];
 };
 #endif

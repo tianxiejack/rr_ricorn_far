@@ -203,10 +203,10 @@ enum{
 };
 #endif
 
-#define ROIW (1920/3/4)
-#define ROIH	(1080/2/4)
-#define HALF_ROIW (1920/3/4/2)
-#define HALF_ROIH	(1080/2/4/2)
+#define ROIW 400
+#define ROIH	400
+#define HALF_ROIW 200
+#define HALF_ROIH	200
 
 
 
@@ -369,7 +369,7 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 
 #define DEFAULT_EXT_WG712_TGA	"wg712.tga"
 
-
+#define DEBUG_TGA "debug.tga"
 #define TURRET_TGA			"paota.tga"
 #define PANORAMIC_MIRROR_TGA "zhoushijing.tga"
 #if USE_12
@@ -447,6 +447,8 @@ enum CCT_COUNT {
 
 		TURRET_T,
 		PANORAMIC_MIRROR_T,
+
+		DEBUG_T,
 		CCT_COUNT
 		};
 

@@ -4,6 +4,8 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../spiH.cpp\
+../Cap_Spi_Message.cpp\
 ../MvModeSwith.cpp\
 ../MvDrawRect.cpp\
 ../MvDetect.cpp\
@@ -66,6 +68,8 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./spiH.o\
+./Cap_Spi_Message.o\
 ./MvModeSwith.o\
 ./MvDrawRect.o\
 ./MvDetect.o\
@@ -125,6 +129,8 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+../spiH.o\
+../Cap_Spi_Message.o\
 ./MvModeSwith.d\
 ./MvDrawRect.d\
 ./MvDetect.d\

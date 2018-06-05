@@ -190,6 +190,46 @@ void HDv4l_cam::UYVquar(unsigned char *dst,unsigned char *src, int ImgWidth, int
 		}
 	}
 }
+
+void HDv4l_cam::UYVnoXquar(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
+{
+	for(int j =0;j<ImgHeight;j++)
+	{
+		for(int i=0;i<ImgWidth*2/4;i++)
+		{
+			*(dst+j*ImgWidth*3+i*6+0)=*(src+j*ImgWidth*2+i*4+0);
+			*(dst+j*ImgWidth*3+i*6+1)=*(src+j*ImgWidth*2+i*4+1);
+			*(dst+j*ImgWidth*3+i*6+2)=*(src+j*ImgWidth*2+i*4+2);
+
+			*(dst+j*ImgWidth*3+i*6+3)=*(src+j*ImgWidth*2+i*4+0);
+			*(dst+j*ImgWidth*3+i*6+4)=*(src+j*ImgWidth*2+i*4+3);
+			*(dst+j*ImgWidth*3+i*6+5)=*(src+j*ImgWidth*2+i*4+2);
+
+		}
+	}
+}
+
+void HDv4l_cam::UYVY2UYV(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
+{
+	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
+		{
+//#pragma omp parallel for
+		for(int i=0;i<4;i++)
+		{
+			UYVnoXquar(dst+i*FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*3,src+i*FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*2,FPGA_SINGLE_PIC_W,FPGA_SINGLE_PIC_H);
+		}
+		}
+	else
+	{
+		ImgHeight/=4;
+//#pragma omp parallel for
+		for(int i=0;i<4;i++)
+		{
+		UYVnoXquar(dst+i*ImgWidth*ImgHeight*3,src+i*ImgWidth*ImgHeight*2,ImgWidth,ImgHeight);
+		}
+	}
+}
+
 void HDv4l_cam::UYVY2UYVx(unsigned char *dst,unsigned char *src, int ImgWidth, int ImgHeight)
 {
 	if (ImgWidth==FPGA_SCREEN_WIDTH) //4副先进行切割
@@ -493,10 +533,9 @@ int HDv4l_cam::GetNowPicIdx(unsigned char *src)
 	return picIdx;
 }
 int HDv4l_cam::ChangeIdx2chid(int idx)
-{//0~9
-	//int picidx=(GetNowPicIdx()+2);
-	//return picidx;
-	return 0;
+{//1~10
+	idx+=1;
+	return idx;
 }
 
 void save_yuyv(char *filename,void *pic,int w,int h)
@@ -591,12 +630,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
-					//	chid[MAIN]=ChangeIdx2chid(MAIN);
-						//nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
-			//todo  change
-						chid[MAIN]=MAIN_1;
-						nowGrayidx=mv_count;
-						transformed_src_main=&MVDECT_data_main[nowGrayidx];
+						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
+						chid[MAIN]=ChangeIdx2chid(nowGrayidx);
+						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -612,18 +648,16 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						if(now_pic_format==MVDECT_CN)//移动检测
 						{
 						{
-						//	YUYV2UYVx(target_data[nowGrayidx],(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-							#if MVDECT
+									#if MVDECT
 							{
 							//	if(mv_detect.MDisStart())
 							if(IsMvDetect)
 								{
-									mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
+								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								mv_detect.SetTempSrcptr(*transformed_src_main,nowGrayidx-1);
 								}
 							}
-							mv_count++;
-							if(mv_count==CAM_COUNT)
-								mv_count=0;
 							#endif
 						}
 						}
@@ -640,11 +674,11 @@ int HDv4l_cam::read_frame(int now_pic_format)
 										save_single_pic(filename,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 									}
 								}
-								UYVY2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 							}
 							else
 							{
-								UYVY2UYVx(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
 
 #if MVDECT
@@ -677,7 +711,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					{
 						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
 						{
-							UYVY2UYVx(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+							UYVY2UYV(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 						}
 						else if(now_pic_format==MVDECT_CN)//移动检测
 						{

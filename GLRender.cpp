@@ -78,6 +78,7 @@ extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
 char chosenCam[2]={0,0};
 
+extern bool IsMvDetect;
 bool IsgstCap=false;
 int m_cam_pos=-1;
 
@@ -979,7 +980,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 {
 	GLEnv & env=env1;
 	GLubyte *pBytes;
-#if USE_CPU
+#if 1
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGB8;
 	GLenum format= GL_BGR;
 #else
@@ -4502,6 +4503,7 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 			bzero(text4,1000);
 			bzero(text5,1000);
 #if USE_UART
+#if 0
 			int recv_n=0;
 			n=ReadMessage(IPC_MSG_TYPE_SELF_CHECK).payload.ipc_s_faultcode.fault_code_number;
 			if(n!=0)
@@ -4543,6 +4545,7 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 							BrokenSum++;
 						}
 					}
+#endif
 	#else
 
 		   n=100;
@@ -4560,8 +4563,8 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 				sprintf(temp2,"QE%d",i);
 				strcpy(text5[i],temp2);
 			}
-			strcpy(text," FANG:");
-			strcpy(text2," YANG:");
+			strcpy(text,"PAO");
+			strcpy(text2," ZSJ");
 			strcpy(text3," M IL");
 		//	strcpy(text3,"    CEJU:");
 #endif
@@ -4572,7 +4575,7 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 			float pos2[20]={1.615,1.54,1.47,1.408,1.35,1.298,1.25,1.2055,1.16,1.12,1.08};
 			float pos3[5]={1.7,1.615,1.53,1.46,1.39};
 
-			if(fboMode==FBO_ALL_VIEW_559_MODE
+			if(displayMode==ALL_VIEW_MODE
 					||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 			{
 				if(g_windowWidth==1024)
@@ -4581,10 +4584,10 @@ void Render::RenderPositionView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h)
 					DrawAngleCordsView(m_env,&rect1,text,0.8);
 					Rect2i rect2(g_windowWidth*730/1024,g_windowHeight*280.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
 					DrawAngleCordsView(m_env,&rect2,text2,0.8);
-					Rect2i rect3(g_windowWidth*900/1024,g_windowHeight*320.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(m_env,&rect3,text3,0.8);
-					Rect2i rect4(g_windowWidth*900/1024,g_windowHeight*280.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
-					DrawAngleCordsView(m_env,&rect4,text3,0.8);
+			//		Rect2i rect3(g_windowWidth*900/1024,g_windowHeight*320.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
+			//		DrawAngleCordsView(m_env,&rect3,text3,0.8);
+		//			Rect2i rect4(g_windowWidth*900/1024,g_windowHeight*280.0/768.0, g_windowWidth/20, g_windowHeight*1/20);
+			//		DrawAngleCordsView(m_env,&rect4,text3,0.8);
 				}
 				else
 				{
@@ -6572,6 +6575,8 @@ if(setpriorityOnce)
 			{
 				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
 				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
+
 			}
 			#endif
 
@@ -6581,6 +6586,9 @@ if(setpriorityOnce)
 	}
 	case TRIM_MODE:
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
+		p_ChineseCBillBoard->ChooseTga=DEBUG_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth-g_windowWidth/0.9, g_windowHeight*1/8, g_windowHeight, g_windowHeight);
+
 		break;
 	case CHOSEN_VIEW_MODE:
 		tIdle.threadRun(MAIN_CN);
@@ -7969,7 +7977,11 @@ GLEnv & env=env1;
 		//case 'o':
 		case 'O':
 #if MVDECT
-			mv_detect.OpenMD(MAIN);
+			if(IsMvDetect==false)
+				IsMvDetect=true;
+			else if(IsMvDetect==true)
+				IsMvDetect=false;
+			//mv_detect.OpenMD(MAIN);
 #endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
@@ -8252,7 +8264,7 @@ GLEnv & env=env1;
 			break;
 		case 'o'://high definition pano view
 #if MVDECT
-			mv_detect.CloseMD(MAIN);
+			//mv_detect.CloseMD(MAIN);
 #endif
 			break;
 		case 'p'://high definition pano add pano view
@@ -8402,7 +8414,7 @@ GLEnv & env=env1;
 			}
 			else
 			{
-				IsgstCap=false;;
+				IsgstCap=false;
 			}
 			break;
 		case 'z'://steady on
@@ -9998,7 +10010,7 @@ Render::ChineseCharacterBillBoard::ChineseCharacterBillBoard(GLMatrixStack &mode
 {
 	strcpy( ChineseC_TextureFileName[TURRET_T], TURRET_TGA);
 	strcpy( ChineseC_TextureFileName[PANORAMIC_MIRROR_T], PANORAMIC_MIRROR_TGA);
-
+	strcpy( ChineseC_TextureFileName[DEBUG_T], DEBUG_TGA);
 	strcpy( ChineseC_TextureFileName[ONEX_REALTIME_T], ONEX_REALTIME_TGA);
 		strcpy( ChineseC_TextureFileName[TWOX_REALTIME_T], TWOX_REALTIME_TGA);
 		strcpy( ChineseC_TextureFileName[FOURX_REALTIME_T], FOURX_REALTIME_TGA);
@@ -12069,7 +12081,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		}
 		break;
 	}
-#if USE_CPU
+#if 0
 	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 #else
 	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16

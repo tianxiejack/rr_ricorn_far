@@ -8,6 +8,7 @@
 #include<assert.h>
 #include "StlGlDefines.h"
 #include"MvModeSwith.h"
+#include<omp.h>
 using namespace std;
 extern MVModeSwith   mvSwitch;
 //using namespace cv;
@@ -283,7 +284,13 @@ void get_buffer(unsigned char* ptr, int chId)
 								}
 	}
 #endif
-	memcpy(ptr,bufdata,w*SDI_HEIGHT*4);
+
+int h=SDI_HEIGHT/4;
+//#pragma omp parallel for
+		for(int i=0;i<4;i++)
+		{
+	memcpy(ptr+w*h*3*i,bufdata+w*h*3*i,w*h*3);
+		}
 #if 0
 	if(pbeh!=NULL)
 	{

@@ -19,7 +19,7 @@ extern GLEnv env1,env2;
 #if GSTREAM_CAP
 extern RecordHandle * record_handle;
 #endif
-#if USE_CPU
+#if 1
 static int iniCC=3;
 #else
 static int iniCC=4;
@@ -30,7 +30,7 @@ void *pbo_process_thread(void *arg)
 	GLEnv &env=env1;
 	static bool once4=true;
 	setCurrentThreadHighPriority(THREAD_L_GST);
-#if USE_CPU
+#if 1
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC3);
 #else
     Mat testData(CURRENT_SCREEN_HEIGHT, CURRENT_SCREEN_WIDTH, CV_8UC4);
