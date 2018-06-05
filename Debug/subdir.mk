@@ -129,8 +129,8 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
-../spiH.o\
-../Cap_Spi_Message.o\
+./spiH.d\
+./Cap_Spi_Message.d\
 ./MvModeSwith.d\
 ./MvDrawRect.d\
 ./MvDetect.d\
