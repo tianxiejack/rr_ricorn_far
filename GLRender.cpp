@@ -76,7 +76,7 @@ mdRoi_subA;*/
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
-char chosenCam[2]={3,3};
+char chosenCam[2]={0,0};
 
 extern bool IsMvDetect;
 bool IsgstCap=false;
@@ -979,8 +979,8 @@ void Render::GetFPS()
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 #if 1
-		ChangeMainChosenCamidx(3);
-		ChangeSubChosenCamidx(3);
+		ChangeMainChosenCamidx(chosenCam[MAIN]+1);
+		ChangeSubChosenCamidx(chosenCam[SUB]+1);
 #endif
 	GLEnv & env=env1;
 	GLubyte *pBytes;
@@ -4482,23 +4482,23 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 		char text[8];
 		char text2[8];
 		char text3[100][10];
-		strcpy(text," ZSJ");
-		strcpy(text2," PAO");
+		strcpy(text," ZSJP");
+		strcpy(text2," PAOT");
 		int j=0;
 		for(int i=0;i<CAM_COUNT;i++)
 		{
 		if(selfcheck.GetBrokenCam()[i]==0)
 		{
-			sprintf(text3[j],"Q_%d",i);
+			sprintf(text3[j],"Q%d",i+1);
 			  j++;
 		}
 		}
 		if(nowMode==CURRENT_FBO_ALL_VIEW_559_MODE)
 		{
-		Rect2i rect1(g_windowWidth*2450.0/1920.0,g_windowHeight*130.0/1920.0, g_windowWidth/5, g_windowHeight/5);
-		DrawAngleCordsView(m_env,&rect1,text,0.65);
-		Rect2i rect2(g_windowWidth*2450.0/1920.0,g_windowHeight*780.0/1920.0, g_windowWidth/5, g_windowHeight/5);
-		DrawAngleCordsView(m_env,&rect2,text2,0.65);
+			Rect2i rect1(1920*1620.0/1920.0,1080*60.0/1920.0, 300, 200);
+			DrawAngleCordsView(m_env,&rect1,text,0.65);
+			Rect2i rect2(1920*1620.0/1920.0,1080*220.0/1920.0, 300, 200);
+			DrawAngleCordsView(m_env,&rect2,text2,0.65);
 		}
 		else if(nowMode==	CURRENT_TELESCOPE_RIGHT_MODE
 				||nowMode==CURRENT_TELESCOPE_LEFT_MODE
@@ -4509,21 +4509,31 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 				||nowMode==CURRENT_SECOND_TELESCOPE_BACK_MODE
 				||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE)
 		{
-			Rect2i rect1(g_windowWidth*2450.0/1920.0,g_windowHeight*420.0/1920.0, g_windowWidth/5, g_windowHeight/5);
+			Rect2i rect1(1920*1120.0/1920.0,1080*350.0/1920.0, 300, 200);
 			DrawAngleCordsView(m_env,&rect1,text,0.65);
-			Rect2i rect2(g_windowWidth*2450.0/1920.0,g_windowHeight*780.0/1920.0, g_windowWidth/5, g_windowHeight/5);
+			Rect2i rect2(1920*670.0/1920.0,1080*350.0/1920.0, 300, 200);
 			DrawAngleCordsView(m_env,&rect2,text2,0.65);
 		}
 		for(int k=0;k<j;k++)
 		{
-			if(k<5)
+			if(k<3)
 			{
-				Rect2i rect1(g_windowWidth*(2450.0+k*100)/1920.0,g_windowHeight*(1200.0)/1920.0, g_windowWidth/5, g_windowHeight/5);
+				Rect2i rect1(1024*(3010.0+k*100)/1920.0,768*(590.0)/1920.0, 300, 200);
 				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
 			}
-			else
+			else if(k<6)
 			{
-				Rect2i rect1(g_windowWidth*(2450.0+(k-5)*100)/1920.0,g_windowHeight*(1100.0)/1920.0, g_windowWidth/5, g_windowHeight/5);
+				Rect2i rect1(1024*(3010.0+(k-3)*100)/1920.0,768*(690.0)/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+			}
+			else if(k<9)
+			{
+				Rect2i rect1(1024*(3010.0+(k-6)*100)/1920.0,768*(790.0)/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+			}
+			else if(k<10)
+			{
+				Rect2i rect1(1024*(3010.0+(k-9)*100)/1920.0,768*(890.0)/1920.0, 300, 200);
 				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
 			}
 		}
@@ -6666,7 +6676,7 @@ if(setpriorityOnce)
 			{
 				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
 				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
-				RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
+		//		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 
 			}
 			#endif
@@ -6723,7 +6733,9 @@ if(setpriorityOnce)
 			//	RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 	//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 	//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+	//		RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			 RenderMilView(CURRENT_TELESCOPE_FRONT_MODE ,env,0, 0,1920, 1080);
+
 			break;
 		case	TELESCOPE_RIGHT_MODE:
 			tIdle.threadIdle(MAIN_CN);
@@ -6738,10 +6750,12 @@ if(setpriorityOnce)
 					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
 						}*/
 #endif
+				 RenderMilView(CURRENT_TELESCOPE_RIGHT_MODE ,env,0, 0,1920, 1080);
+
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+	//			RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
 				break;
 		case	TELESCOPE_BACK_MODE:
 			tIdle.threadIdle(MAIN_CN);
@@ -6759,8 +6773,10 @@ if(setpriorityOnce)
 			   //		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
-				break;
+		//		RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+				 RenderMilView(CURRENT_TELESCOPE_BACK_MODE ,env,0, 0,1920, 1080);
+
+			   break;
 		case	TELESCOPE_LEFT_MODE:
 			tIdle.threadIdle(MAIN_CN);
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
@@ -6777,8 +6793,10 @@ if(setpriorityOnce)
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 				//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderCompassView(env,g_windowWidth*1615.0/1920.0,g_windowHeight*-15/1080.0,g_windowWidth*290.0/1920.0,g_windowWidth*290.0/1920.0);
-				RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
-				break;
+		//		RenderPositionView(env,g_windowWidth*0,g_windowHeight*0,g_windowWidth, g_windowHeight);
+			 RenderMilView(CURRENT_TELESCOPE_LEFT_MODE ,env,0, 0,1920, 1080);
+
+			break;
 	case CHECK_MYSELF:
 	{
 		static bool Once=true;
@@ -7129,12 +7147,12 @@ if(setpriorityOnce)
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*180.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 						p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 
 					p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*970.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
 	}
 
 	else if(displayMode==TELESCOPE_FRONT_MODE
@@ -7155,7 +7173,7 @@ if(setpriorityOnce)
 		RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 */
 	p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-	RenderChineseCharacterBillBoardAt(env,g_windowWidth*999.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*900.0/1920.0,g_windowHeight*980.0/1080.0);
+	RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
 
 		 if(displayMode==TELESCOPE_FRONT_MODE)
 		{
