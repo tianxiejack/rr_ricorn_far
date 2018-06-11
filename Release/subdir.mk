@@ -69,7 +69,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
-./IPC_Far_Recv_Message.cpp\
+./IPC_Far_Recv_Message.o\
 ./spiH.o\
 ./Cap_Spi_Message.o\
 ./MvModeSwith.o\
