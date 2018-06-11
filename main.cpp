@@ -25,6 +25,7 @@
 #include"PanoCaptureGroup.h"
 #include"ChosenCaptureGroup.h"
 
+#include"IPC_Far_Recv_Message.h"
 #include"GLEnv.h"
 RenderMain mainWin;
 Common common;
@@ -69,6 +70,7 @@ void mvDetectorDraw(std::vector<TRK_RECT_INFO> &resTarget,int chId)
 #endif
 int main(int argc, char** argv)
 {
+		IPC_Init_All();
 #if USE_CAP_SPI
 	SpiSet();
 	//InitIPCModule();

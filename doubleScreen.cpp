@@ -9,6 +9,8 @@
 #include"MvModeSwith.h"
 extern MVModeSwith   mvSwitch;
 #endif
+#include"IPC_Far_Recv_Message.h"
+
 extern thread_idle tIdle;
 extern Render render;
 extern MvDetect mv_detect;
@@ -18,11 +20,35 @@ extern GLEnv env2,env1;
 extern ForeSightPos foresightPos[MS_COUNT];
 extern char chosenCam[2];
 static float delayT=20.0;
+extern bool IsMvDetect;
+extern KEY_TYPE keytype;
+extern coor_p coor;
 void InitBowlDS()
 {
 
 }
 
+void Render::ChangeSecondTelMode(bool isright)
+{
+	SECOND_DISPLAY nextMode;
+	if(!isright)
+	{
+		nextMode = SECOND_DISPLAY(((int)SecondDisplayMode-1) % SECOND_TOTAL_MODE_COUNT);
+		if(nextMode==SECOND_CHOSEN_VIEW_MODE)
+		{
+			 nextMode = SECOND_TELESCOPE_LEFT_MODE;
+		}
+	}
+	else if(isright)
+	{
+		nextMode = SECOND_DISPLAY(((int)SecondDisplayMode+1) % SECOND_TOTAL_MODE_COUNT);
+		if(nextMode==SECOND_ALL_VIEW_MODE)
+		{
+			 nextMode = SECOND_TELESCOPE_FRONT_MODE;
+		}
+	}
+	SecondDisplayMode=nextMode;
+}
 
 void Render::RenderSceneDS()
 {
@@ -48,9 +74,160 @@ void Render::RenderSceneDS()
 	int t[10]={0};
 	static timeval startT[20]={0};
 
+
+
 	//GLEnv &env=env2;
 	GLEnv &env=env1;
+	static bool SpeedSetOnce=true;
+	if(SpeedSetOnce)
+	{
+		foresightPos[SUB].SetSpeedX((render.get_PanelLoader().Getextent_pos_x()-render.get_PanelLoader().Getextent_neg_x())/1920.0*10.0);
+		foresightPos[SUB].SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
+		SpeedSetOnce=false;
+	}
+	//static SECOND_DISPLAY Now_Tel_Mode=-1;
+	switch(getPassenger_KeyType())
+	{
+	case PASSENGER_PERISCOPE_MODE:
+		SecondDisplayMode=SECOND_TELESCOPE_FRONT_MODE;
+		break;
+	case PASSENGER_PANORAMA_MODE:
+			SecondDisplayMode=SECOND_559_ALL_VIEW_MODE;
+			break;
+	case PASSENGER_SINGLE_CHANNEL_MODE:
+			SecondDisplayMode=SECOND_CHOSEN_VIEW_MODE;
+			break;
+	case PASSENGER_TARGET_DETECTION_ON:
+		IsMvDetect=true;
+				break;
+	case PASSENGER_TARGET_DETECTION_OFF:
+		IsMvDetect=false;
+				break;
+	case			PASSENGER_IMAGE_ENHANCEMENT_ON_1:
+		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_1\n");
+		break;
+	case			PASSENGER_IMAGE_ENHANCEMENT_ON_2:
+		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_2\n");
+		break;
+	case			PASSENGER_IMAGE_ENHANCEMENT_ON_3:
+		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_3\n");
+		break;
+	case			PASSENGER_IMAGE_ENHANCEMENT_OFF:
+		printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
+		break;
+	case	PASSENGER_T_D_ON_MOVE_RIGHT:
+		printf("PASSENGER_T_D_ON_MOVE_RIGHT\n");
+		break;
+	case		PASSENGER_T_D_ON_MOVE_LEFT:
+		printf("PASSENGER_T_D_ON_MOVE_LEFT\n");
+		break;
+	case		PASSENGER_T_D_ON_MOVE_UP:
+		printf("PASSENGER_T_D_ON_MOVE_UP\n");
+		break;
+	case		PASSENGER_T_D_ON_MOVE_DOWN:
+		printf("PASSENGER_T_D_ON_MOVE_DOWN\n");
+		break;
+	case	PASSENGER_T_D_ON_AFFIRM:
+		printf("PASSENGER_T_D_ON_AFFIRM\n");
+	break;
+	case	PASSENGER_T_D_ON_AFFIRM_RIGHT:
+		printf("PASSENGER_T_D_ON_AFFIRM_RIGHT\n");
+	break;
+	case	PASSENGER_T_D_ON_AFFIRM_LEFT:
+		printf("PASSENGER_T_D_ON_AFFIRM_LEFT\n");
+	break;
+	case	PASSENGER_T_D_ON_AFFIRM_CANCEL:
+		printf("PASSENGER_T_D_ON_AFFIRM_CANCEL\n");
+	break;
 
+
+	case PASSENGER_T_D_OFF_PANO_MOVE_LEFT:
+		if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+										||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+									p_ForeSightFacade[SUB]->MoveLeft(-PanoLen*100.0,SUB);
+	break;
+	case	PASSENGER_T_D_OFF_PANO_MOVE_RIGHT:
+		if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+							||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+						p_ForeSightFacade[SUB]->MoveRight(PanoLen*100.0,SUB);
+	break;
+	case	PASSENGER_T_D_OFF_PANO_MOVE_UP:
+		if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+			p_ForeSightFacade[SUB]->MoveUp(PanoHeight/(CORE_AND_POS_LIMIT),SUB);
+	break;
+	case	PASSENGER_T_D_OFF_PANO_MOVE_DOWN:
+		if(SecondDisplayMode==	SECOND_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+			p_ForeSightFacade[SUB]->MoveDown(-PanoHeight/(CORE_AND_POS_LIMIT),SUB);
+	break;
+
+	case PASSENGER_T_D_OFF_PERISCOPE_CCW_H:
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+		ChangeSecondTelMode(true);
+		break;
+	case	PASSENGER_T_D_OFF_PERISCOPE_CW_H:
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			ChangeSecondTelMode(false);
+		break;
+	case	PASSENGER_T_D_OFF_PERISCOPE_CCW_V:
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			ChangeSecondTelMode(true);
+		break;
+	case	PASSENGER_T_D_OFF_PERISCOPE_CW_V:
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			ChangeSecondTelMode(false);
+		break;
+
+	case	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CCW_H:
+		if(SecondDisplayMode==	SECOND_CHOSEN_VIEW_MODE)
+		{
+		chosenCam[SUB]=chosenCam[SUB]+1;
+		if(chosenCam[SUB]==11)
+			chosenCam[SUB]=1;
+		ChangeSubChosenCamidx(chosenCam[SUB]);
+		}
+		break;
+	case	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CW_H:
+		if(SecondDisplayMode==	SECOND_CHOSEN_VIEW_MODE)
+		{
+		chosenCam[SUB]=chosenCam[SUB]-1;
+				if(chosenCam[SUB]==0)
+					chosenCam[SUB]=10;
+				ChangeSubChosenCamidx(chosenCam[SUB]);
+		}
+		break;
+	case	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CCW_V:
+		if(SecondDisplayMode==	SECOND_CHOSEN_VIEW_MODE)
+		{
+		chosenCam[SUB]=chosenCam[SUB]+1;
+		if(chosenCam[SUB]==11)
+			chosenCam[SUB]=1;
+		ChangeSubChosenCamidx(chosenCam[SUB]);
+		}
+		break;
+	case	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CW_V:
+		if(SecondDisplayMode==	SECOND_CHOSEN_VIEW_MODE)
+		{
+		chosenCam[SUB]=chosenCam[SUB]-1;
+		if(chosenCam[SUB]==0)
+			chosenCam[SUB]=10;
+		ChangeSubChosenCamidx(chosenCam[SUB]);
+		}
+		break;
+	}
 		switch(SecondDisplayMode)
 	{
 	case SECOND_ALL_VIEW_MODE:

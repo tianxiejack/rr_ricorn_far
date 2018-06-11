@@ -76,7 +76,7 @@ mdRoi_subA;*/
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
-char chosenCam[2]={0,0};
+char chosenCam[2]={1,1};
 
 extern bool IsMvDetect;
 bool IsgstCap=false;
@@ -979,8 +979,8 @@ void Render::GetFPS()
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 #if 1
-		ChangeMainChosenCamidx(chosenCam[MAIN]+1);
-		ChangeSubChosenCamidx(chosenCam[SUB]+1);
+		ChangeMainChosenCamidx(1);
+		ChangeSubChosenCamidx(1);
 #endif
 	GLEnv & env=env1;
 	GLubyte *pBytes;
@@ -9000,7 +9000,7 @@ GLEnv & env=env1;
 				if(CHOSEN_VIEW_MODE==displayMode)
 				{
 				#if 1
-					saveSinglePic[chosenCam[MAIN]]=true;
+					saveSinglePic[chosenCam[MAIN]-1]=true;
 					printf("savePicIdx=%x\n",chosenCam[MAIN]-1);
 				#endif
 				}
