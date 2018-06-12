@@ -1,12 +1,20 @@
 #include "MvDrawRect.h"
 #include"StlGlDefines.h"
-#if 0
-
+#include <stdio.h>
+#if 1
+extern unsigned char * p_newestMvSrc[CAM_COUNT];
+#if MVDECT
+extern MvDetect mv_detect;
+MotionDetectorROI   mdRoi_mainT(4,&mv_detect),mdRoi_subT(4,&mv_detect);
+MotionDetectorROI   mdRoi_mainA(2,&mv_detect),mdRoi_subA(2,&mv_detect);
+#endif
 MotionDetectorROI::MotionDetectorROI(int sumTarget,MvDetect *pmv):
 m_pmv(pmv),m_sumTarget(sumTarget)
 {
 	m4=(Mat(FPGA_SCREEN_HEIGHT,FPGA_SCREEN_WIDTH,CV_8UC4));
 		m6=(Mat(SDI_HEIGHT,SDI_WIDTH,CV_8UC4));
+		moveN=false;
+		moveP=false;
 	for(int i=0;i<m_sumTarget;i++)
 	{
 
@@ -16,39 +24,117 @@ m_pmv(pmv),m_sumTarget(sumTarget)
 	lastRect[i].outRect.width=-1;
 	lastRect[i].outRect.x=-1;
 	lastRect[i].outRect.y=-1;
-	lastRect[i].x_angle=-1;
-	lastRect[i].y_angle=-1;
 	//for(int j=0;j<CC;j++)
 		//RectColor[i][j]=0;
-	RoiSrc[i]=(unsigned char *)malloc(ROIW*ROIH*4);
+	RoiSrc[i]=(unsigned char *)malloc(ROIW*ROIH*3);
 	}
 //	tempSrc4=(unsigned char *)malloc(FPGA_SCREEN_HEIGHT*FPGA_SCREEN_WIDTH*4);
 //	tempSrc6=(unsigned char *)malloc(SDI_HEIGHT*SDI_WIDTH*4);
 }
 
-bool CmpXsamller(const mvRect &mv1,const mvRect  &mv2)
+bool CmpXsamller( const mvRect &mv1, const mvRect  &mv2)
 {
-	return mv1.x_angle < mv2.x_angle;
+	if(mv1.x_angle()!= mv2.x_angle())
+	{
+		return mv1.x_angle() < mv2.x_angle();
+	}
+	else if(mv1.x_angle() == mv2.x_angle()
+			||mv1.y_angle() != mv2.y_angle())
+	{
+		return mv1.y_angle() < mv2.y_angle();
+	}
+	else if(mv1.x_angle() == mv2.x_angle()
+			||mv1.y_angle() == mv2.y_angle())
+	{
+		if(mv1.outRect.width!=mv2.outRect.width)
+		{
+			return mv1.outRect.width<mv2.outRect.width;
+		}
+		else if(mv1.outRect.width==mv2.outRect.width)
+		{
+			return mv1.outRect.height<mv2.outRect.height;
+		}
+	}
 }
 bool CmpXbigger(const mvRect &mv1,const mvRect  &mv2)
 {
-	return mv1.x_angle > mv2.x_angle;
+	if(mv1.x_angle() != mv2.x_angle())
+	{
+		return mv1.x_angle() > mv2.x_angle();
+	}
+	else if(mv1.x_angle() == mv2.x_angle()
+			||mv1.y_angle() != mv2.y_angle())
+	{
+		return mv1.y_angle() > mv2.y_angle();
+	}
+	else if(mv1.x_angle() == mv2.x_angle()
+				||mv1.y_angle() == mv2.y_angle())
+		{
+			if(mv1.outRect.width!=mv2.outRect.width)
+			{
+				return mv1.outRect.width>mv2.outRect.width;
+			}
+			else if(mv1.outRect.width==mv2.outRect.width)
+			{
+				return mv1.outRect.height>mv2.outRect.height;
+			}
+		}
 }
 bool CmpYsmaller(const mvRect &mv1,const mvRect  &mv2)
 {
-	return mv1.y_angle < mv2.y_angle;
+	if( mv1.y_angle() != mv2.y_angle())
+	{
+		return mv1.y_angle() < mv2.y_angle();
+	}
+	else if( mv1.y_angle() == mv2.y_angle()
+			||mv1.x_angle()!=mv2.x_angle())
+	{
+		return mv1.x_angle() < mv2.x_angle();
+	}
+	else if(mv1.y_angle() == mv2.y_angle()
+				||mv1.x_angle() == mv2.x_angle())
+	{
+		if(mv1.outRect.height!=mv2.outRect.height)
+		{
+			return mv1.outRect.height<mv2.outRect.height;
+		}
+		else if(mv1.outRect.height==mv2.outRect.height)
+		{
+			return mv1.outRect.width<mv2.outRect.width;
+		}
+	}
 }
 bool CmpYbigger(const mvRect &mv1,const mvRect  &mv2)
 {
-	return mv1.y_angle > mv2.y_angle;
+	if( mv1.y_angle() != mv2.y_angle())
+		{
+			return mv1.y_angle() > mv2.y_angle();
+		}
+		else if( mv1.y_angle() == mv2.y_angle()
+				||mv1.x_angle()!=mv2.x_angle())
+		{
+			return mv1.x_angle() > mv2.x_angle();
+		}
+		else if(mv1.y_angle() == mv2.y_angle()
+						||mv1.x_angle() == mv2.x_angle())
+			{
+				if(mv1.outRect.height!=mv2.outRect.height)
+				{
+					return mv1.outRect.height>mv2.outRect.height;
+				}
+				else if(mv1.outRect.height==mv2.outRect.height)
+				{
+					return mv1.outRect.width>mv2.outRect.width;
+				}
+			}
 }
 void  MotionDetectorROI::MRectangle(int fourOrsix,mvRect *p)
 {
 	int startx,starty,endx,endy,w,h;
 	if(fourOrsix==MAIN_FPGA_SIX)
 	{
-		 startx=p->outRect.x/3+(640*(p->camIdx%3));
-		 starty=p->outRect.y/2+(540*(p->camIdx/3));
+		 startx=p->outRect.x/3;
+		 starty=p->outRect.y/2+(540*p->camIdx);
 		 w=p->outRect.width/3;
 		 h=p->outRect.height/2;//取出容器中rect的值
 		 endx=startx+w;
@@ -57,9 +143,9 @@ void  MotionDetectorROI::MRectangle(int fourOrsix,mvRect *p)
 	}
 	else if (fourOrsix==MAIN_FPGA_FOUR)
 	{
-		 startx=p->outRect.x/2+(640*((p->camIdx-6)%2));
-		 starty=p->outRect.y/2+(540*((p->camIdx-6)/2));
-		 w=p->outRect.width/2;
+		 startx=p->outRect.x/3;
+		 starty=p->outRect.y/2+(540*(p->camIdx-6));
+		 w=p->outRect.width/3;
 		 h=p->outRect.height/2;//取出容器中rect的值
 		 endx=startx+w;
 		 endy=starty+h;
@@ -72,12 +158,13 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 	vector<mvRect> *wholeV;
 	vector<mvRect> *wholeVrcv;
 	vector<mvRect> tempV;
-	wholeVrcv=m_pmv->GetWholeRect();
+	wholeVrcv=m_pmv->Getm_WholeRect();
+
 //将范围内的rect找出
 	if(range[END]>range[START]){					//不跨360度
 		for(int i=0;i<wholeVrcv->size();i++)
 		{
-			if((*wholeVrcv)[i].x_angle>range[START]   && (*wholeVrcv)[i].x_angle<=range[END] )
+			if((*wholeVrcv)[i].x_angle()>range[START]   && (*wholeVrcv)[i].x_angle()<=range[END] )
 			{
 				tempV.push_back((*wholeVrcv)[i]);
 			}
@@ -86,23 +173,25 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 	else{//跨360度
 		for(int i=0;i<wholeVrcv->size();i++)
 		{
-			if((*wholeVrcv)[i].x_angle>range[START]   && (*wholeVrcv)[i].x_angle<=360.0)
+			if((*wholeVrcv)[i].x_angle()>range[START]   && (*wholeVrcv)[i].x_angle()<=MAX_X_POS)
 			{
 				tempV.push_back((*wholeVrcv)[i]);
 			}
 			for(int i=0;i<wholeVrcv->size();i++)
 			{
-				if((*wholeVrcv)[i].x_angle>0   && (*wholeVrcv)[i].x_angle<=range[END] )
+				if((*wholeVrcv)[i].x_angle()>0   && (*wholeVrcv)[i].x_angle()<=range[END] )
 				{
 					tempV.push_back((*wholeVrcv)[i]);
 				}
 			}
 		}
 	}
+
 	wholeV=&tempV;
 
 		//按x从小到达排序
 		sort(wholeV->begin(),wholeV->end(),CmpXsamller);
+
 		/*****找出所以的框*****/
 		for(int i=0;i<wholeV->size();i++)
 		{
@@ -113,7 +202,8 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 					(*wholeV)[i].color[0]=0;
 					(*wholeV)[i].color[1]=255.0;
 					(*wholeV)[i].color[2]=0;
-					targetRect[i]=(*wholeV)[i];  //将前m_sumTarget个绿色的保留以显示图片
+						targetRect[i]=(*wholeV)[i];
+					//将前m_sumTarget个绿色的保留以显示图片
 					lastRect[i]=targetRect[i];//黄色target默认targetRect
 				}
 				else//红色
@@ -138,7 +228,8 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 			int j=m_sumTarget-wholeV->size();
 			for(int k=wholeV->size();k<j;k++)
 			{
-				targetRect[k].x_angle=-1;
+				targetRect[k].outRect.x=-1; //如果target的camIdx  outRect.x是-1,則表示沒有這個target
+				targetRect[k].camIdx=-1;	//保證get_xangle()<0
 				lastRect[k]=targetRect[k];
 			}
 		 }
@@ -151,12 +242,13 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 	//如果targetidx圈出的rect选择下一个
 	 if(IsChooseN(targetidx))
 	 {
+		 resetChooseN(targetidx);
 		 //在所有从小到大排序好的vector中插入lastrect[targetidx],找出lastrect的下一个作为黄色rect
 		 //并将这个rect赋值给lastrect[targetidx]
 			for(int i=0;i<wholeV->size();i++)
 			{
 				//如果找到第一个大于last的，则跳出循环
-				if(lastRect[targetidx].x_angle<(*wholeV)[i].x_angle)
+				if(lastRect[targetidx].x_angle()<(*wholeV)[i].x_angle())
 				{
 					(*wholeV)[i].color[0]=0;
 					(*wholeV)[i].color[1]=255;
@@ -170,13 +262,14 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 	 }//next
 	 else if(IsChooseP(targetidx))
 		 {
+		 resetChooseP(targetidx);
 		 	 sort(wholeV->begin(),wholeV->end(),CmpXbigger);
 			 //在所有从大到小排序好的vector中插入lastrect[targetidx],找出lastrect的上一个作为黄色rect
 			 //并将这个rect赋值给lastrect[targetidx]
 				for(int i=0;i<wholeV->size();i++)
 				{
 					//如果找到第一个小于last的，则跳出循环
-					if(lastRect[targetidx].x_angle>(*wholeV)[i].x_angle)
+					if(lastRect[targetidx].x_angle()>(*wholeV)[i].x_angle())
 					{
 						(*wholeV)[i].color[0]=0;
 						(*wholeV)[i].color[1]=255;
@@ -190,13 +283,14 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 		 }//pre
 	 else if(IsChooseUp(targetidx))
 		 {
+		 resetChooseUp(targetidx);
 		 	 sort(wholeV->begin(),wholeV->end(),CmpYbigger);
 			 //在所有从大到小排序好的vector中插入lastrect[targetidx],找出lastrect的上一个作为黄色rect
 			 //并将这个rect赋值给lastrect[targetidx]
 				for(int i=0;i<wholeV->size();i++)
 				{
 					//如果找到第一个小于last的，则跳出循环
-					if(lastRect[targetidx].y_angle>(*wholeV)[i].y_angle)
+					if(lastRect[targetidx].y_angle()>(*wholeV)[i].y_angle())
 					{
 						(*wholeV)[i].color[0]=0;
 						(*wholeV)[i].color[1]=255;
@@ -210,13 +304,14 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 		 }//up
 	 else if(IsChooseDown(targetidx))
 		 {
+		 resetChooseDown(targetidx);
 		 	 sort(wholeV->begin(),wholeV->end(),CmpYsmaller);
 			 //在所有从小到大排序好的vector中插入lastrect[targetidx],找出lastrect的下一个作为黄色rect
 			 //并将这个rect赋值给lastrect[targetidx]
 				for(int i=0;i<wholeV->size();i++)
 				{
 					//如果找到第一个大于last的，则跳出循环
-					if(lastRect[targetidx].y_angle<(*wholeV)[i].y_angle)
+					if(lastRect[targetidx].y_angle()<(*wholeV)[i].y_angle())
 					{
 						(*wholeV)[i].color[0]=0;
 						(*wholeV)[i].color[1]=255;
@@ -232,6 +327,22 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 
 		}//有target在
 
+		else //沒有target ,移動所有的
+		{
+			if(IsMoveN())
+			{
+				resetMoveN();
+				sort(wholeV->begin(),wholeV->end(),CmpXsamller);
+
+			}
+			else if(IsMoveP())
+			{
+				resetMoveP();
+				sort(wholeV->begin(),wholeV->end(),CmpXbigger);
+			}
+
+		}
+#if 0
 		/*******把绿色 红色 黄色 全画了****/
 				if(fourOrsix==MAIN_FPGA_FOUR)//只画cam 6~9
 				{
@@ -253,6 +364,7 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 						}
 					}
 				}
+#endif
 }
 
 
@@ -306,85 +418,47 @@ unsigned char * MotionDetectorROI::GetRoiSrc(int targetidx)
 	{
 		temp=targetRect[targetidx];
 	}
-	 if(temp.camIdx>=0 &&temp.camIdx<=5)//1920*1080
-	 {
-		 //先到1920*1080的位置
-		 transx=temp.outRect.x/3+(640*(temp.camIdx%3));
-		 transy=temp.outRect.y/2+(540*(temp.camIdx/3));
-		 transw=temp.outRect.width/3;
-		 transh=temp.outRect.height/2;
-		 midx=transx+transw/2;
-		 midy=transy+transh/2;
-		 //再按照mid取出对应的roi数据
-		 //如果中间点到该相机图像边界左边的距离小于1920/3/4/2
-		 if(midx-(temp.camIdx%3)*640<HALF_ROIW)
-		 {
-			 //左边起点，加半个ROIW
-			 midx=HALF_ROIW+(temp.camIdx%3)*640;
-		 }
-		 else if(((temp.camIdx%3)+1)*640-midx<HALF_ROIW)
-		 {
-			 //右边起点，减半个ROIW
-			 midx=((temp.camIdx%3)+1)*640-HALF_ROIW;
-		 }
+	 transx=temp.outRect.x;
+	 transy=temp.outRect.y;
+	 transw=temp.outRect.width;
+	 transh=temp.outRect.height;
+	 midx=transx+transw/2;
+	 midy=transy+transh/2;
 
-		 //如果中间点到图像上边的距离小于1080/2/4/2
-		 if(midy-(temp.camIdx/3)*540<HALF_ROIH)
-		 {
-			 //上边起点，加半个ROIH
-			 midy=HALF_ROIH+(temp.camIdx/3)*540;
-		 }
-		 else if(((temp.camIdx/3)+1)*540-midy<HALF_ROIH)
-		 {
-			 //下边起点，减半个ROIH
-			 midy=((temp.camIdx/3)+1)*540-HALF_ROIH;
-		 }
-		 drawx=midx-HALF_ROIW;
-		 drawy=midy-HALF_ROIH;
+if(midx<HALF_ROIW)
+	drawx=0;
+else if(midx>SDI_WIDTH-HALF_ROIW)
+	drawx=SDI_WIDTH-ROIW;
+if(midy<HALF_ROIH)
+	drawy=0;
+else if(midy>SDI_HEIGHT-HALF_ROIH)
+	drawy=SDI_HEIGHT-ROIH;
+RectfromSrc(-1,targetidx,temp.camIdx,drawx,drawy,draww,drawh);
+/*	 if(temp.camIdx>=0 &&temp.camIdx<=5)//1920*1080
+	 {
 		 RectfromSrc(MAIN_FPGA_SIX,targetidx,drawx,drawy,draww,drawh);
 	 }
 /////////////////////////////////////////////
 	 else if(temp.camIdx>=6 &&temp.camIdx<=9)//1280*1080
 	 {
-		 //先到1280*1080的位置
-		 transx=temp.outRect.x/2+(640*((temp.camIdx-6)%2));
-		 transy=temp.outRect.y/2+(540*((temp.camIdx-6)/2));
-		 transw=temp.outRect.width/2;
-		 transh=temp.outRect.height/2;
-		 midx=transx+transw/2;
-		 midy=transy+transh/2;
-		 //再按照mid取出对应的roi数据
-		 //如果中间点到该相机图像边界左边的距离小于1920/3/4/2
-		 		 if(midx-((temp.camIdx-6)%2)*640<HALF_ROIW)
-		 		 {
-		 			 //左边起点，加半个ROIW
-		 			 midx=HALF_ROIW+((temp.camIdx-6)%3)*640;
-		 		 }
-		 		 else if((((temp.camIdx-6)%2)+1)*640-midx<HALF_ROIW)
-		 		 {
-		 			 //右边起点，减半个ROIW
-		 			 midx=(((temp.camIdx-6)%2)+1)*640-HALF_ROIW;
-		 		 }
-
-		 		 //如果中间点到图像上边的距离小于1080/2/4/2
-		 		 if(midy-((temp.camIdx-6)/2)*540<HALF_ROIH)
-		 		 {
-		 			 //上边起点，加半个ROIH
-		 			 midy=HALF_ROIH+((temp.camIdx-6)/3)*540;
-		 		 }
-		 		 else if((((temp.camIdx-6)/2)+1)*540-midy<HALF_ROIH)
-		 		 {
-		 			 //下边起点，减半个ROIH
-		 			 midy=(((temp.camIdx-6)/2)+1)*540-HALF_ROIH;
-		 		 }
-		 		 drawx=midx-HALF_ROIW;
-		 		 drawy=midy-HALF_ROIH;
 		 		RectfromSrc(MAIN_FPGA_FOUR,targetidx,drawx,drawy,draww,drawh);
-	 }
+	 }*/
+return RoiSrc[targetidx];
 }
-void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int x,int y,int w,int h)
+void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x,int y,int w,int h)
 {
-	if(fourOrsix==MAIN_FPGA_SIX)
+	if(p_newestMvSrc[camIdx]==NULL)
+	{
+		printf("p_newestMvSrc %d==NULL",camIdx);
+	}
+	else if(p_newestMvSrc[camIdx]!=NULL)
+	{
+		Mat SRC(1080,1920,CV_8UC3,p_newestMvSrc[camIdx]);
+		Mat DST(h,w,CV_8UC3,RoiSrc[targetidx]);
+		Rect rect(x,y,w,h);
+		DST=SRC(rect);
+	}
+	/*	if(fourOrsix==MAIN_FPGA_SIX)
 	{
 		Mat SRC(1080,1920,CV_8UC4,tempSrc6);
 		Mat DST(h,w,CV_8UC4,RoiSrc[targetidx]);
@@ -397,7 +471,7 @@ void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int x,int y,int 
 		Mat DST(h,w,CV_8UC4,RoiSrc[targetidx]);
 		Rect rect(x,y,w,h);
 		DST=SRC(rect);
-	}
+	}*/
 }
 void MotionDetectorROI::drawRect(int targetidx,unsigned char *src,int capidx)
 {

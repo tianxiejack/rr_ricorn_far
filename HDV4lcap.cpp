@@ -46,6 +46,7 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
 unsigned char * target_data[CAM_COUNT];
+extern unsigned char * p_newestMvSrc[CAM_COUNT];
 
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
@@ -655,9 +656,21 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
+						if(nowGrayidx>=11||nowGrayidx<=0) 
+						{
+							printf("nowGrayidx~~~~~~~~~~~~~~~~~~=%d\n",nowGrayidx);
+						chid[MAIN]=0;
+						//nowGrayidx=mv_count;
+						transformed_src_main=&MVDECT_data_main[0];
+						
+						}
+						else
+						{
+
 						chid[MAIN]=nowGrayidx+1;
 						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
+						}
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -677,7 +690,12 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							//if(mv_detect.MDisStart())
 							if(IsMvDetect)
 							{
+							if(nowGrayidx>=1&&nowGrayidx<=10)
+							{ 
+								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
+							}
 							}
 							#endif
 						}

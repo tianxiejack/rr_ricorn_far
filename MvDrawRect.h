@@ -7,9 +7,12 @@ using namespace cv;
 #include"StlGlDefines.h"
 #include"cv_version.h"
 #include"MvDetect.h"
+#include"MvDrawRect.h"
+
 #define MAX_TARGET_NUM 4
 #define CC 3
-#if 0
+#define MAX_X_POS (1920*9)
+#if 1
 enum{
 	BIG,
 	SMALL
@@ -19,7 +22,7 @@ enum{
 	END
 };
 
-class MotionDetectorROI:public IF_MotionDetectorROI
+class MotionDetectorROI//:public IF_MotionDetectorROI
 {
 public :
 	MotionDetectorROI(int sumTarget,MvDetect *pmv);
@@ -28,16 +31,23 @@ public :
 	void ChoosePre(int targetidx){choosePre[targetidx]=true;};
 	void ChooseUp(int targetidx){chooseUp[targetidx]=true;};
 	void ChooseDown(int targetidx){chooseDown[targetidx]=true;};
+	void MoveN(){ moveN=true;};
+	void MoveP(){ moveP=true;};
 
 	void resetChooseN(int targetidx){chooseNext[targetidx]=false;};
 	void resetChooseP(int targetidx){choosePre[targetidx]=false;};
 	void resetChooseUp(int targetidx){chooseUp[targetidx]=false;};
 	void resetChooseDown(int targetidx){chooseDown[targetidx]=false;};
+	void resetMoveN(){ moveN=false;};
+	void resetMoveP(){ moveP=false;};
 
 	bool IsChooseN(int targetidx){return chooseNext[targetidx];};
 	bool IsChooseP(int targetidx){return choosePre[targetidx];};
 	bool IsChooseUp(int targetidx){return chooseUp[targetidx];};
 	bool IsChooseDown(int targetidx){return chooseDown[targetidx];};
+	bool IsMoveN(){return moveN;};
+	bool IsMoveP(){return moveP;};
+
 
 	void SetRange(float startAngle,float endAngle){
 			range[START]=startAngle;
@@ -82,15 +92,18 @@ public :
 //	void RankVectorClear(int targetidx){RankRect[targetidx].clear();};
 	mvRect *Rank(int targetidx,int bigOrsmall);
 
-	void RectfromSrc(int fourOrsix,int targetidx,int x,int y,int w,int h);
+	void RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x,int y,int w,int h);
 	unsigned char * GetRoiSrc(int targetidx);
 	void SettempSrc4(unsigned char *src);
 	void SettempSrc6(unsigned char *src);
+
 
 	unsigned char * GetpRoiSrc(int targetidx){return RoiSrc[targetidx];};
 private:
 	double RectColor[MAX_TARGET_NUM][CC];
 	float range[2]; //0～右～45～前～135～左～225～后～315～右～360
+	bool moveN;
+	bool moveP;
 	bool chooseNext[MAX_TARGET_NUM];
 	bool choosePre[MAX_TARGET_NUM];
 	bool chooseUp[MAX_TARGET_NUM];
@@ -100,7 +113,6 @@ private:
 //	std::vector<mvRect> RankRect[MAX_TARGET_NUM];
 	unsigned char *tempSrc4;
 	unsigned char *tempSrc6;
-
 	Mat m4;//[MAX_TARGET_NUM];
 	Mat m6;//[MAX_TARGET_NUM];
 	unsigned char *RoiSrc[MAX_TARGET_NUM];

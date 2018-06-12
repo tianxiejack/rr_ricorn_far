@@ -62,21 +62,21 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
-#if MVDECT
+#if MVDECT         
 #include"MvDrawRect.h"
 #include"MvModeSwith.h"
 extern MVModeSwith   mvSwitch;
-/*extern MotionDetectorROI
+extern MotionDetectorROI
 mdRoi_mainT,
 mdRoi_subT,
 mdRoi_mainA,
-mdRoi_subA;*/
+mdRoi_subA;
  extern MvDetect mv_detect;
 #endif
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
-char chosenCam[2]={0,0};
+char chosenCam[2]={1,1};
 
 extern bool IsMvDetect;
 bool IsgstCap=false;
@@ -816,7 +816,7 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 static void TargetORI(GLubyte *ptr, int index,GLEnv &env)
 {
 	index-=MAGICAL_NUM;
-#if 0
+#if 1
 	switch (index)
 				{
 				case MAIN_TARGET_A0:
@@ -857,8 +857,6 @@ static void TargetORI(GLubyte *ptr, int index,GLEnv &env)
 					ptr=mdRoi_subT.GetRoiSrc(1);
 									break;
 							}
-#else
-	memset(ptr,0xff,ROIW*ROIH*4);
 #endif
 }
 
@@ -979,8 +977,8 @@ void Render::GetFPS()
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
 #if 1
-		ChangeMainChosenCamidx(chosenCam[MAIN]+1);
-		ChangeSubChosenCamidx(chosenCam[SUB]+1);
+		ChangeMainChosenCamidx(1);
+		ChangeSubChosenCamidx(1);
 #endif
 	GLEnv & env=env1;
 	GLubyte *pBytes;
@@ -1004,7 +1002,8 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				||!env.Getp_PBORcr()->Init()
 				|| !env.Getp_PBOVGAMgr()->Init()
 				|| !env.Getp_PBOSDIMgr()->Init()
-				||!env.Getp_PBOChosenMgr()->Init()){
+				||!env.Getp_PBOChosenMgr()->Init()
+				||!env.Getp_PBOTargetMgr()->Init()){
 		cout<<"Failed to init PBO manager"<<endl;
 			exit(1);
 		}
@@ -5133,6 +5132,7 @@ void Render::TargectTelView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int 
 		m_env.GetmodelViewMatrix()->Translate(0.0f, 0.0f, -h);//-h
 		m_env.GetmodelViewMatrix()->Scale(w, h, 1.0f);
 		DrawTargetVideo(m_env,targetIdx,true);
+//	DrawSDIVideo(m_env,true);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 }
 
@@ -6646,7 +6646,8 @@ if(setpriorityOnce)
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 #if			MVDECT
-	/*		if(mv_detect.CanUseMD(MAIN))
+		//if(mv_detect.CanUseMD(MAIN))
+		if(IsMvDetect)
 			{
 				glScissor(0,0,1920,563);
 					//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
@@ -6661,7 +6662,7 @@ if(setpriorityOnce)
 			TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
 
 			}
-			else*/
+			else
 					{
 				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
 				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
@@ -9000,7 +9001,7 @@ GLEnv & env=env1;
 				if(CHOSEN_VIEW_MODE==displayMode)
 				{
 				#if 1
-					saveSinglePic[chosenCam[MAIN]]=true;
+					saveSinglePic[chosenCam[MAIN]-1]=true;
 					printf("savePicIdx=%x\n",chosenCam[MAIN]-1);
 				#endif
 				}

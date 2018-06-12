@@ -111,6 +111,7 @@ public:
     int SetWheelArcWidth(float arcWidth);
     void SetdisplayMode( );
     void ChangeTelMode();
+    void ChangeSecondTelMode(bool isright);
     void sendBack();
     void sendTrackSpeed(int w,int h);
 private:
