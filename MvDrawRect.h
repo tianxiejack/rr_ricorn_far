@@ -57,7 +57,7 @@ public :
 		};
 //	float GetRange(int startOrend){return range[startOrend];};
 
-	void DrawAllRectOri(int fourOrsix);
+	void DrawAllRectOri(int fourOrsix=0);
 	void MRectangle(int fourOrsix,mvRect *p);
 	bool ISanySingleRect(){
 		for(int i=0;i<m_sumTarget;i++)

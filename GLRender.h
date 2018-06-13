@@ -730,6 +730,7 @@ private:
 	GLFrame Render2FrontCameraFrame;
 	GLFrame ChosenCameraFrame;
 	GLFrame targetFrame[TARGET_CAM_COUNT];
+#define TARGET_TEXTURE_COUNT (TARGET_CAM_COUNT)
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
@@ -774,12 +775,13 @@ private:
 	int GetWindowHeight(){return g_windowHeight;};
 	GLuint GL_ChosenTextureIDs[CHOSEN_TEXTURE_COUNT];
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
-	GLuint GL_TargetTextureIDs[TARGET_CAM_COUNT];
+	GLuint GL_TargetTextureIDs[TARGET_TEXTURE_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
 	GLuint GL_FBOTextureIDs[1];
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
 	GLuint SDITextures[SDI_TEXTURE_COUNT];
 	GLuint GL_ChosenTextures[CHOSEN_TEXTURE_COUNT];
+	GLuint GL_TargetTextures[TARGET_TEXTURE_COUNT];
 	GLuint GL_ExtensionTextureIDs[EXTENSION_TEXTURE_COUNT];
 	GLuint extensionTextures[EXTENSION_TEXTURE_COUNT];
 	GLuint GL_IconTextureIDs[1];

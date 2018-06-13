@@ -11,13 +11,19 @@ MotionDetectorROI   mdRoi_mainA(2,&mv_detect),mdRoi_subA(2,&mv_detect);
 MotionDetectorROI::MotionDetectorROI(int sumTarget,MvDetect *pmv):
 m_pmv(pmv),m_sumTarget(sumTarget)
 {
+	range[0]=0;
+	range[1]=MAX_X_POS;
 	m4=(Mat(FPGA_SCREEN_HEIGHT,FPGA_SCREEN_WIDTH,CV_8UC4));
 		m6=(Mat(SDI_HEIGHT,SDI_WIDTH,CV_8UC4));
 		moveN=false;
 		moveP=false;
 	for(int i=0;i<m_sumTarget;i++)
 	{
-
+		targetRect[i].camIdx=0;
+		targetRect[i].outRect.x=200;
+		targetRect[i].outRect.y=200;
+		targetRect[i].outRect.width=400;
+		targetRect[i].outRect.height=400;
 	chooseNext[i]=false;
 	choosePre[i]=false;
 	lastRect[i].outRect.height=-1;
@@ -228,9 +234,9 @@ void MotionDetectorROI:: DrawAllRectOri(int fourOrsix)
 			int j=m_sumTarget-wholeV->size();
 			for(int k=wholeV->size();k<j;k++)
 			{
-				targetRect[k].outRect.x=-1; //如果target的camIdx  outRect.x是-1,則表示沒有這個target
-				targetRect[k].camIdx=-1;	//保證get_xangle()<0
-				lastRect[k]=targetRect[k];
+			//	targetRect[k].outRect.x=-1; //如果target的camIdx  outRect.x是-1,則表示沒有這個target
+			//	targetRect[k].camIdx=-1;	//保證get_xangle()<0
+			//	lastRect[k]=targetRect[k];
 			}
 		 }
 
@@ -398,11 +404,7 @@ void  MotionDetectorROI::put2RankVector(int targetidx,std::vector<cv::Rect> *p_s
 unsigned char * MotionDetectorROI::GetRoiSrc(int targetidx)
 {
 	mvRect temp;
-	int transx=-1,
-		 transy=-1,
-		 transw=-1,
-		 transh=-1,
-		 midx=-1,
+	int midx=-1,
 		 midy=-1,
 		drawx=-1,
 		drawy=-1,
@@ -418,22 +420,27 @@ unsigned char * MotionDetectorROI::GetRoiSrc(int targetidx)
 	{
 		temp=targetRect[targetidx];
 	}
-	 transx=temp.outRect.x;
-	 transy=temp.outRect.y;
-	 transw=temp.outRect.width;
-	 transh=temp.outRect.height;
-	 midx=transx+transw/2;
-	 midy=transy+transh/2;
+	drawx=temp.outRect.x;
+	drawy=temp.outRect.y;
+	draww=temp.outRect.width;
+	drawh=temp.outRect.height;
+	 midx=drawx+draww/2;
+	 midy=drawy+drawh/2;
 
 if(midx<HALF_ROIW)
 	drawx=0;
-else if(midx>SDI_WIDTH-HALF_ROIW)
-	drawx=SDI_WIDTH-ROIW;
+else if(midx>=SDI_WIDTH-HALF_ROIW)
+	drawx=SDI_WIDTH-ROIW-1;
 if(midy<HALF_ROIH)
 	drawy=0;
-else if(midy>SDI_HEIGHT-HALF_ROIH)
-	drawy=SDI_HEIGHT-ROIH;
-RectfromSrc(-1,targetidx,temp.camIdx,drawx,drawy,draww,drawh);
+else if(midy>=SDI_HEIGHT-HALF_ROIH)
+	drawy=SDI_HEIGHT-ROIH-1;
+
+
+//printf("targetidx=%d  camidx=%d  drawx=%d drawy=%d,w=%d,=%d\n",targetidx,temp.camIdx,drawx,drawy,draww,drawh);
+	RectfromSrc(-1,targetidx,temp.camIdx,drawx,drawy,draww,drawh);
+
+
 /*	 if(temp.camIdx>=0 &&temp.camIdx<=5)//1920*1080
 	 {
 		 RectfromSrc(MAIN_FPGA_SIX,targetidx,drawx,drawy,draww,drawh);
@@ -453,20 +460,14 @@ void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x
 	}
 	else if(p_newestMvSrc[camIdx]!=NULL)
 	{
-		x=200;
-		y=200;
-		w=400;
-		h=400;
 		Mat SRC(1080,1920,CV_8UC3,p_newestMvSrc[camIdx]);
 		Mat out(h,w,CV_8UC3);
 		Rect rect(x,y,w,h);
 		out=SRC(rect);
 		for(int j = 0; j< h; j++){
-			unsigned char* pDst = RoiSrc[targetidx]+j*w*3;
-			memcpy(pDst, out.row(j).data,w*3);
-
+			//unsigned char* pDst = RoiSrc[targetidx]+j*w*3;
+			memcpy(RoiSrc[targetidx]+j*w*3, out.row(j).data,w*3);
 		}
-
 	}
 	/*	if(fourOrsix==MAIN_FPGA_SIX)
 	{

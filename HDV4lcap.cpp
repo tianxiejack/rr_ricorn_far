@@ -30,6 +30,7 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
+#include"MvDrawRect.h"
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
@@ -47,7 +48,11 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_sub[6];
 unsigned char * target_data[CAM_COUNT];
 extern unsigned char * p_newestMvSrc[CAM_COUNT];
-
+extern MotionDetectorROI
+mdRoi_mainT,
+mdRoi_subT,
+mdRoi_mainA,
+mdRoi_subA;
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
 

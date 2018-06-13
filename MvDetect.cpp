@@ -5,7 +5,8 @@
 using namespace cv;
 Mat m4(2160,640,CV_8UC3);
 Mat m6(3240,640,CV_8UC3);
-unsigned char * p_newestMvSrc[CAM_COUNT];
+unsigned char * p_newestMvSrc[CAM_COUNT]={NULL,NULL,NULL,NULL,NULL,NULL,NULL
+,NULL,NULL,NULL};
 extern MvDetect mv_detect;
 
 #if  MVDECT

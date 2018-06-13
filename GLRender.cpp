@@ -817,6 +817,7 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 {
 	index-=MAGICAL_NUM;
     unsigned char *ptr= NULL;
+#if 1
 	switch (index)
 				{
 				case MAIN_TARGET_A0:
@@ -829,7 +830,7 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 					ptr=mdRoi_mainT.GetRoiSrc(2);
 									break;
 				case MAIN_TARGET_A3:
-					ptr=mdRoi_mainT.GetRoiSrc(2);
+					ptr=mdRoi_mainT.GetRoiSrc(3);
 							break;
 				case SUB_TARGET_A0:
 					ptr=mdRoi_subA.GetRoiSrc(0);
@@ -845,21 +846,27 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 								break;
 
 				case		MAIN_TARGET_T0:
-					ptr=mdRoi_mainT.GetRoiSrc(0);
+					ptr=mdRoi_mainA.GetRoiSrc(0);
 							break;
 				case			MAIN_TARGET_T1:
-					ptr=mdRoi_mainT.GetRoiSrc(1);
+					ptr=mdRoi_mainA.GetRoiSrc(1);
 								break;
 				case			SUB_TARGET_T0:
-					ptr=mdRoi_subT.GetRoiSrc(0);
+					ptr=mdRoi_subA.GetRoiSrc(0);
 								break;
 				case		SUB_TARGET_T1:
-					ptr=mdRoi_subT.GetRoiSrc(1);
+					ptr=mdRoi_subA.GetRoiSrc(1);
 									break;
 							}
 			if(ptr){
 				memcpy(pDst,ptr,ROIW*ROIH*3);
 			}
+			else {
+				memset(pDst,0,ROIW*ROIH*3);
+			}
+#else 
+memset(pDst,0,ROIW*ROIH*3);
+#endif
 }
 
 static void mainTarget0(GLubyte *ptr, int index,GLEnv &env)
@@ -1156,17 +1163,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 				glTexImage2D(GL_TEXTURE_2D,0,nComponents,PANO_TEXTURE_WIDTH, PANO_TEXTURE_HEIGHT, 0,
 						format, GL_UNSIGNED_BYTE, 0);
 			}
-		for(int i = 0; i < TARGET_CAM_COUNT; i++){
-				glBindTexture(GL_TEXTURE_2D, GL_TargetTextureIDs[i]);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-				glTexImage2D(GL_TEXTURE_2D,0,nComponents,ROIW, ROIH, 0,
-						format, GL_UNSIGNED_BYTE, 0);
-			}
+
 #else
 		for(int i = 0; i < CAM_COUNT; i++){
 			glBindTexture(GL_TEXTURE_2D, textures[i]);
@@ -1213,6 +1210,18 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
 				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask1);
 	}
+	glGenTextures(12, GL_TargetTextures);
+			for(int i = 0; i < 12; i++){
+					glBindTexture(GL_TEXTURE_2D, GL_TargetTextures[i]);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+					glTexImage2D(GL_TEXTURE_2D,0,nComponents,ROIW, ROIH, 0,
+							format, GL_UNSIGNED_BYTE, 0);
+				}
 	//setting up extension textures etc.
 	{
 		glGenTextures(EXTENSION_TEXTURE_COUNT, extensionTextures);
@@ -2292,10 +2301,10 @@ void Render::DrawTargetVideo(GLEnv &m_env,int  targetIdx,bool needSendData)
 			m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
 			glActiveTexture(GL_TargetTextureIDs[targetIdx]);
 			if(needSendData){
-				m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextureIDs[targetIdx], (PFN_PBOFILLBUFFER)TargetORI,targetIdx+MAGICAL_NUM);
+				m_env.Getp_PBOTargetMgr()->sendData(m_env,GL_TargetTextures[targetIdx], (PFN_PBOFILLBUFFER)TargetORI,targetIdx+MAGICAL_NUM);
 			}
 			else{
-				glBindTexture(GL_TEXTURE_2D, GL_TargetTextureIDs[targetIdx]);
+				glBindTexture(GL_TEXTURE_2D, GL_TargetTextures[targetIdx]);
 			}
 			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), targetIdx+4);
 			m_env.Getp_shadowBatch()->Draw();
@@ -6657,11 +6666,15 @@ if(setpriorityOnce)
 				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 				glDisable(GL_SCISSOR_TEST);
 
+				mdRoi_mainT.DrawAllRectOri();
+			//	mdRoi_subT.DrawAllRectOri();
+			//	mdRoi_mainA.DrawAllRectOri();
+			//	mdRoi_subA.DrawAllRectOri();
 								//		mv_detect.SetoutRect();
 			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
-			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
-			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
-			TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
+		//	TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+		//	TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
+		//	TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
 
 			}
 			else
