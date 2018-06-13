@@ -813,18 +813,18 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 	env.GetPanoCaptureGroup()->captureCam(ptr,index);
 }
 
-static void TargetORI(GLubyte *ptr, int index,GLEnv &env)
+static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 {
 	index-=MAGICAL_NUM;
-#if 1
+    unsigned char *ptr= NULL;
 	switch (index)
 				{
 				case MAIN_TARGET_A0:
-					ptr=mdRoi_mainT.GetRoiSrc(0);
+					ptr= mdRoi_mainT.GetRoiSrc(0);
 									break;
 				case MAIN_TARGET_A1:
 					ptr=mdRoi_mainT.GetRoiSrc(1);
-													break;
+						break;
 				case MAIN_TARGET_A2:
 					ptr=mdRoi_mainT.GetRoiSrc(2);
 									break;
@@ -857,7 +857,9 @@ static void TargetORI(GLubyte *ptr, int index,GLEnv &env)
 					ptr=mdRoi_subT.GetRoiSrc(1);
 									break;
 							}
-#endif
+			if(ptr){
+				memcpy(pDst,ptr,ROIW*ROIH*3);
+			}
 }
 
 static void mainTarget0(GLubyte *ptr, int index,GLEnv &env)

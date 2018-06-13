@@ -453,10 +453,20 @@ void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x
 	}
 	else if(p_newestMvSrc[camIdx]!=NULL)
 	{
+		x=200;
+		y=200;
+		w=400;
+		h=400;
 		Mat SRC(1080,1920,CV_8UC3,p_newestMvSrc[camIdx]);
-		Mat DST(h,w,CV_8UC3,RoiSrc[targetidx]);
+		Mat out(h,w,CV_8UC3);
 		Rect rect(x,y,w,h);
-		DST=SRC(rect);
+		out=SRC(rect);
+		for(int j = 0; j< h; j++){
+			unsigned char* pDst = RoiSrc[targetidx]+j*w*3;
+			memcpy(pDst, out.row(j).data,w*3);
+
+		}
+
 	}
 	/*	if(fourOrsix==MAIN_FPGA_SIX)
 	{
