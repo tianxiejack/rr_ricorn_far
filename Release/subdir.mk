@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../set_button.cpp\
 ../IPC_Far_Recv_Message.cpp\
 ../spiH.cpp\
 ../Cap_Spi_Message.cpp\
@@ -69,6 +70,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./set_button.o\
 ./IPC_Far_Recv_Message.o\
 ./spiH.o\
 ./Cap_Spi_Message.o\
@@ -131,6 +133,7 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./set_button.d\
 ./IPC_Far_Recv_Message.d\
 ./spiH.d\
 ./Cap_Spi_Message.d\

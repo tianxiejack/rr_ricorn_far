@@ -50,6 +50,7 @@
 #include "PBO_FBO_Facade.h"
 #include "RenderDrawBehaviour.h"
 #include"GLEnv.h"
+#include "set_button.h"
 using namespace std;
 
 class RenderMain;
@@ -59,7 +60,7 @@ static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
 /* Called once from main() */
 /*set up render scene*/
 static const M3DVector3f DEFAULT_ORIGIN = {0.0f, 0.0f, 50.0f};
-class Render:public InterFaceDrawBehaviour{
+class Render:public InterFaceDrawBehaviour,public InterfaceRenderBehavior{
 public:
 	Render();
 	~Render();
@@ -860,6 +861,14 @@ private:
 	OitVehicle *pPano;
 
 	vector <vector <int> > overlappoint[CAM_COUNT];
+public:
+	 void SetTouchPosX(int x){touch_pos_x=x;};
+	 int GetTouchPosX(){return touch_pos_x;};
+	 void SetTouchPosY(int y){touch_pos_y=y;};
+	 int GetTouchPosY(){return touch_pos_y;};
+private:
+		int touch_pos_x,touch_pos_y;
+		multiLayerButtonGroup * button_array;
 };
 
 void* getDefaultShaderMgr();

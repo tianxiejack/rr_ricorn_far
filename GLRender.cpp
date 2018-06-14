@@ -65,6 +65,7 @@
 #if MVDECT         
 #include"MvDrawRect.h"
 #include"MvModeSwith.h"
+#include "menu_button.h"
 extern MVModeSwith   mvSwitch;
 extern MotionDetectorROI
 mdRoi_mainT,
@@ -755,6 +756,7 @@ Render::~Render()
 		if(Petal_OverLap[i])
 			delete Petal_OverLap[i];
 	}
+	delete [] button_array;
 }
 
 
@@ -815,6 +817,7 @@ static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 
 static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 {
+#if MVDECT
 	index-=MAGICAL_NUM;
     unsigned char *ptr= NULL;
 #if 1
@@ -866,6 +869,7 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 			}
 #else 
 memset(pDst,0,ROIW*ROIH*3);
+#endif
 #endif
 }
 
@@ -1332,6 +1336,9 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 #endif
 	}
 	glMatrixMode(GL_MODELVIEW);
+	button_array = new multiLayerButtonGroup(this,1);
+	button_array->init_button_group(&shaderManager,env.GetmodelViewMatrix(), env.GetprojectionMatrix(),env.GetviewFrustum());
+	button_array->SetEnableDraw(true);//show menu
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6694,7 +6701,7 @@ if(setpriorityOnce)
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 #if			MVDECT
 		//if(mv_detect.CanUseMD(MAIN))
-		if(IsMvDetect)
+		if(0)//if(IsMvDetect)
 			{
 				glScissor(0,0,1920,563);
 					//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
@@ -6702,15 +6709,15 @@ if(setpriorityOnce)
 				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 				glDisable(GL_SCISSOR_TEST);
 
-				mdRoi_mainT.DrawAllRectOri();
+			//	mdRoi_mainT.DrawAllRectOri();
 			//	mdRoi_subT.DrawAllRectOri();
-			//	mdRoi_mainA.DrawAllRectOri();
+				mdRoi_mainA.DrawAllRectOri();
 			//	mdRoi_subA.DrawAllRectOri();
 								//		mv_detect.SetoutRect();
 			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
-		//	TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
-		//	TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
-		//	TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
+			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
+			TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A3);
 
 			}
 			else
@@ -7442,7 +7449,7 @@ if(setpriorityOnce)
 #endif
 
 #endif// RENDER2FRONT
-
+	button_array->Group_Draw();
 }
 
 
