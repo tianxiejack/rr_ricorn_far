@@ -31,6 +31,9 @@
 #include"MvDetect.h"
 #include "thread_idle.h"
 #include"MvDrawRect.h"
+#include <cuda.h>
+#include <cuda_gl_interop.h>
+#include <cuda_runtime_api.h>
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
@@ -54,6 +57,8 @@ mdRoi_subT,
 mdRoi_mainA,
 mdRoi_subA;
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
+
+extern bool enable_hance;
 
 
 
@@ -598,6 +603,86 @@ void save_gray(char *filename,void *pic,int w,int h)
 	imwrite(filename,Pic);
 }
 
+/*
+void YUYVEnhanceFour(unsigned char * dst,unsigned char * src,int w,int h)
+{
+#if 1//ENABLE_ENHANCE_FUNCTION
+		static unsigned char * gpu_uyvyFour;
+		static unsigned char * gpu_rgbFour;
+		static unsigned char * gpu_enhFour;
+		static unsigned char * cpu_uyvyFour;
+		static bool once =true;
+		static cudaStream_t m_cuStreamFour[2];
+		if(once)
+		{
+			cudaMalloc((void **)&gpu_uyvyFour,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*2);
+			cudaMalloc((void **)&gpu_rgbFour,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*3);
+			cudaMalloc((void **)&gpu_enhFour,(FPGA_SINGLE_PIC_W)*(FPGA_SINGLE_PIC_H*4)*3);
+
+			for(int i=0; i<2; i++){
+				cudaStreamCreate(&m_cuStreamFour[0]);
+			}
+			once=false;
+			cpu_uyvyFour=(unsigned char *)malloc(FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*2);
+		}
+		int noww=FPGA_SINGLE_PIC_W,nowh=0;
+	//	if(w=1280)
+	//	{
+	//		nowh=FPGA_SINGLE_PIC_H*4;
+	//	}
+	//	else if(w==1920)
+		{
+			nowh=FPGA_SINGLE_PIC_H*4;
+		}
+		cudaMemcpy(gpu_uyvyFour,src,noww*nowh*2,cudaMemcpyHostToDevice);
+		//yuyv2bgr_(gpu_rgb,gpu_yuyv,SDI_WIDTH,SDI_HEIGHT,m_cuStream[0]);
+		uyvy2bgr_(gpu_rgbFour,gpu_uyvyFour,noww,nowh,m_cuStreamFour[0]);
+		Mat dst1(nowh,noww,CV_8UC3,gpu_enhFour);
+		Mat src1(nowh,noww,CV_8UC3,gpu_rgbFour);
+		cuClahe( src1,dst1);		//, 4,4,4.5,0);
+		cudaMemcpy(dst,gpu_enhFour,noww*nowh*3,cudaMemcpyDeviceToHost);
+#endif
+}
+void YUYVEnhance(unsigned char * dst,unsigned char * src,int w,int h)
+{
+#if 1//ENABLE_ENHANCE_FUNCTION
+		static unsigned char * gpu_uyvy;
+		static unsigned char * gpu_rgb;
+		static unsigned char * gpu_enh;
+		static unsigned char * cpu_uyvy;
+		static bool once =true;
+		static cudaStream_t m_cuStream[2];
+		if(once)
+		{
+			cudaMalloc((void **)&gpu_uyvy,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*2);
+			cudaMalloc((void **)&gpu_rgb,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*3);
+			cudaMalloc((void **)&gpu_enh,(FPGA_SINGLE_PIC_W)*(FPGA_SINGLE_PIC_H*6)*3);
+
+			for(int i=0; i<2; i++){
+				cudaStreamCreate(&m_cuStream[i]);
+			}
+			once=false;
+			cpu_uyvy=(unsigned char *)malloc(FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*2);
+		}
+		int noww=FPGA_SINGLE_PIC_W,nowh=0;
+	//	if(w=1280)
+	//	{
+	//		nowh=FPGA_SINGLE_PIC_H*4;
+	//	}
+	//	else if(w==1920)
+		{
+			nowh=FPGA_SINGLE_PIC_H*6;
+		}
+		cudaMemcpy(gpu_uyvy,src,noww*nowh*2,cudaMemcpyHostToDevice);
+		//yuyv2bgr_(gpu_rgb,gpu_yuyv,SDI_WIDTH,SDI_HEIGHT,m_cuStream[0]);
+		uyvy2bgr_(gpu_rgb,gpu_uyvy,noww,nowh,m_cuStream[0]);
+		Mat dst1(nowh,noww,CV_8UC3,gpu_enh);
+		Mat src1(nowh,noww,CV_8UC3,gpu_rgb);
+		cuClahe( src1,dst1);		//, 4,4,4.5,0);
+		cudaMemcpy(dst,gpu_enh,noww*nowh*3,cudaMemcpyDeviceToHost);
+#endif
+}
+*/
 int HDv4l_cam::read_frame(int now_pic_format)
 {
 	int t[10]={0};
@@ -722,6 +807,20 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							}
 							else
 							{
+//#if ENABLE_ENHANCE_FUNCTION
+							if(	enable_hance)
+							{
+								memcpy(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW*nowpicH*2);
+#if 0
+								if(nowpicW==1920)
+								YUYVEnhance(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+								else
+								YUYVEnhanceFour(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+
+
+								#endif
+							}
+							else
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 								//todo //４副　６副
 #if MVDECT
