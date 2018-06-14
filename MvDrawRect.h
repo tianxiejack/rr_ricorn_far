@@ -7,7 +7,6 @@ using namespace cv;
 #include"StlGlDefines.h"
 #include"cv_version.h"
 #include"MvDetect.h"
-#include"MvDrawRect.h"
 
 #define MAX_TARGET_NUM 4
 #define CC 3
@@ -99,6 +98,9 @@ public :
 
 
 	unsigned char * GetpRoiSrc(int targetidx){return RoiSrc[targetidx];};
+
+
+
 private:
 	double RectColor[MAX_TARGET_NUM][CC];
 	float range[2]; //0～右～45～前～135～左～225～后～315～右～360
@@ -119,6 +121,7 @@ private:
 	int m_sumTarget;
 	bool selectSingleRect[MAX_TARGET_NUM];
 	MvDetect *m_pmv;
+
 };
 
 #endif

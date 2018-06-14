@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../RoiFocusCamidx.cpp\
 ../set_button.cpp\
 ../IPC_Far_Recv_Message.cpp\
 ../spiH.cpp\
@@ -70,6 +71,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./RoiFocusCamidx.o\
 ./set_button.o\
 ./IPC_Far_Recv_Message.o\
 ./spiH.o\
@@ -133,6 +135,7 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./RoiFocusCamidx.d\
 ./set_button.d\
 ./IPC_Far_Recv_Message.d\
 ./spiH.d\

@@ -11,6 +11,7 @@ extern MVModeSwith   mvSwitch;
 #endif
 #include"IPC_Far_Recv_Message.h"
 #include"MvDrawRect.h"
+#include"RoiFocusCamidx.h"
 extern thread_idle tIdle;
 extern Render render;
 extern MvDetect mv_detect;
@@ -23,6 +24,8 @@ static float delayT=20.0;
 extern bool IsMvDetect;
 extern bool enable_hance;
 extern MotionDetectorROI
+
+
 mdRoi_mainT,
 mdRoi_subT,
 mdRoi_mainA,
@@ -275,7 +278,7 @@ void Render::RenderSceneDS()
 #if MVDECT
 		if(IsMvDetect)
 							{
-								glScissor(0,0,1920,563);
+								glScissor(0,0,1920,565);
 									//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 								glEnable(GL_SCISSOR_TEST);
 								glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -854,7 +857,26 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			//		else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 									break;
 
-#if MVDECT
+
+				case '!':
+					RoiFocusCamidx::GetInstance()->increaseRoiFocusCamidx();
+					break;
+				case '@':
+					RoiFocusCamidx::GetInstance()->decreaseRoiFocusCamidx();
+				break;
+				case '#':
+					RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
+				break;
+				case 'O':
+		#if MVDECT
+					if(IsMvDetect==false)
+						IsMvDetect=true;
+					else if(IsMvDetect==true)
+						IsMvDetect=false;
+					//mv_detect.OpenMD(MAIN);
+		#endif
+
+#if 0
 		case '5':
 			mvSwitch.CloseSwitch(SUB_MV_TEL_VIEW_SWITCH);
 			mvSwitch.OpenSwitch(SUB_MV_ALL_VIEW_SWITCH);
