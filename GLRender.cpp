@@ -1336,7 +1336,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 #endif
 	}
 	glMatrixMode(GL_MODELVIEW);
-	button_array = new multiLayerButtonGroup(this,1);
+	button_array = new multiLayerButtonGroup(this,MENU_GROUP_COUNT);
 	button_array->init_button_group(&shaderManager,env.GetmodelViewMatrix(), env.GetprojectionMatrix(),env.GetviewFrustum());
 	button_array->SetEnableDraw(true);//show menu
 }
@@ -7448,7 +7448,8 @@ if(setpriorityOnce)
 	cout<<"mode="<<displayMode<<":rearTime="<<rearTime/1000000<<",birdTime="<<birdTime/1000000<<",fboTime="<<fboTime/1000000<<endl;
 #endif
 
-#endif// RENDER2FRONT
+#endif// RENDER2FRON
+
 	button_array->Group_Draw();
 }
 
@@ -12347,6 +12348,26 @@ void Render::WritePanoScaleArrayData(char * filename,float * arraydata_left,floa
 	}
 	fclose(fp);
 }
+
+int Render::getGroupMenuIndex()
+{
+	int idx = 0;
+	if(displayMode==CHECK_MYSELF){
+		idx = 1;
+	}
+	else if(displayMode==CHOSEN_VIEW_MODE){
+		idx = 2;
+	}
+	else{
+		idx = 0;
+	}
+	return idx;
+}
+
+void Render::processKeycode(int keycode){
+
+	this->ProcessOitKeys(env1,keycode,0,0);
+}
 //================end of embedded fixed billboard implementation========
 
 void* getDefaultShaderMgr()
@@ -12368,7 +12389,7 @@ void set10camsOverlapArea(int count,int & direction,bool &AppOverlap)
 	int overlapcount=2;
 	int temp_x=count%480;
 	int array[10]={0};
-#if 1
+
 	int delta=48;
 	if(temp_x<2)
 	{
@@ -12461,101 +12482,6 @@ void set10camsOverlapArea(int count,int & direction,bool &AppOverlap)
 											{
 												direction=9;
 											}
-#else
-	int delta=24;
-			if(temp_x<delta)
-			{
-				direction=0;
-			}
-			else if(temp_x<delta+2)
-			{
-				direction=0;
-				AppOverlap=true;
-			}
-			else if(temp_x<delta+48)
-			{
-				direction=1;
-			}
-			else if(temp_x<delta+48+2)
-			{
-				direction=1;
-				AppOverlap=true;
-			}
-			else if(temp_x<delta+48*2)
-				{
-					direction=2;
-				}
-				else if(temp_x<delta+48*2+2)
-				{
-					direction=2;
-					AppOverlap=true;
-				}
-				else if(temp_x<delta+48*3)
-					{
-						direction=3;
-					}
-					else if(temp_x<delta+48*3+2)
-					{
-						direction=3;
-						AppOverlap=true;
-					}
-					else if(temp_x<delta+48*4)
-						{
-							direction=4;
-						}
-						else if(temp_x<delta+48*4+2)
-						{
-							direction=4;
-							AppOverlap=true;
-						}
-						else if(temp_x<delta+48*5)
-							{
-								direction=5;
-							}
-							else if(temp_x<delta+48*5+2)
-							{
-								direction=5;
-								AppOverlap=true;
-							}
-
-							else if(temp_x<delta+48*6)
-								{
-									direction=6;
-								}
-								else if(temp_x<delta+48*6+2)
-								{
-									direction=6;
-									AppOverlap=true;
-								}
-								else if(temp_x<delta+48*7)
-									{
-										direction=7;
-									}
-									else if(temp_x<delta+48*7+2)
-									{
-										direction=7;
-										AppOverlap=true;
-									}
-									else if(temp_x<delta+48*8)
-										{
-											direction=8;
-										}
-										else if(temp_x<delta+48*8+2)
-										{
-											direction=8;
-											AppOverlap=true;
-										}
-										else if(temp_x<delta+48*9)
-											{
-												direction=9;
-											}
-										else if(temp_x<delta+48*9+2)
-										{
-											direction=9;
-											AppOverlap=true;
-										}
-#endif
-
 
 
 }
@@ -12607,119 +12533,6 @@ void setOverlapArea(int count,int & direction,bool &AppOverlap)
 		direction=0;
 	}
 
-/*
-	int delta_count=2;
-	if(temp_x<20)
-	{
-		direction=0;
-	}
-	else if(temp_x<22)
-	{
-		direction=0;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42+delta_count))//42
-	{
-		direction=1;
-	}
-	else if(temp_x<(20+42+2+delta_count))//44
-	{
-		direction=1;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*2+delta_count))//84
-	{
-		direction=2;
-	}
-	else if(temp_x<(20+42*2+2+delta_count))//86
-	{
-		direction=2;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*3+2*1))//128
-	{
-		direction=3;
-	}
-	else if(temp_x<(20+42*3+2*1+2))//130
-	{
-		direction=3;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*4+2*1+delta_count))//170
-	{
-		direction=4;
-	}
-	else if(temp_x<(20+42*4+2*1+2+delta_count))//172
-	{
-		direction=4;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*5+2*1+delta_count))//212
-	{
-		direction=5;
-	}
-	else if(temp_x<(20+42*5+2*1+2+delta_count))//214
-	{
-		direction=5;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*6+2*2))//256
-	{
-		direction=6;
-	}
-	else if(temp_x<(20+42*6+2*2+2))//258
-	{
-		direction=6;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*7+2*2+delta_count))//298
-	{
-		direction=7;
-	}
-	else if(temp_x<(20+42*7+2*2+2+delta_count))//300
-	{
-		direction=7;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*8+2*2+delta_count+2))//340
-	{
-		direction=8;
-	}
-	else if(temp_x<(20+42*8+2*2+2+delta_count+2))//342
-	{
-		direction=8;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*9+2*3+delta_count))//384
-	{
-		direction=9;
-	}
-	else if(temp_x<(20+42*9+2*3+2+delta_count))//386
-	{
-		direction=9;
-		AppOverlap=true;
-	}
-	else if(temp_x<(20+42*10+2*3+delta_count))//426
-	{
-		direction=10;
-	}
-	else if(temp_x<(20+42*10+2*3+2+delta_count))//428
-	{
-		direction=10;
-		AppOverlap=true;
-	}
-
-	else if(temp_x<(20+42*11+2*3+delta_count+2))//468
-		{
-			direction=11;
-		}
-		else if(temp_x<(20+42*11+2*3+2+delta_count+2))//470
-		{
-			direction=11;
-			AppOverlap=true;
-		}
-		else
-			direction=0;*/
 }
 
 void SendBackXY(int *Pos)

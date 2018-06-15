@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#define MENU_BUTTON_HOR_COUNT 7
-#define MENU_BUTTON_VER_COUNT 4
+#define MENU_BUTTON_HOR_COUNT 8
+#define MENU_BUTTON_VER_COUNT 8
 #define MENU_BUTTON_COUNT (MENU_BUTTON_HOR_COUNT*MENU_BUTTON_VER_COUNT)
-
+#define MENU_GROUP_COUNT 3
 class MenuButton;
 class GLShaderManager;
 class ButtonGroup;
@@ -18,7 +18,8 @@ public:
    virtual int GetTouchPosY()=0;
    virtual void SetTouchPosX(int x)=0;
    virtual void SetTouchPosY(int x)=0;
-
+   virtual int getGroupMenuIndex() = 0;
+   virtual void processKeycode(int keycode)=0;
 };
 
 class InterfaceButtonGroup{
@@ -43,6 +44,7 @@ public:
 			GLMatrixStack * projectionMtrx, GLFrustum *     pViewFrustrm);
 	void SetEnableDraw(bool enable);
 	bool GetEnableDraw(){return enable_draw;};
+	void SetcurrentActiveBGIndex(int idx){currentActiveBGIndex=idx;};
 private:
 	std::vector<ButtonGroup*> m_layeredButtonGroupsVect;
 	int currentActiveBGIndex;

@@ -866,6 +866,8 @@ public:
 	 int GetTouchPosX(){return touch_pos_x;};
 	 void SetTouchPosY(int y){touch_pos_y=y;};
 	 int GetTouchPosY(){return touch_pos_y;};
+	 int getGroupMenuIndex() ;
+	 void processKeycode(int keycode);
 private:
 		int touch_pos_x,touch_pos_y;
 		multiLayerButtonGroup * button_array;

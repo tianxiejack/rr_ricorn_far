@@ -9,6 +9,16 @@
 #if USE_ON_BOARD
 #include "IPC_Near_Recv_Message.h"
 #endif
+#define MARGIN_X_OFFSET 0.04
+#define MARGIN_Y_OFFSET 0.04
+
+#define BUTTON_WIDTH 0.1
+#define GAP_X	(BUTTON_WIDTH/10.0)
+#define MARGIN_X (MARGIN_X_OFFSET+0.5*(1.0-BUTTON_WIDTH*(MENU_BUTTON_HOR_COUNT)-GAP_X*(MENU_BUTTON_HOR_COUNT-1)))
+
+#define BUTTON_HEIGHT 0.1
+#define GAP_Y (BUTTON_HEIGHT/10.0)
+#define MARGIN_Y (MARGIN_Y_OFFSET+0.5*(1.0-BUTTON_HEIGHT*(MENU_BUTTON_VER_COUNT)-GAP_Y*(MENU_BUTTON_VER_COUNT-1)))
 
 extern void* getDefaultShaderMgr();
 
@@ -19,12 +29,8 @@ static GLfloat vbuttonnormal[]={0.8,0.8,0.0,0.3};
 static GLfloat vbuttonchoose[]={0.0,0.3,0.3,0.7};
 
 
-int data_state[MENU_BUTTON_COUNT]={0,1,0};
-float data_x[MENU_BUTTON_COUNT]={-0.5,0.0,0.5};
-float data_y[MENU_BUTTON_COUNT]={-0.5,0.0,0.5};
-float data_width[MENU_BUTTON_COUNT]={0.1,0.2,0.3};
-float data_height[MENU_BUTTON_COUNT]={0.1,0.2,0.3};
-int data_key[MENU_BUTTON_COUNT]={20,21,22};
+
+
 
 #define BUTTON_NAME_UP_DOWN "updown.tga"
 #define BUTTON_NAME_ENH		"enh.tga"
@@ -34,29 +40,50 @@ typedef struct buttonMask{
 	int idx_x;
 	int idx_y;
 	char * tgaFileName;
+	char keyCode;
 }buttonMask;
 
 static buttonMask mask1[]={
-		{0, 0, BUTTON_NAME_UP_DOWN},
-		{0, 1, BUTTON_NAME_ENH}
+		{0, 0, BUTTON_NAME_UP_DOWN, 's'},
+		{1, 0, BUTTON_NAME_UP_DOWN, 's'},
+		{2, 0, BUTTON_NAME_UP_DOWN, 's'},
+		{3, 0, BUTTON_NAME_UP_DOWN ,'s'},
+		{4, 0, BUTTON_NAME_UP_DOWN, 's'},
+		{5, 0, BUTTON_NAME_UP_DOWN, 's'},
+
+		{0, 1, BUTTON_NAME_ENH, 's'},
+		{0, 2, BUTTON_NAME_ENH, 's'},
+
+		{0, 7, BUTTON_NAME_UP_DOWN, 's'},
+		{1, 7, BUTTON_NAME_ENH, 's'},
+		{2, 7, BUTTON_NAME_ENH, 's'},
+		{3, 7, BUTTON_NAME_ENH, 's'},
+		{4, 7, BUTTON_NAME_ENH, 's'},
+		{7, 7, BUTTON_NAME_MVDETECT, 's'},
+
 };
 
 static buttonMask mask2[]={
-		{3, 3, BUTTON_NAME_UP_DOWN},
-		{4, 3, BUTTON_NAME_ENH},
-		{5, 3, BUTTON_NAME_MVDETECT}
+		{3, 3, BUTTON_NAME_UP_DOWN, 's'},
+		{4, 3, BUTTON_NAME_ENH, 's'},
+		{5, 3, BUTTON_NAME_MVDETECT, 's'}
 };
-
+static buttonMask mask3[]={
+		{3, 7, BUTTON_NAME_ENH, 's'},
+		{4, 7, BUTTON_NAME_ENH, 's'},
+		{7, 7, BUTTON_NAME_MVDETECT, 's'},
+};
 #define MAX_LAYEDED_GROUP_COUNT 8
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
 		mask1,mask2,
-		NULL,NULL,NULL,NULL,NULL,NULL};
+		mask3,NULL,NULL,NULL,NULL,NULL};
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask1)/sizeof(mask1[0]),
 		sizeof(mask2)/sizeof(mask2[0]),
-		0,0,0,0,0,0
+		sizeof(mask3)/sizeof(mask3[0]),
+		0,0,0,0,0
 };
 //---------------------------------------------------------------
 
@@ -99,7 +126,10 @@ bool BaseBillBoard::LoadTGATextureRect(const char *szFileName, GLenum minFilter,
 
 void BaseBillBoard::Init(int x, int y, int width, int height)
 {
-
+	x=0;  //startx
+	y=155; //y must be the height of your own tga's height
+	width=300;//x must be the height of your own tga's width
+	height=155;//y must be the height of your own tga's height
 	HZbatch.Begin(GL_TRIANGLE_FAN, 4, 1);
 
 	// Upper left hand corner
@@ -298,6 +328,14 @@ void ButtonGroup::Update_State(InterfaceRenderBehavior* p_Host){
 
 	currentHightLightButtonId = FindButton(pos_x,pos_y,window_width,window_height);
 
+	if(currentHightLightButtonId>=0){
+		int keyData = m_buttonsVect[currentHightLightButtonId]->getKeycode();
+		if(keyData >= 0){
+			p_Host->processKeycode(keyData);
+		}
+	}
+
+
 };
 
 void ButtonGroup::acceptButtonMask(buttonMask* mask, int count)
@@ -309,7 +347,7 @@ void ButtonGroup::acceptButtonMask(buttonMask* mask, int count)
 }
 
 
-void ButtonGroup::init_button_group(int button_count,GLfloat * color_normal,GLfloat * color_choose,int * state,float * x,float * y,float * width,float * height,GLShaderManager * shaderManager,int * key)
+void ButtonGroup::init_button_group(int button_count,GLfloat * color_normal,GLfloat * color_choose,int * state,float * x,float * y,float * width,float * height,GLShaderManager * shaderManager)
 {
 	shaderMgr_group=shaderManager;
 	int count = m_Maskbutton.size();
@@ -321,7 +359,7 @@ void ButtonGroup::init_button_group(int button_count,GLfloat * color_normal,GLfl
 //如果这个位置是有按钮的，把此位置对应的按钮初始化并加入按钮组
 			if(l == m_Maskbutton[i]->idx_x + MENU_BUTTON_HOR_COUNT * m_Maskbutton[i]->idx_y ){
 				pbuttons[i].SetTgaFileName(m_Maskbutton[i]->tgaFileName );
-				pbuttons[i].init_button(color_normal,color_choose,state[l],x[l],y[l],width[l],height[l],shaderMgr_group,key[l]);
+				pbuttons[i].init_button(color_normal,color_choose,state[l],x[l],y[l],width[l],height[l],shaderMgr_group,m_Maskbutton[i]->keyCode);
 				pbuttons[i].SetShaderMgr(shaderMgr_group);
 
 				Append_Group(pbuttons+i);
@@ -343,19 +381,20 @@ void ButtonGroup::HightlightButton(int id)
 
 int ButtonGroup::FindButton(float x,float y,int window_width,int window_height)
 {
-	int number_of_button=-1;
+	int activatedbutton=-1;
 	float pos_x=2.0*x/window_width-1.0;
 	float pos_y=2.0*y/window_height -1.0;
 	for(int i=0;i<m_buttonsVect.size();i++)
 	{
 		if(m_buttonsVect[i]->FindPointOnButton(pos_x,pos_y))
 		{
-			number_of_button=i;
+			activatedbutton=i;
 			m_buttonsVect[i]->choose_state=1;
-			i=m_buttonsVect.size();
+			break;
 		}
 	}
-	return number_of_button;
+
+	return activatedbutton;
 }
 
 void ButtonGroup::Append_Group(MenuButton * button)
@@ -385,6 +424,7 @@ void multiLayerButtonGroup::Group_Draw()
 {
 	if(enable_draw)
 	{
+		this->SetcurrentActiveBGIndex(p_Host->getGroupMenuIndex());
 		Update_State();
 		m_layeredButtonGroupsVect[currentActiveBGIndex]->Group_Draw(p_Host->GetWindowWidth(),
 			p_Host->GetWindowHeight(),this->p_modelViewMatrix, this->p_projectionMatrix,
@@ -405,16 +445,20 @@ void multiLayerButtonGroup::init_button_group(GLShaderManager *shaderManager,GLM
 	p_modelViewMatrix=modelViewMatrix;
 	p_projectionMatrix= projectionMtrx;
 	pViewFrustrm = ViewFrustrm;
+	int data_state[MENU_BUTTON_COUNT]={0,1,0};
+	float data_x[MENU_BUTTON_COUNT]={-0.5,0.0,0.5};
+	float data_y[MENU_BUTTON_COUNT]={-0.5,0.0,0.5};
+	float data_width[MENU_BUTTON_COUNT]={0.1,0.2,0.3};
+	float data_height[MENU_BUTTON_COUNT]={0.1,0.2,0.3};
 	for(int cxm_i=0;cxm_i<MENU_BUTTON_VER_COUNT;cxm_i++)
 	{
 		for(int cxm_j=0;cxm_j<MENU_BUTTON_HOR_COUNT;cxm_j++)
 		{
 			data_state[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=0;
-			data_width[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=0.15;
-			data_height[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=0.2;
-			data_key[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=20+cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT;
-			data_x[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=2.0*(cxm_j+1)/(MENU_BUTTON_HOR_COUNT+1)-data_width[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]/2.0-1.0;
-			data_y[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=2.0*(cxm_i+1)/(MENU_BUTTON_VER_COUNT+1)-data_height[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]/2.0-1.0;
+			data_width[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=BUTTON_WIDTH;
+			data_height[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=BUTTON_HEIGHT;
+			data_x[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=MARGIN_X+cxm_j*(BUTTON_WIDTH+GAP_X);
+			data_y[cxm_j+cxm_i*MENU_BUTTON_HOR_COUNT]=MARGIN_Y+cxm_i*(BUTTON_HEIGHT+GAP_Y);
 
 		}
 	}
@@ -425,7 +469,7 @@ void multiLayerButtonGroup::init_button_group(GLShaderManager *shaderManager,GLM
 		m_layeredButtonGroupsVect[i]->acceptButtonMask(pMasks[i],MaskLengths[i]);
 		//初始化按钮组
 		m_layeredButtonGroupsVect[i]->init_button_group(MENU_BUTTON_COUNT,vbuttonnormal,vbuttonchoose,
-				data_state,data_x,data_y,	data_width,data_height,shaderManager,data_key);
+				data_state,data_x,data_y,	data_width,data_height,shaderManager);
 	}
 }
 

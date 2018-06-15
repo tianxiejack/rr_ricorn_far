@@ -70,9 +70,9 @@ public:
 
 	bool FindPointOnButton(float x,float y);
 	void SetTgaFileName(const char * name);
-	void ProcessKey()
+	int getKeycode()
 	{
-		;
+		return key_data;
 	};
 
 };
@@ -87,7 +87,7 @@ public:
 	void Group_Draw(int width,int height,GLMatrixStack * p_modelViewMatrix,GLMatrixStack * p_projectionMtrx,GLFrustum * viewFrustum);
 	void Update_State(InterfaceRenderBehavior* p_Host);
 	void acceptButtonMask(buttonMask* mask, int count);
-	void init_button_group(int button_count,float * color_normal,float * color_choose,int * state,float * x,float * y,float * width,float * height,GLShaderManager * shaderManager,int * key);
+	void init_button_group(int button_count,float * color_normal,float * color_choose,int * state,float * x,float * y,float * width,float * height,GLShaderManager * shaderManager);
 	void HightlightButton(int id);
 	int GetHighlightButtonId(){return currentHightLightButtonId;};
 private:
