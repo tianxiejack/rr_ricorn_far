@@ -13,13 +13,12 @@
 #define MARGIN_Y_OFFSET (-0.05)
 
 #define BUTTON_WIDTH 0.1
-#define GAP_X	(BUTTON_WIDTH/10.0)
-#define MARGIN_X (MARGIN_X_OFFSET+0.5*(1.0-BUTTON_WIDTH*(MENU_BUTTON_HOR_COUNT)-GAP_X*(MENU_BUTTON_HOR_COUNT-1)))
+#define GAP_X	(BUTTON_WIDTH*0.03)
+#define MARGIN_X 0
 
-#define BUTTON_HEIGHT 0.1
-#define GAP_Y (BUTTON_HEIGHT/10.0)
-#define MARGIN_Y (MARGIN_Y_OFFSET+0.5*(1.0-BUTTON_HEIGHT*(MENU_BUTTON_VER_COUNT)-GAP_Y*(MENU_BUTTON_VER_COUNT-1)))
-
+#define BUTTON_HEIGHT 0.12
+#define GAP_Y (BUTTON_HEIGHT*0.1)
+#define MARGIN_Y 0
 extern void* getDefaultShaderMgr();
 
 #define HIGHT_LIGHT_WAIT_COUNT 20
@@ -39,6 +38,7 @@ static GLfloat vbuttonchoose[]={0.0,0.3,0.3,0.7};
 #define BUTTON_FORESIGHT "m_foresight.tga"
 #define BUTTON_FRONT "m_front.tga"
 #define BUTTON_LEFT "m_left.tga"
+#define BUTTON_BACK "m_back.tga"
 #define BUTTON_MENU "m_menu.tga"
 #define BUTTON_MODE "m_mode.tga"
 #define BUTTON_NEAR "m_near.tga"
@@ -83,6 +83,7 @@ static buttonMask mask_default_round_ui[]={
 		{4, 0, BUTTON_ENHANCE, 's'},
 		{6, 0, BUTTON_FORESIGHT, 's'},
 		{8, 0, BUTTON_RECORD, 's'}
+
 };
 
 //2.2模式選擇界面
@@ -113,7 +114,7 @@ static buttonMask mask_around_mode_ui[]={
 static buttonMask mask_telescope_mode_ui[]={
 		{0, 6, BUTTON_TELESCOPE, 's'},
 		{0, 5, BUTTON_FRONT, 's'},
-		{0, 4, BUTTON_RIGHT, 's'},
+		{0, 4, BUTTON_BACK, 's'},
 		{0, 3, BUTTON_LEFT, 's'},
 		{0, 2, BUTTON_RIGHT, 's'},
 
@@ -128,8 +129,8 @@ static buttonMask mask_telescope_mode_ui[]={
 static buttonMask mask_single_channel_mode_ui[]={
 
 		{0, 5, BUTTON_SINGLE_CHANNEL, 's'},
-		{0, 4, BUTTON_CLOCKWISE, 's'},
-		{0, 3, BUTTON_ANTI_CLOCKWISE, 's'},
+		{0, 4, BUTTON_ANTI_CLOCKWISE, 's'},
+		{0, 3, BUTTON_CLOCKWISE, 's'},
 
 		{0, 0, BUTTON_MODE, 's'},
 		{2, 0, BUTTON_TARGET, 's'},
@@ -171,72 +172,152 @@ static buttonMask mask_foresight_mode_ui[]={
 
 //5增強模式
 static buttonMask mask_enhance_mode_ui[]={
-		{1, 0, BUTTON_ONE, 's'},
-		{1, 1, BUTTON_TWO, 's'},
-		{1, 2, BUTTON_THREE, 's'},
-		{1, 3, BUTTON_FOUR, 's'},
-		{1, 4, BUTTON_CLOSE, 's'},
+		{0, 7, BUTTON_ONE, 's'},
+		{0, 6, BUTTON_TWO, 's'},
+		{0, 5, BUTTON_THREE, 's'},
+		{0, 4, BUTTON_FOUR, 's'},
+		{0, 3, BUTTON_CLOSE, 's'},
 
-		{1, 7, BUTTON_MODE, 's'},
-		{3, 7, BUTTON_TARGET, 's'},
-		{5, 7, BUTTON_ENHANCE, 's'},
-		{7, 7, BUTTON_FORESIGHT, 's'},
-		{9, 7, BUTTON_RECORD, 's'}
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
 };
 
 //6儲存視頻
 static buttonMask mask_record_mode_ui[]={
-		{1, 3, BUTTON_START	, 's'},
-		{1, 4, BUTTON_CLOSE, 's'},
+		{0, 4, BUTTON_START	, 's'},
+		{0, 3, BUTTON_CLOSE, 's'},
 
-		{1, 7, BUTTON_MODE, 's'},
-		{3, 7, BUTTON_TARGET, 's'},
-		{5, 7, BUTTON_ENHANCE, 's'},
-		{7, 7, BUTTON_FORESIGHT, 's'},
-		{9, 7, BUTTON_RECORD, 's'}
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
 };
 
 //7零位校正
 static buttonMask mask_zero_position_mode_ui[]={
-		{1, 3, BUTTON_ZERO_POSITION, 's'},
-		{1, 4, BUTTON_RETURN, 's'},
+		{0, 4, BUTTON_ZERO_POSITION, 's'},
+		{0, 3, BUTTON_RETURN, 's'},
 
-		{1, 7, BUTTON_MODE, 's'},
-		{3, 7, BUTTON_TARGET, 's'},
-		{5, 7, BUTTON_ENHANCE, 's'},
-		{7, 7, BUTTON_FORESIGHT, 's'},
-		{9, 7, BUTTON_RECORD, 's'}
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
 };
 
 //8菜單消隱界面
 static buttonMask mask_disappear_mode_ui[]={
-		{10, 7, BUTTON_MENU, 's'}
+		{9, 0, BUTTON_MENU, 's'}
 };
 
 
 /**********駕駛員界面**********/
 //1.1駕駛員基礎界面
+static buttonMask mask_driver_basic_mode_ui[]={
+
+		{0, 1, BUTTON_ERROR_STATE, 's'},
+		{0, 2, BUTTON_NEAR, 's'},
+		{0, 3, BUTTON_ALLVIEW, 's'},
+};
+
+//2.1駕駛員全景調節界面
+static buttonMask mask_driver_far_allview_mode_ui[]={
+
+		{0, 2, BUTTON_RETURN, 's'},
+		{0, 0, BUTTON_MODE, 's'},
+			{2, 0, BUTTON_TARGET, 's'},
+			{4, 0, BUTTON_ENHANCE, 's'},
+			{6, 0, BUTTON_FORESIGHT, 's'}
+};
 
 
-//2.1全景界面
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//
+
+//近景界面
+static buttonMask mask_driver_near_allview_mode_ui[]={
+		{0, 3, BUTTON_RETURN, 's'},
+		{0, 0, BUTTON_SINGLE_CHANNEL, 's'},
+		{2, 0, BUTTON_OVERLOOK, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'}
+};
+
+//駕駛員菜單消隱界面
+static buttonMask mask_driver_disappear_mode_ui[]={
+		{9, 0, BUTTON_MENU, 's'}
+};
+
+
+//近景單通道
+static buttonMask mask_driver_near_single_channel_mode_ui[]={
+		{0, 3, BUTTON_TROCHOID, 's'},
+		{0, 0, BUTTON_SINGLE_CHANNEL, 's'},
+		{2, 0, BUTTON_OVERLOOK, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'}
+};
+//近景增強模式
+static buttonMask mask_driver_near_enhance_mode_ui[]={
+		{0, 7, BUTTON_ONE, 's'},
+		{0, 6, BUTTON_TWO, 's'},
+		{0, 5, BUTTON_THREE, 's'},
+		{0, 4, BUTTON_FOUR, 's'},
+		{0, 3, BUTTON_CLOSE, 's'},
+
+		{0, 0, BUTTON_SINGLE_CHANNEL, 's'},
+		{2, 0, BUTTON_OVERLOOK, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'}
+};
+
+//近景俯瞰模式
+static buttonMask mask_driver_near_overlook_mode_ui[]={
+		{0, 7, BUTTON_FRONT, 's'},
+		{0, 6, BUTTON_BACK, 's'},
+		{0, 5, BUTTON_LEFT, 's'},
+		{0, 4, BUTTON_RIGHT, 's'},
+		{0, 3, BUTTON_TROCHOID, 's'},
+
+		{0, 0, BUTTON_SINGLE_CHANNEL, 's'},
+		{2, 0, BUTTON_OVERLOOK, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'}
+};
 
 
 
-
-
-
-
-#define MAX_LAYEDED_GROUP_COUNT 8
+#define MAX_LAYEDED_GROUP_COUNT 19
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
-		mask_basic_ui,mask_choose_mode_ui,
-		NULL,NULL,NULL,NULL,NULL,NULL};
+		mask_basic_ui,mask_default_round_ui,
+		mask_choose_mode_ui,mask_around_mode_ui,mask_telescope_mode_ui,mask_single_channel_mode_ui,
+		mask_mvdetect_mode_ui,mask_foresight_mode_ui,mask_enhance_mode_ui,
+		mask_record_mode_ui,mask_zero_position_mode_ui,
+		mask_disappear_mode_ui,mask_driver_basic_mode_ui,mask_driver_disappear_mode_ui,
+		mask_driver_far_allview_mode_ui,
+		mask_driver_near_allview_mode_ui,mask_driver_near_single_channel_mode_ui,
+		mask_driver_near_enhance_mode_ui,mask_driver_near_overlook_mode_ui};
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_basic_ui)/sizeof(mask_basic_ui[0]),
+		sizeof(mask_default_round_ui)/sizeof(mask_default_round_ui[0]),
 		sizeof(mask_choose_mode_ui)/sizeof(mask_choose_mode_ui[0]),
-		0,0,//sizeof(mask3)/sizeof(mask3[0]),
-		0,0,0,0
+		sizeof(mask_around_mode_ui)/sizeof(mask_around_mode_ui[0]),
+		sizeof(mask_telescope_mode_ui)/sizeof(mask_telescope_mode_ui[0]),
+		sizeof(mask_single_channel_mode_ui)/sizeof(mask_single_channel_mode_ui	[0]),
+		sizeof(mask_mvdetect_mode_ui)/sizeof(mask_mvdetect_mode_ui[0]),
+		sizeof(mask_foresight_mode_ui)/sizeof(mask_foresight_mode_ui[0]),
+		sizeof(mask_enhance_mode_ui)/sizeof(mask_enhance_mode_ui[0]),
+		sizeof(mask_record_mode_ui)/sizeof(mask_record_mode_ui[0]),
+		sizeof(mask_zero_position_mode_ui)/sizeof(mask_zero_position_mode_ui[0]),
+		sizeof(mask_disappear_mode_ui)/sizeof(mask_disappear_mode_ui[0]),
+		sizeof(mask_driver_basic_mode_ui)/sizeof(mask_driver_basic_mode_ui[0]),
+		sizeof(mask_driver_disappear_mode_ui)/sizeof(mask_driver_disappear_mode_ui[0]),
+		sizeof(mask_driver_far_allview_mode_ui)/sizeof(mask_driver_far_allview_mode_ui[0]),
+		sizeof(mask_driver_near_allview_mode_ui)/sizeof(mask_driver_near_allview_mode_ui[0]),
+		sizeof(mask_driver_near_single_channel_mode_ui)/sizeof(mask_driver_near_single_channel_mode_ui[0]),
+		sizeof(mask_driver_near_enhance_mode_ui)/sizeof(mask_driver_near_enhance_mode_ui[0]),
+		sizeof(mask_driver_near_overlook_mode_ui)/sizeof(mask_driver_near_overlook_mode_ui[0])
 };
 //---------------------------------------------------------------
 
