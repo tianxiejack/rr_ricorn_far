@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
-#define MENU_BUTTON_HOR_COUNT 8
+#define MENU_BUTTON_HOR_COUNT 10
 #define MENU_BUTTON_VER_COUNT 8
 #define MENU_BUTTON_COUNT (MENU_BUTTON_HOR_COUNT*MENU_BUTTON_VER_COUNT)
-#define MENU_GROUP_COUNT 3
+#define MENU_GROUP_COUNT 8
 class MenuButton;
 class GLShaderManager;
 class ButtonGroup;

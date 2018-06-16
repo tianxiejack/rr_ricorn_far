@@ -409,19 +409,19 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 #define WRONG_TGA				"wrong.tga"
 #define IDLE_TGA						"idle.tga"
 
-#define CHOSEN_FRONT_LEFT "chosen_front_left.tga"
-#define CHOSEN_FRONT_RIGHT "chosen_front_right.tga"
+#define CHOSEN_FRONT_LEFT_TGA "chosen_front_left.tga"
+#define CHOSEN_FRONT_RIGHT_TGA "chosen_front_right.tga"
 
-#define CHOSEN_BACK_LEFT "chosen_back_left.tga"
-#define CHOSEN_BACK_RIGHT "chosen_back_right.tga"
+#define CHOSEN_BACK_LEFT_TGA "chosen_back_left.tga"
+#define CHOSEN_BACK_RIGHT_TGA "chosen_back_right.tga"
 
-#define CHOSEN_LEFT_FRONT "chosen_left_front.tga"
-#define CHOSEN_LEFT_MID "chosen_left_mid.tga"
-#define CHOSEN_LEFT_BACK "chosen_left_back.tga"
+#define CHOSEN_LEFT_FRONT_TGA "chosen_left_front.tga"
+#define CHOSEN_LEFT_MID_TGA "chosen_left_mid.tga"
+#define CHOSEN_LEFT_BACK_TGA "chosen_left_back.tga"
 
-#define CHOSEN_RIGHT_FRONT "chosen_right_front.tga"
-#define CHOSEN_RIGHT_MID "chosen_right_mid.tga"
-#define CHOSEN_RIGHT_BACK "chosen_right_back.tga"
+#define CHOSEN_RIGHT_FRONT_TGA "chosen_right_front.tga"
+#define CHOSEN_RIGHT_MID_TGA "chosen_right_mid.tga"
+#define CHOSEN_RIGHT_BACK_TGA "chosen_right_back.tga"
 
 typedef enum CURRENT_MODE
 {
@@ -482,6 +482,22 @@ enum CCT_COUNT {
 		PANORAMIC_MIRROR_T,
 
 		DEBUG_T,
+
+ CHOSEN_RIGHT_FRONT_T,
+ CHOSEN_FRONT_RIGHT_T,
+ CHOSEN_FRONT_LEFT_T,
+ CHOSEN_LEFT_FRONT_T,
+ CHOSEN_LEFT_MID_T,
+ CHOSEN_LEFT_BACK_T,
+ CHOSEN_BACK_LEFT_T,
+ CHOSEN_BACK_RIGHT_T,
+ CHOSEN_RIGHT_BACK_T,
+ CHOSEN_RIGHT_MID_T,
+
+
+
+
+
 		CCT_COUNT
 		};
 

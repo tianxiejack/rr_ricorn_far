@@ -9,8 +9,8 @@
 #if USE_ON_BOARD
 #include "IPC_Near_Recv_Message.h"
 #endif
-#define MARGIN_X_OFFSET 0.04
-#define MARGIN_Y_OFFSET 0.04
+#define MARGIN_X_OFFSET 0.05
+#define MARGIN_Y_OFFSET (-0.05)
 
 #define BUTTON_WIDTH 0.1
 #define GAP_X	(BUTTON_WIDTH/10.0)
@@ -24,18 +24,42 @@ extern void* getDefaultShaderMgr();
 
 #define HIGHT_LIGHT_WAIT_COUNT 20
 
-
 static GLfloat vbuttonnormal[]={0.8,0.8,0.0,0.3};
 static GLfloat vbuttonchoose[]={0.0,0.3,0.3,0.7};
 
+#define BUTTON_ALLVIEW "m_allview.tga"
+#define BUTTON_ANTI_CLOCKWISE			"m_anti_clockwise.tga"
+#define BUTTON_AROUND "m_around.tga"
+#define BUTTON_CANCLE "m_cancle.tga"
+#define BUTTON_CLOCKWISE "m_clockwise.tga"
+#define BUTTON_CLOSE "m_close.tga"
+#define BUTTON_DOWN "m_down.tga"
+#define BUTTON_ENHANCE "m_enhance.tga"
+#define BUTTON_ERROR_STATE "m_error_state.tga"
+#define BUTTON_FORESIGHT "m_foresight.tga"
+#define BUTTON_FRONT "m_front.tga"
+#define BUTTON_LEFT "m_left.tga"
+#define BUTTON_MENU "m_menu.tga"
+#define BUTTON_MODE "m_mode.tga"
+#define BUTTON_NEAR "m_near.tga"
+#define BUTTON_OVERLOOK "m_overlook.tga"
+#define BUTTON_RECORD "m_record.tga"
+#define BUTTON_RETURN "m_return.tga"
+#define BUTTON_RIGHT "m_right.tga"
+#define BUTTON_SINGLE_CHANNEL "m_single_channel.tga"
+#define BUTTON_SINGLE_SELECTION "m_single_selection.tga"
+#define BUTTON_START "m_start.tga"
+#define BUTTON_STOP "m_stop.tga"
+#define BUTTON_TARGET "m_target.tga"
+#define BUTTON_TELESCOPE "m_telescope.tga"
+#define BUTTON_TROCHOID "m_trochoid.tga"
+#define BUTTON_UP "m_up.tga"
+#define BUTTON_ZERO_POSITION "m_zero_position.tga"
 
-
-
-
-#define BUTTON_NAME_UP_DOWN "updown.tga"
-#define BUTTON_NAME_ENH		"enh.tga"
-#define BUTTON_NAME_MVDETECT		"mvdetect.tga"
-
+#define BUTTON_ONE "m_one.tga"
+#define BUTTON_TWO "m_two.tga"
+#define BUTTON_THREE "m_three.tga"
+#define BUTTON_FOUR "m_four.tga"
 typedef struct buttonMask{
 	int idx_x;
 	int idx_y;
@@ -43,52 +67,181 @@ typedef struct buttonMask{
 	char keyCode;
 }buttonMask;
 
-static buttonMask mask1[]={
-		{0, 0, BUTTON_NAME_UP_DOWN, 's'},
-		{1, 0, BUTTON_NAME_UP_DOWN, 's'},
-		{2, 0, BUTTON_NAME_UP_DOWN, 's'},
-		{3, 0, BUTTON_NAME_UP_DOWN ,'s'},
-		{4, 0, BUTTON_NAME_UP_DOWN, 's'},
-		{5, 0, BUTTON_NAME_UP_DOWN, 's'},
-
-		{0, 1, BUTTON_NAME_ENH, 's'},
-		{0, 2, BUTTON_NAME_ENH, 's'},
-
-		{0, 7, BUTTON_NAME_UP_DOWN, 's'},
-		{1, 7, BUTTON_NAME_ENH, 's'},
-		{2, 7, BUTTON_NAME_ENH, 's'},
-		{3, 7, BUTTON_NAME_ENH, 's'},
-		{4, 7, BUTTON_NAME_ENH, 's'},
-		{7, 7, BUTTON_NAME_MVDETECT, 's'},
-
+//1.1車長基礎界面
+static buttonMask mask_basic_ui[]={
+		{0, 3, BUTTON_ALLVIEW, 's'},
+		{0, 2, BUTTON_ERROR_STATE, 's'}
 };
 
-static buttonMask mask2[]={
-		{3, 3, BUTTON_NAME_UP_DOWN, 's'},
-		{4, 3, BUTTON_NAME_ENH, 's'},
-		{5, 3, BUTTON_NAME_MVDETECT, 's'}
+//2.1全景調節界面，默認環視模式
+static buttonMask mask_default_round_ui[]={
+		{0, 3, BUTTON_ZERO_POSITION, 's'},
+		{0, 2, BUTTON_RETURN, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
 };
-static buttonMask mask3[]={
-		{3, 7, BUTTON_NAME_ENH, 's'},
-		{4, 7, BUTTON_NAME_ENH, 's'},
-		{7, 7, BUTTON_NAME_MVDETECT, 's'},
+
+//2.2模式選擇界面
+static buttonMask mask_choose_mode_ui[]={
+		{0, 7, BUTTON_AROUND, 's'},
+		{0, 6, BUTTON_TELESCOPE, 's'},
+		{0, 5, BUTTON_SINGLE_CHANNEL, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
 };
+
+//2.3環視模式
+static buttonMask mask_around_mode_ui[]={
+		{0, 7, BUTTON_AROUND, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
+};
+
+//2.4潛望模式
+static buttonMask mask_telescope_mode_ui[]={
+		{0, 6, BUTTON_TELESCOPE, 's'},
+		{0, 5, BUTTON_FRONT, 's'},
+		{0, 4, BUTTON_RIGHT, 's'},
+		{0, 3, BUTTON_LEFT, 's'},
+		{0, 2, BUTTON_RIGHT, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
+};
+
+//2.5單通道模式
+static buttonMask mask_single_channel_mode_ui[]={
+
+		{0, 5, BUTTON_SINGLE_CHANNEL, 's'},
+		{0, 4, BUTTON_CLOCKWISE, 's'},
+		{0, 3, BUTTON_ANTI_CLOCKWISE, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
+};
+
+//3.1目標檢測模式
+static buttonMask mask_mvdetect_mode_ui[]={
+		{0, 7, BUTTON_UP, 's'},
+		{0, 6, BUTTON_DOWN, 's'},
+		{0, 5, BUTTON_LEFT, 's'},
+		{0, 4, BUTTON_RIGHT, 's'},
+		{0, 3, BUTTON_SINGLE_SELECTION, 's'},
+		{0, 2, BUTTON_CANCLE, 's'},
+		{0, 1, BUTTON_CLOSE, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
+};
+
+//4 分划調節
+static buttonMask mask_foresight_mode_ui[]={
+		{0, 7, BUTTON_UP, 's'},
+		{0, 6, BUTTON_DOWN, 's'},
+		{0, 5, BUTTON_LEFT, 's'},
+		{0, 4, BUTTON_RIGHT, 's'},
+
+		{0, 0, BUTTON_MODE, 's'},
+		{2, 0, BUTTON_TARGET, 's'},
+		{4, 0, BUTTON_ENHANCE, 's'},
+		{6, 0, BUTTON_FORESIGHT, 's'},
+		{8, 0, BUTTON_RECORD, 's'}
+};
+
+//5增強模式
+static buttonMask mask_enhance_mode_ui[]={
+		{1, 0, BUTTON_ONE, 's'},
+		{1, 1, BUTTON_TWO, 's'},
+		{1, 2, BUTTON_THREE, 's'},
+		{1, 3, BUTTON_FOUR, 's'},
+		{1, 4, BUTTON_CLOSE, 's'},
+
+		{1, 7, BUTTON_MODE, 's'},
+		{3, 7, BUTTON_TARGET, 's'},
+		{5, 7, BUTTON_ENHANCE, 's'},
+		{7, 7, BUTTON_FORESIGHT, 's'},
+		{9, 7, BUTTON_RECORD, 's'}
+};
+
+//6儲存視頻
+static buttonMask mask_record_mode_ui[]={
+		{1, 3, BUTTON_START	, 's'},
+		{1, 4, BUTTON_CLOSE, 's'},
+
+		{1, 7, BUTTON_MODE, 's'},
+		{3, 7, BUTTON_TARGET, 's'},
+		{5, 7, BUTTON_ENHANCE, 's'},
+		{7, 7, BUTTON_FORESIGHT, 's'},
+		{9, 7, BUTTON_RECORD, 's'}
+};
+
+//7零位校正
+static buttonMask mask_zero_position_mode_ui[]={
+		{1, 3, BUTTON_ZERO_POSITION, 's'},
+		{1, 4, BUTTON_RETURN, 's'},
+
+		{1, 7, BUTTON_MODE, 's'},
+		{3, 7, BUTTON_TARGET, 's'},
+		{5, 7, BUTTON_ENHANCE, 's'},
+		{7, 7, BUTTON_FORESIGHT, 's'},
+		{9, 7, BUTTON_RECORD, 's'}
+};
+
+//8菜單消隱界面
+static buttonMask mask_disappear_mode_ui[]={
+		{10, 7, BUTTON_MENU, 's'}
+};
+
+
+/**********駕駛員界面**********/
+//1.1駕駛員基礎界面
+
+
+//2.1全景界面
+
+
+
+
+
+
+
 #define MAX_LAYEDED_GROUP_COUNT 8
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
-		mask1,mask2,
-		mask3,NULL,NULL,NULL,NULL,NULL};
+		mask_basic_ui,mask_choose_mode_ui,
+		NULL,NULL,NULL,NULL,NULL,NULL};
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
-		sizeof(mask1)/sizeof(mask1[0]),
-		sizeof(mask2)/sizeof(mask2[0]),
-		sizeof(mask3)/sizeof(mask3[0]),
-		0,0,0,0,0
+		sizeof(mask_basic_ui)/sizeof(mask_basic_ui[0]),
+		sizeof(mask_choose_mode_ui)/sizeof(mask_choose_mode_ui[0]),
+		0,0,//sizeof(mask3)/sizeof(mask3[0]),
+		0,0,0,0
 };
 //---------------------------------------------------------------
 
 BaseBillBoard::BaseBillBoard(GLShaderManager* mgr):
-	m_pShaderManager(mgr),	blendmode(6)
+	m_pShaderManager(mgr),	blendmode(1)
 {
 	if(NULL == m_pShaderManager){
 		m_pShaderManager = (GLShaderManager*)getDefaultShaderMgr();
@@ -185,13 +338,12 @@ void BaseBillBoard::SwitchBlendMode(int blendmode)
 void BaseBillBoard::DrawBillBoard(int w, int h)
 {
 	M3DMatrix44f mScreenSpace;
-	m3dMakeOrthographicMatrix(mScreenSpace, 0.0f,800.0f, 0.0f, 600.0f, -1.0f, 1.0f);
+	m3dMakeOrthographicMatrix(mScreenSpace, 0.0f,400.0f, 0.0f, 300.0f, -1.0f, 1.0f);
 	// Turn blending on, and depth testing off
-	glEnable(GL_BLEND);
+	glEnable(GL_BLEND);//使能透明
 	glDisable(GL_DEPTH_TEST);
 	glActiveTexture(GL_TEXTURE0);
 	DoTextureBinding();
-
 	SwitchBlendMode(blendmode);
 	m_pShaderManager->UseStockShader(GLT_SHADER_TEXTURE_RECT_REPLACE,mScreenSpace,0);
 	HZbatch.Draw();
@@ -382,8 +534,8 @@ void ButtonGroup::HightlightButton(int id)
 int ButtonGroup::FindButton(float x,float y,int window_width,int window_height)
 {
 	int activatedbutton=-1;
-	float pos_x=2.0*x/window_width-1.0;
-	float pos_y=2.0*y/window_height -1.0;
+	float pos_x=x/(window_width-1.0);
+	float pos_y=y/(window_height -1.0);
 	for(int i=0;i<m_buttonsVect.size();i++)
 	{
 		if(m_buttonsVect[i]->FindPointOnButton(pos_x,pos_y))
