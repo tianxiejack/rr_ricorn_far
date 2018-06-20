@@ -10,7 +10,7 @@ using namespace cv;
 
 #define MAX_TARGET_NUM 4
 #define CC 3
-#define MAX_X_POS (1920*9)
+#define MAX_X_POS (1920*CAM_COUNT)
 #if 1
 enum{
 	BIG,
@@ -24,7 +24,7 @@ enum{
 class MotionDetectorROI//:public IF_MotionDetectorROI
 {
 public :
-	MotionDetectorROI(int sumTarget,MvDetect *pmv);
+	MotionDetectorROI(int sumTarget,MvDetect *pmv,int mainOrsub);
 
 	void ChooseNext(int targetidx){chooseNext[targetidx]=true;};
 	void ChoosePre(int targetidx){choosePre[targetidx]=true;};
@@ -49,14 +49,21 @@ public :
 
 
 	void SetRange(float startAngle,float endAngle){
-			range[START]=startAngle;
-			range[END]=endAngle;
-			if(range[END]>360.0)
-				range[END]-=360.0;
+			range[START]=startAngle*(MAX_X_POS)/360.0;
+			if(range[START]<0)
+				range[START]=0;
+			else if(range[START]>=MAX_X_POS)
+				range[START]=MAX_X_POS-1;
+
+			range[END]=endAngle*(MAX_X_POS)/360.0;;
+			if(range[START]<0)
+				range[START]=0;
+			else if(range[START]>=MAX_X_POS)
+				range[START]=MAX_X_POS-1;
 		};
 //	float GetRange(int startOrend){return range[startOrend];};
 
-	void DrawAllRectOri(int fourOrsix=0);
+	void DrawAllRectOri(int mainOrsub,int fourOrsix=0);
 	void MRectangle(int fourOrsix,mvRect *p);
 	bool ISanySingleRect(){
 		for(int i=0;i<m_sumTarget;i++)
@@ -121,7 +128,7 @@ private:
 	int m_sumTarget;
 	bool selectSingleRect[MAX_TARGET_NUM];
 	MvDetect *m_pmv;
-
+	int m_MAIN_SUB;
 };
 
 #endif

@@ -89,7 +89,7 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			bufSize 	= imgwidth * imgheight * 2;
 			imgtype     = CV_8UC2;
 			memType = MEMORY_NORMAL;
-			bufferCount = 8;
+			bufferCount = 3;
 			if(Once_buffer)
 			{
 				init_buffer(NULL,NULL,NULL,NULL,NULL);
@@ -685,10 +685,6 @@ void YUYVEnhance(unsigned char * dst,unsigned char * src,int w,int h)
 */
 int HDv4l_cam::read_frame(int now_pic_format)
 {
-	int t[10]={0};
- timeval startT[20]={0};
-
-
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -717,8 +713,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					 assert(false);
 				 }
 				 char filename[20];
-				 static int mvDectCount=0;
-				 static int mv_count=0;
+				 int CC_enh_mvd=0;
 					int chid[2]={-1,-1};
 					int nowGrayidx=-1;
 					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
@@ -748,7 +743,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 			//todo  change
 						if(nowGrayidx>=11||nowGrayidx<=0) 
 						{
-							printf("nowGrayidx~~~~~~~~~~~~~~~~~~=%d\n",nowGrayidx);
+						//	printf("nowGrayidx~~~~~~~~~~~~~~~~~~=%d\n",nowGrayidx);
 						chid[MAIN]=0;
 						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[0];
@@ -781,7 +776,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							if(IsMvDetect)
 							{
 							if(nowGrayidx>=1&&nowGrayidx<=10)
-							{ 
+							{
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 								p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
@@ -810,31 +805,26 @@ int HDv4l_cam::read_frame(int now_pic_format)
 //#if ENABLE_ENHANCE_FUNCTION
 							if(	enable_hance)
 							{
+								CC_enh_mvd=2;
 								memcpy(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW*nowpicH*2);
-#if 0
-								if(nowpicW==1920)
-								YUYVEnhance(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-								else
-								YUYVEnhanceFour(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-
-
-								#endif
 							}
 							else
+							{
+								CC_enh_mvd=3;
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-								//todo //４副　６副
+							}
+							//４副　６副
 #if MVDECT
-							//	if(mv_detect.MDisStart())
 								if(IsMvDetect)
 								{
 									mv_detect.SetoutRect();
 									if(nowpicW==1280)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
 									}
 									else if (nowpicW==1920)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
 									}
 								}
 #endif
@@ -1223,10 +1213,22 @@ void HDAsyncVCap4::Run()
 	//cap in background thread
 	while(thread_state == THREAD_RUNNING)
 	{
-		if(tIdle.isToIdle(pic_format))
+		if(pic_format==	SUB_CN
+				||pic_format==	MAIN_CN
+				||pic_format==	MVDECT_CN
+		)
 		{
 			usleep(500*1000);
 		}
+		/*		if(tIdle.isToIdle(pic_format))
+		{
+			usleep(500*1000);
+		}
+
+		if(0)
+		{
+
+		}*/
 		else
 		{
 			HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());

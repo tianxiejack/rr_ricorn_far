@@ -12,8 +12,8 @@ Idle[FPGA_SIX_CN]=false;
 bool thread_idle::isToIdle(int idx){
 	return Idle[idx];}
 		void thread_idle::threadIdle(int idx){
-		//	Idle[idx]=true;
+			Idle[idx]=true;
 			};
 		void thread_idle::threadRun(int idx){
-		//	Idle[idx]=false;
+			Idle[idx]=false;
 			};

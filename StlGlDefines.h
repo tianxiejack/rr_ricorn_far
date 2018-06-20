@@ -66,6 +66,7 @@ enum{
 
 enum
 {
+	MVDECT_ADD_CN=0,
 	 FPGA_FOUR_CN  =1,
 	 SUB_CN ,
 	MAIN_CN ,

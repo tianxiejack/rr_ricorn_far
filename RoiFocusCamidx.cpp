@@ -7,7 +7,7 @@
 #include"RoiFocusCamidx.h"
 #include"stddef.h"
 static RoiFocusCamidx * pinsFC=NULL;
-
+static RoiFocusCamidx * pinsFCMAIN=NULL;
 
 RoiFocusCamidx* RoiFocusCamidx ::GetInstance()
 {
@@ -17,3 +17,13 @@ RoiFocusCamidx* RoiFocusCamidx ::GetInstance()
 	}
 		return pinsFC;
 }
+
+RoiFocusCamidx* RoiFocusCamidx ::GetMainInstance()
+{
+	if(pinsFCMAIN==NULL)
+	{
+		pinsFCMAIN=new RoiFocusCamidx;
+	}
+		return pinsFCMAIN;
+}
+

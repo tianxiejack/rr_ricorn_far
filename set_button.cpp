@@ -289,14 +289,25 @@ static buttonMask mask_driver_near_overlook_mode_ui[]={
 #define MAX_LAYEDED_GROUP_COUNT 19
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
-		mask_basic_ui,mask_default_round_ui,
-		mask_choose_mode_ui,mask_around_mode_ui,mask_telescope_mode_ui,mask_single_channel_mode_ui,
-		mask_mvdetect_mode_ui,mask_foresight_mode_ui,mask_enhance_mode_ui,
-		mask_record_mode_ui,mask_zero_position_mode_ui,
-		mask_disappear_mode_ui,mask_driver_basic_mode_ui,mask_driver_disappear_mode_ui,
+		mask_basic_ui,
+		mask_default_round_ui,
+		mask_choose_mode_ui,
+		mask_around_mode_ui,
+		mask_telescope_mode_ui,
+		mask_single_channel_mode_ui,
+		mask_mvdetect_mode_ui,
+		mask_foresight_mode_ui,
+		mask_enhance_mode_ui,
+		mask_record_mode_ui,
+		mask_zero_position_mode_ui,
+		mask_disappear_mode_ui,
+		mask_driver_basic_mode_ui,
+		mask_driver_disappear_mode_ui,
 		mask_driver_far_allview_mode_ui,
-		mask_driver_near_allview_mode_ui,mask_driver_near_single_channel_mode_ui,
-		mask_driver_near_enhance_mode_ui,mask_driver_near_overlook_mode_ui};
+		mask_driver_near_allview_mode_ui,
+		mask_driver_near_single_channel_mode_ui,
+		mask_driver_near_enhance_mode_ui,
+		mask_driver_near_overlook_mode_ui};
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_basic_ui)/sizeof(mask_basic_ui[0]),

@@ -33,6 +33,9 @@ public:
 	SelfCheck();
 	~SelfCheck(){};
 	void CheckBrokenCam();
+	void openSelfCheck(){Ischeck=true;};
+	void closeSelfCheck(){Ischeck=false;};
+	bool IScheck(){return Ischeck;};
 	self_check_state IsIDLE();
 	int *GetBrokenCam()
 	{

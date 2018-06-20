@@ -62,10 +62,16 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
+#include "menu_button.h"
+#include "RoiFocusCamidx.h"
 #if MVDECT         
 #include"MvDrawRect.h"
 #include"MvModeSwith.h"
-#include "menu_button.h"
+
+
+
+
+extern bool toprint;
 extern MVModeSwith   mvSwitch;
 extern MotionDetectorROI
 mdRoi_mainT,
@@ -74,12 +80,18 @@ mdRoi_mainA,
 mdRoi_subA;
  extern MvDetect mv_detect;
 #endif
+
+ int chooseMenu=0;
+
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
 char chosenCam[2]={1,1};
 
 extern bool IsMvDetect;
+bool DetectMainOpen=false;
+bool DetectSubOpen=false;
+
 bool IsgstCap=false;
 int m_cam_pos=-1;
 
@@ -683,9 +695,13 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		isCalibTimeOn(FALSE),isDirectionOn(TRUE),p_BillBoard(NULL),p_BillBoardExt(NULL),p_FixedBBD_2M(NULL),
 		p_FixedBBD_5M(NULL),p_FixedBBD_8M(NULL),p_FixedBBD_1M(NULL),
 		m_presetCameraRotateCounter(0),m_ExtVideoId(EXT_CAM_0),
-		fboMode(FBO_ALL_VIEW_559_MODE),
+		//fboMode(FBO_PURE_MODE),
+		//displayMode(PURE_MODE),
+		//SecondDisplayMode(SECOND_PURE_MODE),
+		fboMode(FBO_PURE_MODE),
 		displayMode(CHECK_MYSELF),
-		SecondDisplayMode(SECOND_559_ALL_VIEW_MODE),
+		SecondDisplayMode(SECOND_PURE_MODE),
+
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
 		send_follow_angle_enable(false),p_CompassBillBoard(NULL),p_LineofRuler(NULL),refresh_ruler(true),
@@ -824,16 +840,16 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 	switch (index)
 				{
 				case MAIN_TARGET_A0:
-					ptr= mdRoi_mainT.GetRoiSrc(0);
+					ptr= mdRoi_mainA.GetRoiSrc(0);
 									break;
 				case MAIN_TARGET_A1:
-					ptr=mdRoi_mainT.GetRoiSrc(1);
+					ptr=mdRoi_mainA.GetRoiSrc(1);
 						break;
 				case MAIN_TARGET_A2:
-					ptr=mdRoi_mainT.GetRoiSrc(2);
+					ptr=mdRoi_mainA.GetRoiSrc(2);
 									break;
 				case MAIN_TARGET_A3:
-					ptr=mdRoi_mainT.GetRoiSrc(3);
+					ptr=mdRoi_mainA.GetRoiSrc(3);
 							break;
 				case SUB_TARGET_A0:
 					ptr=mdRoi_subA.GetRoiSrc(0);
@@ -849,16 +865,16 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 								break;
 
 				case		MAIN_TARGET_T0:
-					ptr=mdRoi_mainA.GetRoiSrc(0);
+					ptr=mdRoi_mainT.GetRoiSrc(0);
 							break;
 				case			MAIN_TARGET_T1:
-					ptr=mdRoi_mainA.GetRoiSrc(1);
+					ptr=mdRoi_mainT.GetRoiSrc(1);
 								break;
 				case			SUB_TARGET_T0:
-					ptr=mdRoi_subA.GetRoiSrc(0);
+					ptr=mdRoi_subT.GetRoiSrc(0);
 								break;
 				case		SUB_TARGET_T1:
-					ptr=mdRoi_subA.GetRoiSrc(1);
+					ptr=mdRoi_subT.GetRoiSrc(1);
 									break;
 							}
 			if(ptr){
@@ -4557,15 +4573,37 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 				||nowMode==CURRENT_TELESCOPE_LEFT_MODE
 				||nowMode==CURRENT_TELESCOPE_FRONT_MODE
 				||nowMode==CURRENT_TELESCOPE_BACK_MODE
-				||nowMode==CURRENT_SECOND_TELESCOPE_FRONT_MODE
-				||nowMode==CURRENT_SECOND_TELESCOPE_RIGHT_MODE
-				||nowMode==CURRENT_SECOND_TELESCOPE_BACK_MODE
-				||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE)
+			)
 		{
-			Rect2i rect1(1920*1120.0/1920.0,1080*350.0/1920.0, 300, 200);
-			DrawAngleCordsView(m_env,&rect1,text,0.65);
-			Rect2i rect2(1920*670.0/1920.0,1080*350.0/1920.0, 300, 200);
-			DrawAngleCordsView(m_env,&rect2,text2,0.65);
+			if(DetectMainOpen)
+			{
+
+			}
+			else
+			{
+				Rect2i rect1(1920*1120.0/1920.0,1080*350.0/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect1,text,0.65);
+				Rect2i rect2(1920*670.0/1920.0,1080*350.0/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect2,text2,0.65);
+			}
+		}
+		else if(nowMode==CURRENT_SECOND_TELESCOPE_FRONT_MODE
+					||nowMode==CURRENT_SECOND_TELESCOPE_RIGHT_MODE
+					||nowMode==CURRENT_SECOND_TELESCOPE_BACK_MODE
+					||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE)
+		{
+			if(DetectSubOpen)
+			{
+
+			}
+			else
+			{
+				Rect2i rect1(1920*1120.0/1920.0,1080*350.0/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect1,text,0.65);
+				Rect2i rect2(1920*670.0/1920.0,1080*350.0/1920.0, 300, 200);
+				DrawAngleCordsView(m_env,&rect2,text2,0.65);
+			}
+
 		}
 		for(int k=0;k<j;k++)
 		{
@@ -5389,6 +5427,7 @@ void Render::RenderLeftPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,
 				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_559_MODE
+				||fboMode==FBO_PURE_MODE
 				||displayMode==ALL_VIEW_MODE
 				||displayMode==TRIM_MODE
 				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
@@ -5426,6 +5465,7 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
@@ -5562,6 +5602,7 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 		for(int i=0;i<5;i++)
@@ -5570,7 +5611,7 @@ else if(displayMode==ALL_VIEW_MODE
 		}
 		petal1[9]=9;
 		m_env.GetmodelViewMatrix()->PushMatrix();
-		DrawPanel(m_env,false,petal2,mainOrsub);
+		DrawPanel(m_env,needSendData,petal2,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
 		m_env.GetmodelViewMatrix()->PushMatrix();
 			m_env.GetmodelViewMatrix()->Translate(0,0.0,0.0);
@@ -5690,6 +5731,7 @@ void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLi
 				||displayMode==ALL_VIEW_FRONT_BACK_ONE_DOUBLE_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_559_MODE
+				||fboMode==FBO_PURE_MODE
 				||displayMode==TRIM_MODE
 				||displayMode==ALL_VIEW_MODE
 				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
@@ -5704,6 +5746,7 @@ void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLi
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.2);//-17.6
@@ -5733,6 +5776,7 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 			||displayMode==ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_559_MODE
+			||fboMode==FBO_PURE_MODE
 			||displayMode==TRIM_MODE
 			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 			||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
@@ -5751,6 +5795,7 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 				||displayMode==ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_559_MODE
+				||fboMode==FBO_PURE_MODE
 				||displayMode==TRIM_MODE
 				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
@@ -5765,6 +5810,7 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
@@ -5801,6 +5847,7 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 			||displayMode==ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_MODE
 			||fboMode==FBO_ALL_VIEW_559_MODE
+			||fboMode==FBO_PURE_MODE
 			||displayMode==TRIM_MODE
 			||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 			||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
@@ -5825,6 +5872,7 @@ void Render::RenderRightPanoView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h
 				||displayMode==ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_MODE
 				||fboMode==FBO_ALL_VIEW_559_MODE
+				||fboMode==FBO_PURE_MODE
 				||displayMode==TRIM_MODE
 				||SecondDisplayMode==SECOND_ALL_VIEW_MODE
 				||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
@@ -5849,6 +5897,7 @@ else if(displayMode==ALL_VIEW_MODE
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
@@ -5868,6 +5917,7 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_MODE
 		||fboMode==FBO_ALL_VIEW_559_MODE
+		||fboMode==FBO_PURE_MODE
 		||displayMode==TRIM_MODE)
 {
 	 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,2.0);
@@ -5879,15 +5929,18 @@ m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 		||SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
 	||fboMode==FBO_ALL_VIEW_MODE
 	||fboMode==FBO_ALL_VIEW_559_MODE
+	||fboMode==FBO_PURE_MODE
 	||displayMode==TRIM_MODE)
 {
-	for(int i=5;i<10;i++)
+	 	for(int i=5;i<10;i++)
 		{
 			petal3[i]=i;
 		}
 		m_env.GetmodelViewMatrix()->PushMatrix();
 		DrawPanel(m_env,needSendData,petal3,mainOrsub);
 		m_env.GetmodelViewMatrix()->PopMatrix();
+
+
 }
 else
 {
@@ -5897,7 +5950,7 @@ else
 			}
 			m_env.GetmodelViewMatrix()->PushMatrix();
 			m_env.GetmodelViewMatrix()->Translate(-PanoLen,0.0,0.0);
-			DrawPanel(m_env,true,NULL,mainOrsub);
+			DrawPanel(m_env,false,NULL,mainOrsub);
 			m_env.GetmodelViewMatrix()->PopMatrix();
 }
  /*
@@ -6547,6 +6600,12 @@ if(setpriorityOnce)
 	{
 		isinSDI=false;
 	}
+
+	if(displayMode==PURE_MODE
+			||displayMode==CHECK_MYSELF)
+		fboMode=FBO_PURE_MODE;
+	else
+		fboMode=FBO_ALL_VIEW_559_MODE;
 	switch(displayMode)
 	{
 	case SPLIT_VIEW_MODE:
@@ -6689,19 +6748,19 @@ if(setpriorityOnce)
 	case INIT_VIEW_MODE:
 		DrawInitView(env,new Rect(0, 0, g_windowWidth, g_windowHeight), needSendData);
 		break;
+
+	case PURE_MODE:
+	{
+		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
+		break;
+	}
 	case ALL_VIEW_MODE:
 	{
-#if		MVDECT
-	//	if(mv_detect.CanUseMD(MAIN))
-		{
-		//	mv_detect.SetoutRect();
-		}
-#endif
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 #if			MVDECT
 		//if(mv_detect.CanUseMD(MAIN))
-		if(0)//if(IsMvDetect)
+			if(DetectMainOpen)
 			{
 				glScissor(0,0,1920,563);
 					//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
@@ -6709,11 +6768,7 @@ if(setpriorityOnce)
 				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 				glDisable(GL_SCISSOR_TEST);
 
-			//	mdRoi_mainT.DrawAllRectOri();
-			//	mdRoi_subT.DrawAllRectOri();
-				mdRoi_mainA.DrawAllRectOri();
-			//	mdRoi_subA.DrawAllRectOri();
-								//		mv_detect.SetoutRect();
+				mdRoi_mainA.DrawAllRectOri(MAIN);
 			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
 			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
 			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);
@@ -6782,11 +6837,13 @@ if(setpriorityOnce)
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,FRONT);
 #if			MVDECT
-			if(mv_detect.CanUseMD(MAIN))
+			if(DetectMainOpen)
 			{
-			//		mv_detect.SetoutRect();
-			//	TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
-			//	TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
+				toprint=true;
+				mdRoi_mainT.SetRange(0,90.0);
+				mdRoi_mainT.DrawAllRectOri(MAIN);
+				TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
+				TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
 			}
 #endif
 			//	RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6798,16 +6855,18 @@ if(setpriorityOnce)
 			break;
 		case	TELESCOPE_RIGHT_MODE:
 			tIdle.threadIdle(MAIN_CN);
+
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,RIGHT);
-#if MVDECT
-	/*			if(mv_detect.CanUseMD(MAIN))
-						{
-			//			mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
-					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
-						}*/
+#if			MVDECT
+			if(DetectMainOpen)
+			{toprint=true;
+				mdRoi_mainT.SetRange(270,360.0);
+				mdRoi_mainT.DrawAllRectOri(MAIN);
+				TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
+				TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+			}
 #endif
 				 RenderMilView(CURRENT_TELESCOPE_RIGHT_MODE ,env,0, 0,1920, 1080);
 
@@ -6818,16 +6877,18 @@ if(setpriorityOnce)
 				break;
 		case	TELESCOPE_BACK_MODE:
 			tIdle.threadIdle(MAIN_CN);
+
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,BACK);
-#if MVDECT
-	/*		   if(mv_detect.CanUseMD(MAIN))
-						{
-			//			mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
-					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
-						}*/
+#if			MVDECT
+			if(DetectMainOpen)
+			{toprint=true;
+				mdRoi_mainT.SetRange(180.0,270.0);
+				mdRoi_mainT.DrawAllRectOri(MAIN);
+				TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
+				TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+			}
 #endif
 			   //		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 		//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -6838,16 +6899,18 @@ if(setpriorityOnce)
 			   break;
 		case	TELESCOPE_LEFT_MODE:
 			tIdle.threadIdle(MAIN_CN);
+
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,LEFT);
-#if MVDECT
-	/*			if(mv_detect.CanUseMD(MAIN))
-						{
-			//		mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T0);
-					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,MAIN_TARGET_T1);
-						}*/
+#if			MVDECT
+			if(DetectMainOpen)
+			{toprint=true;
+				mdRoi_mainT.SetRange(90.0,180.0);
+				mdRoi_mainT.DrawAllRectOri(MAIN);
+				TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
+				TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
+			}
 #endif
 				//		RenderTwotimesView(env,g_windowWidth*60/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*1000.0/1920.0, g_windowHeight*400.0/1080.0);
 				//		RenderFourtimesTelView(env,g_windowWidth*1120.0/1920.0,g_windowHeight*39.0/1080.0,g_windowWidth*500.0/1920.0, g_windowHeight*400.0/1080.0);
@@ -7164,7 +7227,7 @@ if(setpriorityOnce)
 			static int a=0;
 			if(a++==50)
 			{
-			displayMode=ALL_VIEW_MODE;
+				displayMode=PURE_MODE;
 			a=0;
 			}
 		}
@@ -7175,7 +7238,7 @@ if(setpriorityOnce)
 		static int b=0;
 				if(b++==50)
 				{
-					displayMode=ALL_VIEW_MODE;
+					displayMode=PURE_MODE;
 				b=0;
 				}
 
@@ -7200,18 +7263,19 @@ if(setpriorityOnce)
 	}
 	else if(displayMode==	ALL_VIEW_MODE)
 	{
-		p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
-		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		 if(!DetectMainOpen)
+		 {
+			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
+			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-
-				p_ChineseCBillBoard->ChooseTga=TURRET_T;
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
-						p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
-
-					p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		 }
+			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
 	}
 
 	else if(displayMode==TELESCOPE_FRONT_MODE
@@ -7219,52 +7283,55 @@ if(setpriorityOnce)
 			||displayMode==TELESCOPE_BACK_MODE
 			||displayMode==TELESCOPE_LEFT_MODE)
 	{
-		p_ChineseCBillBoard->ChooseTga=TURRET_T;
-		RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
-		p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
-		RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
-
-		/*
-	p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-
-		p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
-		RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-*/
-	p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-	RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
-
+		if(DetectMainOpen)
+		{
+			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+		}
+		else
+		{
+			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+		}
 		 if(displayMode==TELESCOPE_FRONT_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
-		//	if(mv_detect.CanUseMD())
-		//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-		//	else
+			if(DetectMainOpen)
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			else
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
 				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
-				//	if(mv_detect.CanUseMD())
-						//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-						//	else
-							RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				if(DetectMainOpen)
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_BACK_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
-			//	if(mv_detect.CanUseMD())
-					//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-					//	else
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			if(DetectMainOpen)
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+			else
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 		else if(displayMode==TELESCOPE_LEFT_MODE)
 		{
 		p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
-		//	if(mv_detect.CanUseMD())
-				//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-				//	else
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		if(DetectMainOpen)
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+		else
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		}
 	}
 
@@ -8200,22 +8267,36 @@ GLEnv & env=env1;
 			break;
 		//case 'o':
 		case 'O':
-#if MVDECT
-			if(IsMvDetect==false)
+#if 1
+			if(!DetectMainOpen)
+			{
+				DetectMainOpen=true;
+			}
+			else if(DetectMainOpen)
+			{
+				DetectMainOpen=false;
+			}
+			if(DetectMainOpen==true
+					||DetectSubOpen==true)
+			{
 				IsMvDetect=true;
-			else if(IsMvDetect==true)
+			}
+			else
+			{
 				IsMvDetect=false;
+			}
 			//mv_detect.OpenMD(MAIN);
 #endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
 		case 'b':
+			chooseMenu=(chooseMenu+1)%19;
 			break;
 		case 'B':
 			mode = OitVehicle::USER_BLEND;
 			break;
 		case '1':
-			displayMode=ALL_VIEW_MODE;
+			displayMode=PURE_MODE;
 			break;
 #if MVDECT
 		case '2':
@@ -8262,9 +8343,9 @@ GLEnv & env=env1;
 			DISPLAYMODE nextMode = DISPLAYMODE(((int)displayMode+1) % TOTAL_MODE_COUNT);
 			//cout<<"NEXTMODE=="<<nextMode<<endl;
 
-			if(nextMode==TRIM_MODE)
+			if(nextMode==PREVIEW_MODE)
 			{
-				nextMode=ALL_VIEW_MODE;
+				nextMode=PURE_MODE;
 			//	 nextMode = DISPLAYMODE(((int)displayMode+15) % TOTAL_MODE_COUNT);
 			}
 			bool isEnterringBackView = (nextMode == BACK_VIEW_MODE);
@@ -8340,7 +8421,7 @@ GLEnv & env=env1;
 		}
 		break;
 		case 'L':
-		//case 'l':
+
 			DISPLAYMODE_SWITCH_TO(TRIPLE_VIEW_MODE);
 			break;
 		case 'P':
@@ -8440,7 +8521,15 @@ GLEnv & env=env1;
 		case 'R':
 			stopcenterviewrotate=!stopcenterviewrotate;
 			break;
-		//case 'j':
+		case 'j':
+			RoiFocusCamidx::GetMainInstance()->increaseRoiFocusCamidx();
+			break;
+		case 'k':
+			RoiFocusCamidx::GetMainInstance()->decreaseRoiFocusCamidx();
+			break;
+		case 'l':
+			RoiFocusCamidx::GetMainInstance()->flipRoiFocusCamidx();
+			break;
 		case 'J':
 			if(rotateangle_per_second<72)
 			{
@@ -8635,9 +8724,10 @@ GLEnv & env=env1;
 	    				}
 	            	}
 			break;
-		case 'G'://PTZ--CCD
-			break;
+
 		case 'g'://PTZ--FIR
+			break;
+		case 'G'://PTZ--CCD
 			if(IsgstCap==false)
 			{
 				IsgstCap=true;
@@ -12424,16 +12514,45 @@ void Render::WritePanoScaleArrayData(char * filename,float * arraydata_left,floa
 int Render::getGroupMenuIndex()
 {
 	int idx = 0;
-/*	if(displayMode==CHECK_MYSELF){
-		idx = 1;
-	}
-	else if(displayMode==CHOSEN_VIEW_MODE){
+	//idx=chooseMenu;
+	if(displayMode==PURE_MODE){
 		idx = 2;
 	}
-	else{
-		idx = 0;
-	}*/
-	idx = 1;
+	else if(displayMode==ALL_VIEW_MODE){
+		idx = 3;
+	}
+	else if(displayMode==CHOSEN_VIEW_MODE){
+		idx = 5;
+	}
+	else if(displayMode==TELESCOPE_BACK_MODE){
+		idx = 4;
+	}
+	else if(displayMode==TELESCOPE_RIGHT_MODE){
+		idx = 4;
+	}
+	else if(displayMode==TELESCOPE_LEFT_MODE){
+		idx = 4;
+	}
+	else if(displayMode==TELESCOPE_FRONT_MODE){
+		idx = 4;
+	}
+	else if(displayMode==TRIM_MODE){
+		idx = 1;
+	}
+
+	if(DetectMainOpen){
+		idx = 6;
+	}
+	if(enable_hance){
+		idx = 8;
+	}
+	if(IsgstCap){
+		idx = 9;
+	}
+	if(0)
+	{
+		idx=11;
+	}
 	return idx;
 }
 

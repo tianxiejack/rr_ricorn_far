@@ -11,6 +11,7 @@
  {
 public:
 	static RoiFocusCamidx *GetInstance();
+	static RoiFocusCamidx* GetMainInstance();
 	int GetRoiFocusCamidx(){return roiFocusCamidx;};
 	void increaseRoiFocusCamidx(){roiFocusCamidx++;roiFocusCamidx%=CAM_COUNT;};
 	void decreaseRoiFocusCamidx(){roiFocusCamidx+=(CAM_COUNT-1);roiFocusCamidx%=CAM_COUNT;};

@@ -38,7 +38,7 @@ public:
 	MvDetect();
 	~MvDetect();
 
-	void DrawRectOnpic(unsigned char *src,int capidx);
+	void DrawRectOnpic(unsigned char *src,int capidx,int cc);
 	void selectFrame(unsigned char *dst,unsigned char *src,int targetId,int camIdx);
 
 
@@ -61,12 +61,12 @@ public:
 	return false;};
 	void SetoutRect();//将检测到的每个通道里6个rect放入对应的6个容器里
 
-	std::vector<mvRect> *Getm_WholeRect()
+	std::vector<mvRect> *Getm_WholeRect(int mainOrsub)
 	{
-		m_WholeRect.clear();
+		m_WholeRect[mainOrsub].clear();
 		for(int i=0;i<CAM_COUNT;i++)
-			m_WholeRect.insert(m_WholeRect.end(),outRect[i].begin(),outRect[i].end());
-		return &m_WholeRect;
+			m_WholeRect[mainOrsub].insert(m_WholeRect[mainOrsub].end(),outRect[i].begin(),outRect[i].end());
+		return &m_WholeRect[mainOrsub];
 	}
 
 
@@ -76,7 +76,7 @@ private:
 	Rect_Srcptr  tempRect_Srcptr[CAM_COUNT];
 	unsigned char* grayFrame[CAM_COUNT];
 	std::vector<mvRect> outRect[CAM_COUNT];
-	std::vector<mvRect> m_WholeRect;
+	std::vector<mvRect> m_WholeRect[2];
 
 
 
