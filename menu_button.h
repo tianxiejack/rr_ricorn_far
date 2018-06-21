@@ -70,7 +70,7 @@ public:
 
 	bool FindPointOnButton(float x,float y);
 	void SetTgaFileName(const char * name);
-	int getKeycode()
+	int  getKeycode()
 	{
 		return key_data;
 	};

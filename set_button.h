@@ -3,7 +3,7 @@
 #define MENU_BUTTON_HOR_COUNT 10
 #define MENU_BUTTON_VER_COUNT 8
 #define MENU_BUTTON_COUNT (MENU_BUTTON_HOR_COUNT*MENU_BUTTON_VER_COUNT)
-#define MENU_GROUP_COUNT 19
+#define MENU_GROUP_COUNT 21
 class MenuButton;
 class GLShaderManager;
 class ButtonGroup;
@@ -45,9 +45,11 @@ public:
 	void SetEnableDraw(bool enable);
 	bool GetEnableDraw(){return enable_draw;};
 	void SetcurrentActiveBGIndex(int idx){currentActiveBGIndex=idx;};
+	void SetSubmenuKeycode(int keycode){m_submenuKeycode = keycode;};
 private:
 	std::vector<ButtonGroup*> m_layeredButtonGroupsVect;
 	int currentActiveBGIndex;
+	int m_submenuKeycode;
 	ButtonGroup * pbuttongroups;
 	bool enable_draw;
 	GLMatrixStack * p_modelViewMatrix;

@@ -707,11 +707,6 @@ int HDv4l_cam::read_frame(int now_pic_format)
 				assert(buf.index < n_buffers);
 			 if (buffers[buf.index].start!=NULL)
 			{
-				 if(now_pic_format==0)
-				 {
-					 printf("now_pic_format=0,0 dev is not used!\n");
-					 assert(false);
-				 }
 				 char filename[20];
 				 int CC_enh_mvd=0;
 					int chid[2]={-1,-1};
@@ -738,6 +733,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
+					case MVDECT_ADD_CN:
 					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
@@ -768,7 +764,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					}
 					if(chid[MAIN]!=-1) //车长
 					{
-						if(now_pic_format==MVDECT_CN)//移动检测
+						if(now_pic_format==MVDECT_CN
+								||now_pic_format==MVDECT_ADD_CN)//移动检测
 						{
 						{
 							#if MVDECT
@@ -844,7 +841,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 							UYVY2UYV(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 						}
-						else if(now_pic_format==MVDECT_CN)//移动检测
+						else if(now_pic_format==MVDECT_CN
+								||MVDECT_ADD_CN==now_pic_format)//移动检测
 						{
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
@@ -1116,6 +1114,9 @@ void HDv4l_cam::mainloop(int now_pic_format)
 		case	 MVDECT_CN	:
 			l=THREAD_L_MVDECT;
 						break;
+		case MVDECT_ADD_CN:
+			l=THREAD_L_MVDECT;
+			break;
 		case	 FPGA_SIX_CN :
 			l=THREAD_L_6;
 						break;
@@ -1213,13 +1214,13 @@ void HDAsyncVCap4::Run()
 	//cap in background thread
 	while(thread_state == THREAD_RUNNING)
 	{
-		if(pic_format==	SUB_CN
-				||pic_format==	MAIN_CN
-				||pic_format==	MVDECT_CN
+	/*	if(pic_format==	SUB_CN
+		||pic_format==	MAIN_CN
+		||pic_format==	MVDECT_CN
 		)
 		{
 			usleep(500*1000);
-		}
+		}*/
 		/*		if(tIdle.isToIdle(pic_format))
 		{
 			usleep(500*1000);
@@ -1229,7 +1230,7 @@ void HDAsyncVCap4::Run()
 		{
 
 		}*/
-		else
+	//	else
 		{
 			HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
 			if(pcore){

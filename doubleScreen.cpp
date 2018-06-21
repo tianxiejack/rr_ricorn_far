@@ -405,6 +405,9 @@ void Render::RenderSceneDS()
 	}
 		 if(SecondDisplayMode==	SECOND_559_ALL_VIEW_MODE)
 		{
+				p_ChineseCBillBoard->ChooseTga=OSD_ALL_VIEW_NAME_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
 			 if(!DetectSubOpen)
 			 {
 			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
@@ -430,6 +433,9 @@ void Render::RenderSceneDS()
 				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
 				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 		{
+			p_ChineseCBillBoard->ChooseTga=OSD_TEL_VIEW_NAME_T;
+			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
 			 if(DetectSubOpen)
 			 {
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
@@ -482,7 +488,72 @@ void Render::RenderSceneDS()
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			}
-	}
+		}
+		else if(SecondDisplayMode==SECOND_CHOSEN_VIEW_MODE)
+		{
+			int idx=chosenCam[SUB];
+			float start_van_x=-495.0;
+				float start_van_y=1540;
+				float van_w=700.0;
+				float van_h=500.0;
+				p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
+				RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
+			switch(idx)
+			{
+			case 1:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 2:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 3:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 4:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+						break;
+			case 5:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 6:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 7:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 8:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 9:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 10:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+				break;
+			defalut :
+						break;
+
+			}
+		}
 
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)

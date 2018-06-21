@@ -12,6 +12,11 @@
 #define INNER_RECT_AND_PANO_ONE_TIME_CAM_LIMIT 7.7
 #define	OUTER_RECT_AND_PANO_TWO_TIMES_CAM_LIMIT 16.8
 #define PER_CAM_ANGLE  36//(360/CAM_COUNT)
+
+#define OSD_NAME_X	240.0
+#define OSD_NAME_Y	998.0
+#define OSD_NAME_W	380.0
+#define OSD_NAME_H	460.0
 typedef enum{
 	CAM_0,
 	CAM_1,
@@ -46,6 +51,7 @@ enum{
        ROI_COUNT
 };
 #endif
+
 
 #define NUM_OF_W 5
 #define NUM_OF_H 2
@@ -424,6 +430,12 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 #define CHOSEN_RIGHT_MID_TGA "chosen_right_mid.tga"
 #define CHOSEN_RIGHT_BACK_TGA "chosen_right_back.tga"
 
+#define OSD_ALL_VIEW_NAME_TGA "osd_all_view_name.tga"
+#define OSD_TEL_VIEW_NAME_TGA	"osd_tel_view_name.tga"
+#define OSD_SINGLE_VIEW_NAME_TGA	"osd_single_view_name.tga"
+#define OSD_HANCING_TGA		"osd_hancing_tga"
+#define OSD_MVDETECTING_TGA		"osd_mvdetecting_tga"
+
 typedef enum CURRENT_MODE
 {
 	CURRENT_CHECK_MYSELF,
@@ -495,7 +507,11 @@ enum CCT_COUNT {
  CHOSEN_RIGHT_BACK_T,
  CHOSEN_RIGHT_MID_T,
 
-
+ OSD_ALL_VIEW_NAME_T,
+ OSD_TEL_VIEW_NAME_T,
+ OSD_SINGLE_VIEW_NAME_T,
+ OSD_HANCING_T,
+ OSD_MVDETECTING_T,
 
 
 

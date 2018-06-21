@@ -83,6 +83,7 @@ public:
 	void writeScanAngle(const char *filename,float angle,float angleofruler);
 	void ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y);
 	void ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y);
+	void ProcessTouchKeys(GLEnv &m_env,int key);
 	void mouseButtonPress(int button, int state, int x, int y);
 	void mouseMotionPress(int x, int y);
 	inline GLShaderManager* getShaderManager(){return &shaderManager;}

@@ -202,6 +202,8 @@ CVideoProcess* trackMode=CVideoProcess::getInstance();
 #if MVDETECTOR_MODE
 mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
+
+
 void readcanshu()
 {
 
@@ -698,9 +700,9 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		//fboMode(FBO_PURE_MODE),
 		//displayMode(PURE_MODE),
 		//SecondDisplayMode(SECOND_PURE_MODE),
-		fboMode(FBO_PURE_MODE),
+		fboMode(FBO_ALL_VIEW_559_MODE),
 		displayMode(CHECK_MYSELF),
-		SecondDisplayMode(SECOND_PURE_MODE),
+		SecondDisplayMode(SECOND_559_ALL_VIEW_MODE),
 
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -714,7 +716,8 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		m_SDIVideoId(SDI_CAM_0),
 		p_CornerMarkerGroup(NULL),
 		shaderManager2(GLShaderManager(CAM_COUNT)),
-		shaderManager(GLShaderManager(CAM_COUNT)),pPano(NULL)
+		shaderManager(GLShaderManager(CAM_COUNT)),pPano(NULL),
+		touch_pos_x(-1),touch_pos_y(-1)
 {
 	MOUSEx = 0, MOUSEy = 0, BUTTON = 0;
 	ROTx = ROTy = ROTz =0;
@@ -6601,11 +6604,11 @@ if(setpriorityOnce)
 		isinSDI=false;
 	}
 
-	if(displayMode==PURE_MODE
-			||displayMode==CHECK_MYSELF)
-		fboMode=FBO_PURE_MODE;
-	else
-		fboMode=FBO_ALL_VIEW_559_MODE;
+//	if(displayMode==PURE_MODE
+	//		||displayMode==CHECK_MYSELF)
+	//	fboMode=FBO_PURE_MODE;
+//	else
+//		fboMode=FBO_ALL_VIEW_559_MODE;
 	switch(displayMode)
 	{
 	case SPLIT_VIEW_MODE:
@@ -7227,7 +7230,7 @@ if(setpriorityOnce)
 			static int a=0;
 			if(a++==50)
 			{
-				displayMode=PURE_MODE;
+				displayMode=ALL_VIEW_MODE;
 			a=0;
 			}
 		}
@@ -7238,7 +7241,7 @@ if(setpriorityOnce)
 		static int b=0;
 				if(b++==50)
 				{
-					displayMode=PURE_MODE;
+					displayMode=ALL_VIEW_MODE;
 				b=0;
 				}
 
@@ -7263,6 +7266,9 @@ if(setpriorityOnce)
 	}
 	else if(displayMode==	ALL_VIEW_MODE)
 	{
+		p_ChineseCBillBoard->ChooseTga=OSD_ALL_VIEW_NAME_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
 		 if(!DetectMainOpen)
 		 {
 			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
@@ -7283,6 +7289,8 @@ if(setpriorityOnce)
 			||displayMode==TELESCOPE_BACK_MODE
 			||displayMode==TELESCOPE_LEFT_MODE)
 	{
+		p_ChineseCBillBoard->ChooseTga=OSD_TEL_VIEW_NAME_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		if(DetectMainOpen)
 		{
 			p_ChineseCBillBoard->ChooseTga=TURRET_T;
@@ -7338,56 +7346,62 @@ if(setpriorityOnce)
 	else if(displayMode==CHOSEN_VIEW_MODE)
 	{
 		int idx=chosenCam[MAIN];
+		float start_van_x=-495.0;
+		float start_van_y=1540;
+		float van_w=700.0;
+		float van_h=500.0;
+		p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		switch(idx)
 		{
 		case 1:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 2:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 3:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 4:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 5:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 6:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 7:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 8:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 9:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
 		case 10:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*830.0/1920.0, g_windowHeight*322.0/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 			break;
 		defalut :
 					break;
@@ -7648,10 +7662,16 @@ void Render::DrawGLScene()
 /* The function called whenever a mouse button event occurs */
 void Render::mouseButtonPress(int button, int state, int x, int y)
 {
-	if (common.isVerbose())
+//	if (common.isVerbose())
 		printf(" mouse--> %i %i %i %i\n", button, state, x, y);
 	setMouseCor(x,y);
 	setMouseButton(button);
+	if(state==1)
+	{
+	SetTouchPosX(x);
+	y=g_windowHeight-y;
+	SetTouchPosY(y);
+	}
 }
 
 void Render::GenerateBirdView()
@@ -8265,28 +8285,22 @@ GLEnv & env=env1;
 		case ';':
 			stop_scan=!stop_scan;
 			break;
-		//case 'o':
-		case 'O':
-#if 1
-			if(!DetectMainOpen)
-			{
-				DetectMainOpen=true;
-			}
-			else if(DetectMainOpen)
-			{
-				DetectMainOpen=false;
-			}
-			if(DetectMainOpen==true
-					||DetectSubOpen==true)
-			{
-				IsMvDetect=true;
-			}
-			else
+		case 'o':
+			DetectMainOpen=false;
+			if(DetectMainOpen==false
+				&&DetectSubOpen==false)
 			{
 				IsMvDetect=false;
 			}
+			break;
+		case 'O':
+			DetectMainOpen=true;
+			if(DetectMainOpen==true
+			||DetectSubOpen==true)
+			{
+				IsMvDetect=true;
+			}
 			//mv_detect.OpenMD(MAIN);
-#endif
 		//	mode = OitVehicle::USER_OIT;
 			break;
 		case 'b':
@@ -8296,9 +8310,45 @@ GLEnv & env=env1;
 			mode = OitVehicle::USER_BLEND;
 			break;
 		case '1':
-			displayMode=PURE_MODE;
+			displayMode=ALL_VIEW_MODE;
 			break;
-#if MVDECT
+		case '2':
+			displayMode=TELESCOPE_FRONT_MODE;
+			break;
+		case '3':
+			displayMode=CHOSEN_VIEW_MODE;
+			break;
+		case '4':
+			displayMode=PURE_MODE;//todo
+			break;
+		case '5':
+			displayMode=TELESCOPE_FRONT_MODE;
+			break;
+		case '6':
+			displayMode=TELESCOPE_BACK_MODE;
+				break;
+		case '7':
+			displayMode=TELESCOPE_LEFT_MODE;
+				break;
+		case '8':
+			displayMode=TELESCOPE_RIGHT_MODE;
+				break;
+		case 't':
+			displayMode=CHOSEN_VIEW_MODE;
+			break;
+		case 'u':
+			chosenCam[MAIN]=chosenCam[MAIN]-1;
+									if(chosenCam[MAIN]==0)
+										chosenCam[MAIN]=10;
+									ChangeMainChosenCamidx(chosenCam[MAIN]);
+			break;
+		case 'i':
+			chosenCam[MAIN]=chosenCam[MAIN]+1;
+									if(chosenCam[MAIN]==11)
+										chosenCam[MAIN]=1;
+									ChangeMainChosenCamidx(chosenCam[MAIN]);
+			break;
+#if 0
 		case '2':
 			mvSwitch.CloseSwitch(MIAN_MV_TEL_VIEW_SWITCH);
 			mvSwitch.OpenSwitch(MIAN_MV_ALL_VIEW_SWITCH);
@@ -8313,7 +8363,7 @@ GLEnv & env=env1;
 		case '5':
 			mvSwitch.CloseSwitch(MIAN_MV_TEL_VIEW_SWITCH);
 			break;
-#endif
+
 		case '6':
 		case '7':
 			blendMode = key-'0';
@@ -8337,6 +8387,7 @@ GLEnv & env=env1;
 						enterNumberofCam=enterNumberofCam*10+blendMode;
 					}
 					break;
+#endif
 		//case 's' :
 		case 'S':
 		{
@@ -8412,10 +8463,7 @@ GLEnv & env=env1;
 			break;
 		case 'n':
 		{
-			chosenCam[MAIN]=chosenCam[MAIN]+1;
-						if(chosenCam[MAIN]==11)
-							chosenCam[MAIN]=1;
-						ChangeMainChosenCamidx(chosenCam[MAIN]);
+
 			//FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
 			//fboMode = nextMode;
 		}
@@ -8425,12 +8473,10 @@ GLEnv & env=env1;
 			DISPLAYMODE_SWITCH_TO(TRIPLE_VIEW_MODE);
 			break;
 		case 'P':
-			if(enable_hance)
-				enable_hance=false;
-			else
 				enable_hance=true;
-		//case 'p':
-			//DISPLAYMODE_SWITCH_TO(SPLIT_VIEW_MODE);
+				break;
+		case 'p':
+			enable_hance=false;
 			break;
 		case 'M':
 		//case 'm':
@@ -8521,6 +8567,8 @@ GLEnv & env=env1;
 		case 'R':
 			stopcenterviewrotate=!stopcenterviewrotate;
 			break;
+		case 'h':
+			break;
 		case 'j':
 			RoiFocusCamidx::GetMainInstance()->increaseRoiFocusCamidx();
 			break;
@@ -8571,22 +8619,8 @@ GLEnv & env=env1;
 					shaderManager.SetTrimColor(testPanoNumber);
 			}
 			break;
-		case 't'://PANO add PTZ view
-			break;
 		case 'y'://two half PANO view
 			DISPLAYMODE_SWITCH_TO(TWO_HALF_PANO_VIEW_MODE);
-			break;
-		case 'u'://single high quality view
-			break;
-		case 'i'://pano view mode
-			DISPLAYMODE_SWITCH_TO(PANO_VIEW_MODE);
-			break;
-		case 'o'://high definition pano view
-#if MVDECT
-			//mv_detect.CloseMD(MAIN);
-#endif
-			break;
-		case 'p'://high definition pano add pano view
 			break;
 		case 'w'://up
 			if(getFollowValue())
@@ -8726,16 +8760,10 @@ GLEnv & env=env1;
 			break;
 
 		case 'g'://PTZ--FIR
+			IsgstCap=false;
 			break;
 		case 'G'://PTZ--CCD
-			if(IsgstCap==false)
-			{
 				IsgstCap=true;
-			}
-			else
-			{
-				IsgstCap=false;
-			}
 			break;
 		case 'z'://steady on
 			break;
@@ -9382,7 +9410,10 @@ GLEnv & env=env1;
 			break;
 
 
-
+			case 0:
+				break;
+			case 1:
+				break;
 		default:
 			break;
 		}
@@ -10329,12 +10360,18 @@ void Render::CompassBillBoard::DoTextureBinding()
 Render::ChineseCharacterBillBoard::ChineseCharacterBillBoard(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr)
 :BaseBillBoard((modelViewMat),(projectionMat),(mgr))
 {
+	 strcpy( ChineseC_TextureFileName[OSD_ALL_VIEW_NAME_T], OSD_ALL_VIEW_NAME_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_TEL_VIEW_NAME_T], OSD_TEL_VIEW_NAME_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_SINGLE_VIEW_NAME_T], OSD_SINGLE_VIEW_NAME_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_HANCING_T], OSD_HANCING_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_MVDETECTING_T], OSD_MVDETECTING_TGA);
+
 	strcpy( ChineseC_TextureFileName[CHOSEN_FRONT_LEFT_T], CHOSEN_FRONT_LEFT_TGA);
 	strcpy( ChineseC_TextureFileName[CHOSEN_FRONT_RIGHT_T], CHOSEN_FRONT_RIGHT_TGA);
-	strcpy( ChineseC_TextureFileName[CHOSEN_BACK_LEFT_T], CHOSEN_FRONT_RIGHT_TGA);
-	strcpy( ChineseC_TextureFileName[CHOSEN_BACK_RIGHT_T], CHOSEN_FRONT_RIGHT_TGA);
-	strcpy( ChineseC_TextureFileName[CHOSEN_LEFT_FRONT_T], CHOSEN_FRONT_RIGHT_TGA);
-	strcpy( ChineseC_TextureFileName[CHOSEN_LEFT_MID_T], CHOSEN_FRONT_RIGHT_TGA);
+	strcpy( ChineseC_TextureFileName[CHOSEN_BACK_LEFT_T], CHOSEN_BACK_LEFT_TGA);
+	strcpy( ChineseC_TextureFileName[CHOSEN_BACK_RIGHT_T], CHOSEN_BACK_RIGHT_TGA);
+	strcpy( ChineseC_TextureFileName[CHOSEN_LEFT_FRONT_T], CHOSEN_LEFT_FRONT_TGA);
+	strcpy( ChineseC_TextureFileName[CHOSEN_LEFT_MID_T], CHOSEN_LEFT_MID_TGA);
 	strcpy( ChineseC_TextureFileName[CHOSEN_LEFT_BACK_T], CHOSEN_LEFT_BACK_TGA);
 	strcpy( ChineseC_TextureFileName[CHOSEN_RIGHT_FRONT_T], CHOSEN_RIGHT_FRONT_TGA);
 	strcpy( ChineseC_TextureFileName[CHOSEN_RIGHT_MID_T], CHOSEN_RIGHT_MID_TGA);
@@ -12556,9 +12593,17 @@ int Render::getGroupMenuIndex()
 	return idx;
 }
 
-void Render::processKeycode(int keycode){
+void Render::ProcessTouchKeys(GLEnv &m_env,int key)
+{
 
-	this->ProcessOitKeys(env1,keycode,0,0);
+}
+void Render::processKeycode(int keycode){
+	if(keycode > 255){
+		button_array->SetSubmenuKeycode(keycode);//set submenu keycode
+	}
+	else{
+		this->ProcessOitKeys(env1,keycode,0,0);
+	}
 }
 //================end of embedded fixed billboard implementation========
 

@@ -8,6 +8,7 @@ Idle[SUB_CN]=false;
 Idle[MAIN_CN]=false;
 Idle[MVDECT_CN]=false;
 Idle[FPGA_SIX_CN]=false;
+Idle[MVDECT_ADD_CN]=false;
 }
 bool thread_idle::isToIdle(int idx){
 	return Idle[idx];}
