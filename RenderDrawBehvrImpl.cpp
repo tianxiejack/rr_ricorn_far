@@ -51,6 +51,7 @@ void Render::FBOdraw()
 			tIdle.threadIdle(SUB_CN);
 			tIdle.threadIdle(MAIN_CN);
 			tIdle.threadIdle(MVDECT_CN);
+			tIdle.threadIdle(MVDECT_ADD_CN);
 			idleOnce=0;
 		}
 		RenderLeftPanoView(env,0,1080.0*(864.0-70-100)/1080.0,1920.0, 1080.0*216.0/1080.0,MAIN,true);

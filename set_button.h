@@ -56,4 +56,6 @@ private:
 	GLMatrixStack * p_projectionMatrix;
 	GLFrustum *     pViewFrustrm;
     InterfaceRenderBehavior* p_Host;
+    int counter;
+    static const int AUTO_HIDE_COUNT=250;
 };

@@ -624,7 +624,8 @@ void ButtonGroup::Group_Draw(int width,int height,GLMatrixStack * p_modelViewMat
 	}
 };
 
-void ButtonGroup::Update_State(InterfaceRenderBehavior* p_Host){
+bool ButtonGroup::Update_State(InterfaceRenderBehavior* p_Host){
+	bool isTouched=false;
 #if USE_ON_BOARD
 	COOR_SYS point_data=getClickCoordinate();
 
@@ -640,6 +641,10 @@ void ButtonGroup::Update_State(InterfaceRenderBehavior* p_Host){
 #endif
 		//pos_x=456;
 		//pos_y=162;
+if(pos_x>0 ||pos_y>0)
+{
+	isTouched=true;
+}
 
 	window_width=p_Host->GetWindowWidth();
 	window_height=p_Host->GetWindowHeight();
@@ -653,7 +658,7 @@ void ButtonGroup::Update_State(InterfaceRenderBehavior* p_Host){
 			p_Host->processKeycode(keyData);
 		}
 	}
-
+return isTouched;
 
 };
 
@@ -727,7 +732,7 @@ void ButtonGroup::Append_Group(MenuButton * button)
 }
 //-------------------------------------multiLayerButtonGroup---------------------------
 multiLayerButtonGroup::multiLayerButtonGroup(InterfaceRenderBehavior *p,int groupCount)
-	:currentActiveBGIndex(0),m_submenuKeycode(0)
+	:currentActiveBGIndex(0),m_submenuKeycode(0),counter(AUTO_HIDE_COUNT)
 {
 
     p_Host = p;
@@ -748,6 +753,10 @@ void multiLayerButtonGroup::Group_Draw()
 {
 	if(enable_draw)
 	{
+		if(counter--<=0)
+		{
+			this->SetEnableDraw(false);
+		}
 		if(m_submenuKeycode > 255){
            switch(m_submenuKeycode)
            {//不需要host切換模式的時候，只修改submenuIndex
@@ -799,11 +808,34 @@ void multiLayerButtonGroup::Group_Draw()
 			p_Host->GetWindowHeight(),this->p_modelViewMatrix, this->p_projectionMatrix,
 			this->pViewFrustrm);
 	}
+	else//檢測觸摸事件
+	{
+			float pos_x=-1;
+			float pos_y=-1;
+		#if USE_ON_BOARD
+			COOR_SYS point_data=getClickCoordinate();
+
+				pos_x=point_data.point_x;
+				pos_y=point_data.point_y;
+		#else
+				pos_x=p_Host->GetTouchPosX();
+				pos_y=p_Host->GetTouchPosY();
+
+
+				p_Host->SetTouchPosX(-1);
+				p_Host->SetTouchPosY(-1);
+		#endif
+		if(pos_x>0 ||pos_y>0)
+			this->SetEnableDraw(true);
+	}
 }
 
 void multiLayerButtonGroup::Update_State()
 {
-	m_layeredButtonGroupsVect[currentActiveBGIndex]->Update_State(p_Host);
+	if(m_layeredButtonGroupsVect[currentActiveBGIndex]->Update_State(p_Host))
+	{
+		this->SetEnableDraw(true);
+	}
 	m_layeredButtonGroupsVect[currentActiveBGIndex]->HightlightButton(m_layeredButtonGroupsVect[currentActiveBGIndex]->GetHighlightButtonId());
 }
 
@@ -845,4 +877,8 @@ void multiLayerButtonGroup::init_button_group(GLShaderManager *shaderManager,GLM
 void multiLayerButtonGroup::SetEnableDraw(bool enable)
 {
 	enable_draw=enable;
+	if(enable)
+		counter=AUTO_HIDE_COUNT;
+	else
+		counter=0;
 }
