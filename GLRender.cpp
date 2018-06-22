@@ -8565,15 +8565,19 @@ GLEnv & env=env1;
 			}
 			break;
 		case 'c':
+			enable_hance=true;
 			Enhance_level=1;
 			break;
 		case 'v':
+			enable_hance=true;
 			Enhance_level=2;
 			break;
 		case 'C':
+			enable_hance=true;
 			Enhance_level=3;
 			break;
 		case 'V':
+			enable_hance=true;
 			Enhance_level=4;
 				break;
 		//case 'C':
