@@ -80,9 +80,9 @@ mdRoi_mainA,
 mdRoi_subA;
  extern MvDetect mv_detect;
 #endif
-
+ float angle_XXX=0.0;
+ extern float ruler_move;
  int chooseMenu=0;
-
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
@@ -1327,7 +1327,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH, RULER_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -1340,7 +1340,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH, RULER_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 
@@ -1353,7 +1353,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,720, 576, 0,
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH, RULER_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
 #endif
@@ -5822,7 +5822,7 @@ void Render::RenderRightForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GL
 {
 	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-1.18);//26.2 +1.8
 	m_env.GetmodelViewMatrix()->Scale(6.0,1.0,4.58);//6.0
-	m_env.GetmodelViewMatrix()->Translate(26.2+2.0,0.0,0);//26.2 +1.8
+	m_env.GetmodelViewMatrix()->Translate(26.2+2.0,0.0,-0.1);//26.2 +1.8
 }
 m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-2.0);
 
@@ -6765,7 +6765,10 @@ if(setpriorityOnce)
 	{
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
-#if			MVDECT
+		RenderRulerView(env,(-1920.0*1920.0+ruler_move)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
+		RenderRulerView(env,(-1920.0*1920.0-ruler_move)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
+
+		#if			MVDECT
 		//if(mv_detect.CanUseMD(MAIN))
 			if(DetectMainOpen)
 			{
@@ -6784,22 +6787,14 @@ if(setpriorityOnce)
 			}
 			else
 					{
-				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
-				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
 					}
 #else
-	//		if(g_windowHeight==768)
-			{
-	//		RenderRightForeSightView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN);
-	//		RenderLeftForeSightView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN);
-			}
-	//		else
-			{
-				RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
-				RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
-		//		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 
-			}
+				RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
+				RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*218.0/1080.0,MAIN);
+		//		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 			#endif
 
 		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
@@ -8323,7 +8318,7 @@ GLEnv & env=env1;
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
-			displayMode=PURE_MODE;//todo
+			displayMode=PURE_MODE;
 			break;
 		case '5':
 			displayMode=TELESCOPE_FRONT_MODE;
@@ -8770,8 +8765,22 @@ GLEnv & env=env1;
 				IsgstCap=true;
 			break;
 		case 'z'://steady on
+			angle_XXX+=1.0;
+			if(angle_XXX>=180)
+			{
+				angle_XXX-=180*2;
+			}
+			ruler_move=(1920*1920*2)/360.0*angle_XXX;
+			printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
 			break;
 		case 'x'://steady off
+			angle_XXX-=1.0;
+			if(angle_XXX<-180)
+			{
+				angle_XXX+=180*2;
+			}
+			ruler_move=(1920*1920*2)/360.0*angle_XXX;
+			printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
 			break;
 		case 'c'://follow on
 			if(!getFollowValue())
@@ -12421,6 +12430,8 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 //	m_env.GetmodelViewMatrix()->Translate(0.0,0.0,-6.0);
 	m_env.GetmodelViewMatrix()->Rotate(180.0f, 0.0f, 0.0f, 1.0f);
 	m_env.GetmodelViewMatrix()->Rotate(180.0f,0.0f, 1.0f, 0.0f);
+
+
 	switch(type)
 	{
 	case RULER_45:
@@ -12434,6 +12445,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		}
 		break;
 	case RULER_90:
+		m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
 		glActiveTexture(GL_IconRuler90TextureIDs[idx]);
 
 		if(needSendData){
@@ -12444,6 +12456,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		}
 		break;
 	case RULER_180:
+		m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
 		glActiveTexture(GL_IconRuler180TextureIDs[idx]);
 
 		if(needSendData){

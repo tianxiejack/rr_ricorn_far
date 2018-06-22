@@ -97,6 +97,8 @@ enum
 #define PAL_WIDTH 720
 #define PAL_HEIGHT 576
 
+#define RULER_WIDTH	2160
+#define RULER_HEIGHT	70
 #if USE_12
 #define TELXLIMIT 8.0
 enum{
