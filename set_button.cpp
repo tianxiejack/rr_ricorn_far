@@ -105,15 +105,15 @@ static buttonMask mask_default_round_ui[]={
 
 //2.2模式選擇界面
 static buttonMask mask_choose_mode_ui[]={
-		{0, 6, BUTTON_TELESCOPE, '2'},
+		{0, 6, BUTTON_TELESCOPE, GO_TO_SUBMENU_mask_telescope_mode_ui},
 		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui},
 		//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		//	{4, 0, BUTTON_ENHANCE, 'P'},
 		//	{2, 0, BUTTON_TARGET, 'O'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
-		{0, 5, BUTTON_SINGLE_CHANNEL, '3'},
+		{0, 5, BUTTON_SINGLE_CHANNEL, GO_TO_SUBMENU_mask_single_channel_mode_ui},
 
-		{0, 7, BUTTON_AROUND,'1' }
+		{0, 7, BUTTON_AROUND,GO_TO_SUBMENU_mask_around_mode_ui }
 
 
 
@@ -204,15 +204,15 @@ static buttonMask mask_mvdetect_return_tel_mode_ui[]={
 
 //4 分划調節
 static buttonMask mask_foresight_mode_ui[]={
-		{0, 7, BUTTON_UP, '!'},
-		{0, 6, BUTTON_DOWN, '@'},
-		{0, 5, BUTTON_LEFT, '#'},
-		{0, 4, BUTTON_RIGHT, '$'},
+		{0, 7, BUTTON_UP, '#'},
+		{0, 6, BUTTON_DOWN, '$'},
+		{0, 5, BUTTON_LEFT, '!'},
+		{0, 4, BUTTON_RIGHT, '@'},
 
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
-		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_choose_mode_ui},
+		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_around_mode_ui},
 		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
 };
 
@@ -242,7 +242,7 @@ static buttonMask mask_enhance_tel_mode_ui[]={
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_telescope_mode_ui},
-		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
+	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
 
 };
@@ -771,10 +771,16 @@ void multiLayerButtonGroup::Group_Draw()
         	   break;
            case   GO_TO_SUBMENU_mask_around_mode_ui:
 			   SetcurrentActiveBGIndex(3);
+			   p_Host->processKeycode('1');
 			   break;
            case   GO_TO_SUBMENU_mask_telescope_mode_ui:
 			   SetcurrentActiveBGIndex(4);
+			   p_Host->processKeycode('2');
 			   break;
+           case GO_TO_SUBMENU_mask_single_channel_mode_ui:
+        	   SetcurrentActiveBGIndex(5);
+        	   p_Host->processKeycode('3');
+        	   break;
 
            case GO_TO_SUBMENU_mask_mvdetect_mode_ui:
         	   SetcurrentActiveBGIndex(6);
@@ -799,10 +805,15 @@ void multiLayerButtonGroup::Group_Draw()
            }
 		}
 
-		else{//let glrender handle it
-			m_submenuKeycode = 0;
+		else if(m_submenuKeycode==-1)
+		{
+			//如果是-1,則沒有最新點擊事件發生
+		}
+		else {//let glrender handle it
+
 			SetcurrentActiveBGIndex(p_Host->getGroupMenuIndex());
 		}
+		m_submenuKeycode = -1;//保證keycode只被調用一次，而不被反覆調用
 		Update_State();
 		m_layeredButtonGroupsVect[currentActiveBGIndex]->Group_Draw(p_Host->GetWindowWidth(),
 			p_Host->GetWindowHeight(),this->p_modelViewMatrix, this->p_projectionMatrix,
