@@ -80,6 +80,7 @@ mdRoi_mainA,
 mdRoi_subA;
  extern MvDetect mv_detect;
 #endif
+ int Enhance_level=1;
  float angle_XXX=0.0;
  extern float ruler_move;
  int chooseMenu=0;
@@ -2428,6 +2429,22 @@ int alpha[12]={1,1,1,1,1,1,1,1,1,1,1,1};
            0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
                 }
 
+#define USE_ENHANCE_08_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
+        shaderManager.UseStockShader(GLT_SHADER_TEXTURE_ENHANCE_BLENDING_08, \
+            m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
+           0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+                }
+
+#define USE_ENHANCE_15_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
+        shaderManager.UseStockShader(GLT_SHADER_TEXTURE_ENHANCE_BLENDING_15, \
+            m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
+           0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+                }
+#define USE_ENHANCE_YELLOW_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
+        shaderManager.UseStockShader(GLT_SHADER_TEXTURE_ENHANCE_BLENDING_yellow, \
+            m_env.GettransformPipeline()->GetModelViewProjectionMatrix(),0,\
+           0,ALPHA_TEXTURE_IDX0+alpha[i],i);\
+                }
 
 #define USE_TEXTURE_ON_PETAL_OVERLAP(m_env,i)        {\
                                                shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BLENDING, \
@@ -2533,21 +2550,47 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 			for(int i = 0; i < CAM_COUNT; i++){
 				if(	enable_hance)
 				{
-#if ENABLE_ENHANCE_FUNCTION
-					shaderManager.UseStockShader(GLT_SHADER_ENHANCE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-#endif
+					switch(Enhance_level)
+					{
+					case 1:
+						shaderManager.UseStockShader(GLT_SHADER_ENHANCE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						break;
+					case 2:
+						shaderManager.UseStockShader(GLT_SHADER_ENHANCE_15, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						break;
+					case 3:
+						shaderManager.UseStockShader(GLT_SHADER_ENHANCE_08, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						break;
+					case 4:
+						shaderManager.UseStockShader(GLT_SHADER_ENHANCE_yellow, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+						break;
+					default:
+						break;
+					}
 				}else
 					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-			//	shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
-
 				 (*m_env.GetPanel_Petal(i)).Draw();
-
 
 				if(	enable_hance)
 				{
-#if ENABLE_ENHANCE_FUNCTION
-				USE_ENHANCE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
-#endif
+					switch(Enhance_level)
+				{
+				case 1:
+					USE_ENHANCE_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
+					break;
+				case 2:
+					USE_ENHANCE_15_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
+					break;
+				case 3:
+					USE_ENHANCE_08_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
+					break;
+				case 4:
+					USE_ENHANCE_YELLOW_TEXTURE_ON_PETAL_OVERLAP(m_env,i);
+					break;
+				default:
+					break;
+				}
+
 				}
 				else
 				{
@@ -2568,10 +2611,25 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 					{
 						if(	enable_hance)
 						{
-#if ENABLE_ENHANCE_FUNCTION
-							shaderManager.UseStockShader(GLT_SHADER_ENHANCE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-#endif
-						}
+							switch(Enhance_level)
+									{
+									case 1:
+										shaderManager.UseStockShader(GLT_SHADER_ENHANCE, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,p_petalNum[i]);
+										break;
+									case 2:
+										shaderManager.UseStockShader(GLT_SHADER_ENHANCE_15, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,p_petalNum[i]);
+										break;
+									case 3:
+										shaderManager.UseStockShader(GLT_SHADER_ENHANCE_08, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,p_petalNum[i]);
+										break;
+									case 4:
+										shaderManager.UseStockShader(GLT_SHADER_ENHANCE_yellow, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,p_petalNum[i]);
+										break;
+									default:
+										break;
+									}
+
+							}
 						else
 						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
@@ -2579,9 +2637,22 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 				{
 					if(enable_hance)
 					{
-						#if ENABLE_ENHANCE_FUNCTION
+						switch(Enhance_level){
+				case 1:
 					USE_ENHANCE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-#endif
+					break;
+				case 2:
+					USE_ENHANCE_15_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+					break;
+				case 3:
+					USE_ENHANCE_08_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+					break;
+				case 4:
+					USE_ENHANCE_YELLOW_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+					break;
+				default:
+					break;
+						}
 					}
 					else
 					{
@@ -8493,14 +8564,25 @@ GLEnv & env=env1;
 				glutFullScreen();
 			}
 			break;
-		//case 'c':
+		case 'c':
+			Enhance_level=1;
+			break;
+		case 'v':
+			Enhance_level=2;
+			break;
 		case 'C':
+			Enhance_level=3;
+			break;
+		case 'V':
+			Enhance_level=4;
+				break;
+		//case 'C':
 
 	//		if(isCalibTimeOn){
 		//		RememberTime();
 	//		}
 	//		isCalibTimeOn = !isCalibTimeOn;
-			break;
+		//	break;
 		//case 'd':
 		case 'D':
 			isDirectionOn = !isDirectionOn;
@@ -8533,11 +8615,11 @@ GLEnv & env=env1;
 		case 'U':
 			SetShowDirection(BillBoard::BBD_FRONT, SHOW_DIRECTION_DYNAMIC);
 			break;
-		case 'v'://right forward
-			break;
-		case 'V':
-			SetShowDirection(BillBoard::BBD_FRONT_RIGHT, SHOW_DIRECTION_DYNAMIC);
-			break;
+		//case 'v'://right forward
+	//		break;
+	//	case 'V':
+	//		SetShowDirection(BillBoard::BBD_FRONT_RIGHT, SHOW_DIRECTION_DYNAMIC);
+	//		break;
 		//case 'w'://right back
 		case 'W':
 			SetShowDirection(BillBoard::BBD_REAR_RIGHT, SHOW_DIRECTION_DYNAMIC);
@@ -8782,7 +8864,7 @@ GLEnv & env=env1;
 			ruler_move=(1920*1920*2)/360.0*angle_XXX;
 			printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
 			break;
-		case 'c'://follow on
+	/*	case 'c'://follow on
 			if(!getFollowValue())
 						{
 							setFollowVaule(true);
@@ -8796,7 +8878,7 @@ GLEnv & env=env1;
 							}
 							enterNumberofCam=0;
 						}
-						break;
+						break;*/
 	//	case 'v'://follow off
 	//		setFollowVaule(false);
 	//		break;

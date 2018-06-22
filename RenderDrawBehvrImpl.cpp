@@ -7,6 +7,7 @@
 #include "thread_idle.h"
 extern GLEnv env1,env2;
 extern thread_idle tIdle;
+float ruler_move=0.0;
 void Render::FBOdraw()
 {
 	//int t[10]={0};
@@ -61,14 +62,18 @@ void Render::FBOdraw()
 	case	FBO_ALL_VIEW_559_MODE:
 	{
 			RenderRightPanoView(env,0,1080.0*(648.0-77)/1080.0,1920.0, 1080.0*216.0/1080.0,MAIN,0,0,0,0,true);
-			RenderLeftPanoView(env,0,1080.0*(864.0-70)/1080.0,1920.0, 1080.0*216.0/1080.0,MAIN,false);
+			RenderLeftPanoView(env,0,1080.0*825/1080.0,1920.0, 1080.0*216.0/1080.0,MAIN,false);
 		if(displayMode!=TRIM_MODE)
 		{
 			RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,MAIN,MY_ALL_VIEW_559_MODE);
 			RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,MAIN);
-			RenderRulerView(env,-1920.0*3.0/1920.0,1080.0*980.0/1080.0,1920.0,1080.0*140.0/1080.0,RULER_90);
+			RenderRulerView(env,(-1920.0*1920.0)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
+			RenderRulerView(env,(-1920.0*1920.0)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
 			RenderMilView(CURRENT_FBO_ALL_VIEW_559_MODE ,env,0, 0,1920, 1080);
 		}
+		RenderRulerView(env,(-1920.0*1920.0+ruler_move)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
+		RenderRulerView(env,(-1920.0*1920.0-ruler_move)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
+
 	}
 	 break;
 
