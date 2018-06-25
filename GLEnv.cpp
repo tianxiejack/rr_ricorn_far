@@ -17,7 +17,7 @@ m_miscCaptureGroup(p_misc),
 PBOMgr(PBOSender(CAM_COUNT,PANO_TEXTURE_WIDTH,PANO_TEXTURE_HEIGHT,iniCC,iniformat,0.6,0.4)),
 FBOmgr(FBOManager(CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,iniformat,internalFormat)),
 PBORcr(PBOReceiver(PBO_ALTERNATE_NUM,CURRENT_SCREEN_WIDTH,CURRENT_SCREEN_HEIGHT,iniCC,iniformat)),
-PBOExtMgr(PBOSender(MAGICAL_NUM+EXT_CAM_COUNT,PAL_WIDTH,PAL_HEIGHT,iniCC,iniformat)),//图片
+PBOExtMgr(PBOSender(MAGICAL_NUM+EXT_CAM_COUNT,RULER_WIDTH,RULER_HEIGHT,iniCC,iniformat)),//图片
 PBOVGAMgr(PBOSender(MAGICAL_NUM+VGA_CAM_COUNT,VGA_WIDTH,VGA_HEIGHT,iniCC,iniformat)),
 PBOSDIMgr(PBOSender(MAGICAL_NUM+SDI_CAM_COUNT,SDI_WIDTH,SDI_HEIGHT,iniCC,iniformat)),
 PBOChosenMgr(PBOSender(MAGICAL_NUM+CHOSEN_CAM_COUNT,SDI_WIDTH,SDI_HEIGHT,iniCC,iniformat)),
@@ -109,11 +109,12 @@ void GLEnv::Set_FboPboFacade(FBOManager  &FBOMgr,PBOReceiver  &PBORcr)
 	mp_FboPboFacade=new PBO_FBO_Facade(FBOMgr,PBORcr);
 }
 
-void GLEnv::init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_mvdetect,CaptureGroup *p_misc)
+void GLEnv::init(CaptureGroup *p_pano,CaptureGroup *p_chosen,CaptureGroup *p_mvdetect,CaptureGroup *p_mvdetect_add,CaptureGroup *p_misc)
 {
 	m_panoCaptureGroup=p_pano;
 	m_chosenCaptureGroup=p_chosen;
 	m_miscCaptureGroup=p_misc;
 	m_mvdectCaptureGroup=p_mvdetect;
+	m_mvdect_addCaptureGroup=p_mvdetect_add;
 }
 

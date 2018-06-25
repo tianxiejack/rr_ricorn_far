@@ -91,6 +91,7 @@ SelfCheck::SelfCheck()
 	nowtime=0;
 	lasttime=0;
 	Onesec=true;
+	Ischeck=true;
 }
 
 void SelfCheck::SetCheckState(self_check_item now_item,self_check_state now_state)

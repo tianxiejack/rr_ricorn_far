@@ -10,7 +10,8 @@
 extern MVModeSwith   mvSwitch;
 #endif
 #include"IPC_Far_Recv_Message.h"
-
+#include"MvDrawRect.h"
+#include"RoiFocusCamidx.h"
 extern thread_idle tIdle;
 extern Render render;
 extern MvDetect mv_detect;
@@ -21,8 +22,17 @@ extern ForeSightPos foresightPos[MS_COUNT];
 extern char chosenCam[2];
 static float delayT=20.0;
 extern bool IsMvDetect;
-extern KEY_TYPE keytype;
-extern coor_p coor;
+extern bool DetectSubOpen;
+extern bool enable_hance;
+
+
+extern MotionDetectorROI
+
+
+mdRoi_mainT,
+mdRoi_subT,
+mdRoi_mainA,
+mdRoi_subA;
 void InitBowlDS()
 {
 
@@ -98,22 +108,26 @@ void Render::RenderSceneDS()
 			SecondDisplayMode=SECOND_CHOSEN_VIEW_MODE;
 			break;
 	case PASSENGER_TARGET_DETECTION_ON:
-		IsMvDetect=true;
+		DetectSubOpen=true;
 				break;
 	case PASSENGER_TARGET_DETECTION_OFF:
-		IsMvDetect=false;
+		DetectSubOpen=false;
 				break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_1:
-		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_1\n");
-		break;
+	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_1\n");
+	//	break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_2:
-		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_2\n");
-		break;
+	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_2\n");
+	//	break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_3:
-		printf("PASSENGER_IMAGE_ENHANCEMENT_ON_3\n");
-		break;
+	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_3\n");
+	//	break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_OFF:
-		printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
+				if(enable_hance)
+					enable_hance=false;
+				else
+					enable_hance=true;
+	//	printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
 		break;
 	case	PASSENGER_T_D_ON_MOVE_RIGHT:
 		printf("PASSENGER_T_D_ON_MOVE_RIGHT\n");
@@ -230,6 +244,11 @@ void Render::RenderSceneDS()
 	}
 		switch(SecondDisplayMode)
 	{
+		case SECOND_PURE_MODE:
+		{
+			env.Getp_FboPboFacade()->Render2Front(SUB,g_windowWidth,g_windowHeight);
+		}
+		break;
 	case SECOND_ALL_VIEW_MODE:
 #if 1
 #if MVDECT
@@ -252,58 +271,66 @@ void Render::RenderSceneDS()
 	//	RenderOnetimeView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*944.0/1920.0, g_subwindowHeight*537.0/1080,SUB);
 		RenderOnetimeView(env,0,0,g_subwindowWidth*944.0/1024.0, g_subwindowHeight*537.0/768.0,SUB);
 		break;
+
+
+
 	case SECOND_559_ALL_VIEW_MODE:
 		tIdle.threadIdle(SUB_CN);
 		env.Getp_FboPboFacade()->Render2Front(SUB,g_subwindowWidth,g_subwindowHeight);
-//		RenderRightForeSightView(env,0,g_subwindowHeight*538.0/768.0,g_subwindowWidth, g_subwindowHeight*116.0/768.0,SUB);
-//		RenderLeftForeSightView(env,0,g_subwindowHeight*655.0/768.0,g_subwindowWidth, g_subwindowHeight*115.0/768.0,SUB);
-		RenderRightForeSightView(env,0,g_subwindowHeight*(648.0-77)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
-		RenderLeftForeSightView(env,0,g_subwindowHeight*(864.0-70)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 		glScissor(0,0,1621,563);
 			//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
 #if MVDECT
-	/*	if(mv_detect.CanUseMD(SUB))
-							{
-						//		mv_detect.SetoutRect();
-
-			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A0);
-			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A1);
-			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A2);
-			TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A3);
-							}
-		else*/
+		if(DetectSubOpen)
 		{
+			glScissor(0,0,1920,565);
+				//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
+			glEnable(GL_SCISSOR_TEST);
+			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+			glDisable(GL_SCISSOR_TEST);
+
+		mdRoi_subA.DrawAllRectOri(SUB);
+		TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A0);
+		TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A1);
+		TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A2);
+		TargectTelView(env,g_subwindowWidth*1012 /1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A3);
+		}
+		else	{
+			RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
+			RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 			RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,SUB,MY_ALL_VIEW_559_MODE);
 			RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
 	//	RenderOnetimeView(env,g_windowWidth*6.0/1024,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
 	//	RenderTwotimesView(env,g_windowWidth*(354.0+6)/1024.0,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
 	//	RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 		}
+
+
 #else
+		RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
+		RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 		RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,SUB,MY_ALL_VIEW_559_MODE);
 		RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
-		//RenderOnetimeView(env,g_windowWidth*6.0/1024,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
-	//	RenderTwotimesView(env,g_windowWidth*(354.0+6)/1024.0,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
-		//RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 #endif
 		break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
-	//	RenderChosenView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024.0/1920.0, g_subwindowHeight*768.0/1920.0,true);
 		RenderChosenView(env,0,0,g_subwindowWidth, g_subwindowHeight,SUB,true);
 		break;
 	case 	SECOND_TELESCOPE_FRONT_MODE:
 		tIdle.threadIdle(SUB_CN);
-		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_FRONT_MODE,SUB);
+
 			    RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,FRONT,SUB);
 #if			MVDECT
-				if(mv_detect.CanUseMD(SUB))
+				if(DetectSubOpen)
 				{
-			//		mv_detect.SetoutRect();
+					mdRoi_subT.SetRange(0,90.0);
+					mdRoi_subT.DrawAllRectOri(SUB);
+					TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T0);
+					TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T1);
 //					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
 //					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
 				}
@@ -312,38 +339,41 @@ void Render::RenderSceneDS()
 				RenderMilView(CURRENT_SECOND_TELESCOPE_FRONT_MODE ,env,0, 0,1920, 1080);
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
+
 		tIdle.threadIdle(SUB_CN);
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,RIGHT,SUB);
 #if			MVDECT
-	/*			if(mv_detect.CanUseMD(SUB))
-						{
-				//			mv_detect.SetoutRect();
-					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
-					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
-					RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
-						}
-				else*/
-				{
-			//		RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
-				}
+				if(DetectSubOpen)
+					{
+					mdRoi_subT.SetRange(270,360.0);
+						mdRoi_subT.DrawAllRectOri(SUB);
+						TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T0);
+						TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T1);
+	//					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
+	//					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
+					}
 #endif
 				RenderMilView(CURRENT_SECOND_TELESCOPE_RIGHT_MODE ,env,0, 0,1920, 1080);
 
 					break;
 	case	SECOND_TELESCOPE_BACK_MODE:
 		tIdle.threadIdle(SUB_CN);
+
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
 		   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 		   RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,BACK,SUB);
 #if			MVDECT
-/*		   if(mv_detect.CanUseMD(SUB))
-					{
-			//			mv_detect.SetoutRect();
-				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
-				TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
-					}*/
+			if(DetectSubOpen)
+				{
+				mdRoi_subT.SetRange(180.0,270.0);
+					mdRoi_subT.DrawAllRectOri(SUB);
+					TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T0);
+					TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T1);
+//					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
+//					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
+				}
 #endif
 	//		RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 
@@ -351,17 +381,20 @@ void Render::RenderSceneDS()
 
 	break;
 	case	SECOND_TELESCOPE_LEFT_MODE:
+
 		tIdle.threadIdle(SUB_CN);
-		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_LEFT_MODE,SUB);
 		  RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,LEFT,SUB);
 #if			MVDECT
-	/*		if(mv_detect.CanUseMD(SUB))
-					{
-			//		mv_detect.SetoutRect();
-				TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
-				TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
-					}*/
+			if(DetectSubOpen)
+				{
+				mdRoi_subT.SetRange(90.0,180.0);
+					mdRoi_subT.DrawAllRectOri(SUB);
+					TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T0);
+					TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_T1);
+//					TargectTelView(env,g_windowWidth*60/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T0);
+//					TargectTelView(env,g_windowWidth*520/1920.0,g_windowHeight*0/1080.0,g_windowWidth*400.0/1920.0, g_windowHeight*400.0/1080.0,SUB_TARGET_T1);
+				}
 #endif
 			//		RenderPositionView(env,g_subwindowWidth*0,g_subwindowHeight*0,g_subwindowWidth, g_subwindowHeight);
 			 RenderMilView(CURRENT_SECOND_TELESCOPE_LEFT_MODE ,env,0, 0,1920, 1080);
@@ -372,11 +405,16 @@ void Render::RenderSceneDS()
 	}
 		 if(SecondDisplayMode==	SECOND_559_ALL_VIEW_MODE)
 		{
+				p_ChineseCBillBoard->ChooseTga=OSD_ALL_VIEW_NAME_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
+			 if(!DetectSubOpen)
+			 {
 			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
 			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-
+			 }
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
@@ -395,54 +433,127 @@ void Render::RenderSceneDS()
 				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
 				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 		{
-			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+			p_ChineseCBillBoard->ChooseTga=OSD_TEL_VIEW_NAME_T;
+			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
+			 if(DetectSubOpen)
+			 {
+				p_ChineseCBillBoard->ChooseTga=TURRET_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+				p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+
+			 }
+			 else
+			 {
+				p_ChineseCBillBoard->ChooseTga=TURRET_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*160.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*600.0/1920.0, g_windowHeight*250.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
-
-				/*
-			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-
-				p_ChineseCBillBoard->ChooseTga=FOURX_REALTIME_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-		*/
-			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
-			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+				p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+			 }
 
 			 if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
-			//	if(mv_detect.CanUseMD())
-			//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-			//	else
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				if(DetectSubOpen)
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			}
 			else if(SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
 			{
-					p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
-					//	if(mv_detect.CanUseMD())
-							//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-							//	else
-								RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-			}
+				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
+				if(DetectSubOpen)
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+}
 			else if(SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
-				//	if(mv_detect.CanUseMD())
-						//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-						//	else
-							RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				if(DetectSubOpen)
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			}
 			else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 			{
-			p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
-			//	if(mv_detect.CanUseMD())
-					//		RenderChineseCharacterBillBoardAt(g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-					//	else
-						RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
+				if(DetectSubOpen)
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
+				else
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			}
-	}
+		}
+		else if(SecondDisplayMode==SECOND_CHOSEN_VIEW_MODE)
+		{
+			int idx=chosenCam[SUB];
+			float start_van_x=-495.0;
+				float start_van_y=1540;
+				float van_w=700.0;
+				float van_h=500.0;
+				p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
+				RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+
+			switch(idx)
+			{
+			case 1:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 2:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 3:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 4:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+						break;
+			case 5:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 6:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 7:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 8:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 9:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+						break;
+			case 10:
+				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+				break;
+			defalut :
+						break;
+
+			}
+		}
 
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
@@ -785,7 +896,7 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			{
 				SECOND_DISPLAY nextMode=SECOND_DISPLAY(((int)SecondDisplayMode+1)%SECOND_TOTAL_MODE_COUNT);
 				if(nextMode==SECOND_ALL_VIEW_MODE)
-					nextMode=SECOND_559_ALL_VIEW_MODE;
+					nextMode=SECOND_PURE_MODE;
 				SecondDisplayMode = nextMode;
 			}
 				break;
@@ -823,7 +934,38 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			//		else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 									break;
 
-#if MVDECT
+
+				case '!':
+					RoiFocusCamidx::GetInstance()->increaseRoiFocusCamidx();
+					break;
+				case '@':
+					RoiFocusCamidx::GetInstance()->decreaseRoiFocusCamidx();
+				break;
+				case '#':
+					RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
+				break;
+				case 'O':
+		#if MVDECT
+					if(!DetectSubOpen)
+					{
+						DetectSubOpen=true;
+					}
+					else if(DetectSubOpen)
+					{
+						DetectSubOpen=false;
+					}
+					if(DetectSubOpen==true
+							||DetectSubOpen==true)
+					{
+						IsMvDetect=true;
+					}
+					else
+					{
+						IsMvDetect=false;
+					}
+		#endif
+
+#if 0
 		case '5':
 			mvSwitch.CloseSwitch(SUB_MV_TEL_VIEW_SWITCH);
 			mvSwitch.OpenSwitch(SUB_MV_ALL_VIEW_SWITCH);
@@ -945,7 +1087,6 @@ void RenderMain::keyPressedDS(unsigned char key, int x, int y)
 		glutCreateSubWindow(2,0,0,1920,1080);
 		glutInitWindowPosition(1921,0);
 		glutInitWindowSize(1920, 1080);
-
 		glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 
 		sprintf(arg1,"Second %s (%s, %s):",VERSION_STRING, __DATE__,__TIME__);

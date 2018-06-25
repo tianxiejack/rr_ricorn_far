@@ -12,6 +12,11 @@
 #define INNER_RECT_AND_PANO_ONE_TIME_CAM_LIMIT 7.7
 #define	OUTER_RECT_AND_PANO_TWO_TIMES_CAM_LIMIT 16.8
 #define PER_CAM_ANGLE  36//(360/CAM_COUNT)
+
+#define OSD_NAME_X	240.0
+#define OSD_NAME_Y	998.0
+#define OSD_NAME_W	380.0
+#define OSD_NAME_H	460.0
 typedef enum{
 	CAM_0,
 	CAM_1,
@@ -47,6 +52,7 @@ enum{
 };
 #endif
 
+
 #define NUM_OF_W 5
 #define NUM_OF_H 2
 
@@ -66,6 +72,7 @@ enum{
 
 enum
 {
+	MVDECT_ADD_CN=0,
 	 FPGA_FOUR_CN  =1,
 	 SUB_CN ,
 	MAIN_CN ,
@@ -90,6 +97,8 @@ enum
 #define PAL_WIDTH 720
 #define PAL_HEIGHT 576
 
+#define RULER_WIDTH	2160
+#define RULER_HEIGHT	70
 #if USE_12
 #define TELXLIMIT 8.0
 enum{
@@ -408,6 +417,27 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 #define	FINE_TGA						"fine.tga"
 #define WRONG_TGA				"wrong.tga"
 #define IDLE_TGA						"idle.tga"
+
+#define CHOSEN_FRONT_LEFT_TGA "chosen_front_left.tga"
+#define CHOSEN_FRONT_RIGHT_TGA "chosen_front_right.tga"
+
+#define CHOSEN_BACK_LEFT_TGA "chosen_back_left.tga"
+#define CHOSEN_BACK_RIGHT_TGA "chosen_back_right.tga"
+
+#define CHOSEN_LEFT_FRONT_TGA "chosen_left_front.tga"
+#define CHOSEN_LEFT_MID_TGA "chosen_left_mid.tga"
+#define CHOSEN_LEFT_BACK_TGA "chosen_left_back.tga"
+
+#define CHOSEN_RIGHT_FRONT_TGA "chosen_right_front.tga"
+#define CHOSEN_RIGHT_MID_TGA "chosen_right_mid.tga"
+#define CHOSEN_RIGHT_BACK_TGA "chosen_right_back.tga"
+
+#define OSD_ALL_VIEW_NAME_TGA "osd_all_view_name.tga"
+#define OSD_TEL_VIEW_NAME_TGA	"osd_tel_view_name.tga"
+#define OSD_SINGLE_VIEW_NAME_TGA	"osd_single_view_name.tga"
+#define OSD_HANCING_TGA		"osd_hancing_tga"
+#define OSD_MVDETECTING_TGA		"osd_mvdetecting_tga"
+
 typedef enum CURRENT_MODE
 {
 	CURRENT_CHECK_MYSELF,
@@ -467,6 +497,26 @@ enum CCT_COUNT {
 		PANORAMIC_MIRROR_T,
 
 		DEBUG_T,
+
+ CHOSEN_RIGHT_FRONT_T,
+ CHOSEN_FRONT_RIGHT_T,
+ CHOSEN_FRONT_LEFT_T,
+ CHOSEN_LEFT_FRONT_T,
+ CHOSEN_LEFT_MID_T,
+ CHOSEN_LEFT_BACK_T,
+ CHOSEN_BACK_LEFT_T,
+ CHOSEN_BACK_RIGHT_T,
+ CHOSEN_RIGHT_BACK_T,
+ CHOSEN_RIGHT_MID_T,
+
+ OSD_ALL_VIEW_NAME_T,
+ OSD_TEL_VIEW_NAME_T,
+ OSD_SINGLE_VIEW_NAME_T,
+ OSD_HANCING_T,
+ OSD_MVDETECTING_T,
+
+
+
 		CCT_COUNT
 		};
 

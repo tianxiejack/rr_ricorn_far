@@ -50,6 +50,8 @@
 #include "PBO_FBO_Facade.h"
 #include "RenderDrawBehaviour.h"
 #include"GLEnv.h"
+#include "set_button.h"
+#include"IPC_Far_Recv_Message.h"
 using namespace std;
 
 class RenderMain;
@@ -59,7 +61,7 @@ static const int ALPHA_MASK_WIDTH = (DEFAULT_IMAGE_WIDTH/16);
 /* Called once from main() */
 /*set up render scene*/
 static const M3DVector3f DEFAULT_ORIGIN = {0.0f, 0.0f, 50.0f};
-class Render:public InterFaceDrawBehaviour{
+class Render:public InterFaceDrawBehaviour,public InterfaceRenderBehavior{
 public:
 	Render();
 	~Render();
@@ -82,6 +84,7 @@ public:
 	void writeScanAngle(const char *filename,float angle,float angleofruler);
 	void ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y);
 	void ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y);
+	void ProcessTouchKeys(GLEnv &m_env,int key);
 	void mouseButtonPress(int button, int state, int x, int y);
 	void mouseMotionPress(int x, int y);
 	inline GLShaderManager* getShaderManager(){return &shaderManager;}
@@ -123,12 +126,13 @@ private:
 
 		SPLIT_VIEW_MODE = 0, //birdview + rotating view
 		CHECK_MYSELF,
+		PURE_MODE,
 		ALL_VIEW_MODE,
 		CHOSEN_VIEW_MODE,
-		TELESCOPE_RIGHT_MODE,
-		TELESCOPE_LEFT_MODE,
 		TELESCOPE_FRONT_MODE,
+		TELESCOPE_RIGHT_MODE,
 		TELESCOPE_BACK_MODE,
+		TELESCOPE_LEFT_MODE,
 		TRIM_MODE,
 
 
@@ -178,6 +182,7 @@ private:
 		} displayMode; 
 
 		enum SECOND_DISPLAY{
+			SECOND_PURE_MODE,
 			SECOND_559_ALL_VIEW_MODE,
 			SECOND_CHOSEN_VIEW_MODE,
 			SECOND_TELESCOPE_FRONT_MODE,
@@ -190,6 +195,7 @@ private:
 		}SecondDisplayMode;
 
 		 enum FBO_MODE {
+			 FBO_PURE_MODE,
 			 FBO_ALL_VIEW_559_MODE,
 			 FBO_ALL_VIEW_MODE,
 			 FBO_MODE_COUNT
@@ -730,6 +736,7 @@ private:
 	GLFrame Render2FrontCameraFrame;
 	GLFrame ChosenCameraFrame;
 	GLFrame targetFrame[TARGET_CAM_COUNT];
+#define TARGET_TEXTURE_COUNT (TARGET_CAM_COUNT)
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
@@ -774,12 +781,13 @@ private:
 	int GetWindowHeight(){return g_windowHeight;};
 	GLuint GL_ChosenTextureIDs[CHOSEN_TEXTURE_COUNT];
 	GLuint GL_VGATextureIDs[VGA_TEXTURE_COUNT];
-	GLuint GL_TargetTextureIDs[TARGET_CAM_COUNT];
+	GLuint GL_TargetTextureIDs[TARGET_TEXTURE_COUNT];
 	GLuint GL_SDITextureIDs[SDI_TEXTURE_COUNT];
 	GLuint GL_FBOTextureIDs[1];
 	GLuint VGATextures[VGA_TEXTURE_COUNT];
 	GLuint SDITextures[SDI_TEXTURE_COUNT];
 	GLuint GL_ChosenTextures[CHOSEN_TEXTURE_COUNT];
+	GLuint GL_TargetTextures[TARGET_TEXTURE_COUNT];
 	GLuint GL_ExtensionTextureIDs[EXTENSION_TEXTURE_COUNT];
 	GLuint extensionTextures[EXTENSION_TEXTURE_COUNT];
 	GLuint GL_IconTextureIDs[1];
@@ -858,6 +866,25 @@ private:
 	OitVehicle *pPano;
 
 	vector <vector <int> > overlappoint[CAM_COUNT];
+public:
+	 void SetTouchPosX(int x){touch_pos_x=x;};
+	 int GetTouchPosX(){
+			coor_p cp=getEphor_CoorPoint();
+			if(cp.point_x>=0)
+			{
+				SetTouchPosX(cp.point_x);
+				SetTouchPosY((g_windowHeight-cp.point_y));
+				printf("nowx=%d nowflipy=%d",cp.point_x,(g_windowHeight-cp.point_y));
+			}
+
+		 return touch_pos_x;};
+	 void SetTouchPosY(int y){touch_pos_y=y;};
+	 int GetTouchPosY(){return touch_pos_y;};
+	 int getGroupMenuIndex() ;
+	 void processKeycode(int keycode);
+private:
+		int touch_pos_x,touch_pos_y;
+		multiLayerButtonGroup * button_array;
 };
 
 void* getDefaultShaderMgr();

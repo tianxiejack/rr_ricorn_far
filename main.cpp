@@ -88,10 +88,12 @@ int main(int argc, char** argv)
 #if USE_BMPCAP
 	env1.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
-			ChosenCaptureGroup::GetMvDetectInstance(),//NULL,
+			ChosenCaptureGroup::GetMvDetectInstance(),
+			NULL,
 			BMPMiscGroup::GetInstance());
 	env2.init(BMPPanoGroup::GetInstance(),
 			BMPMiscGroup::GetInstance(),
+			NULL,
 			NULL,
 			BMPMiscGroup::GetInstance());
 #else
@@ -99,9 +101,12 @@ int main(int argc, char** argv)
 	env1.init(PanoCaptureGroup::GetMainInstance(),
 			ChosenCaptureGroup::GetMainInstance(),
 			ChosenCaptureGroup::GetMvDetectInstance(),
-		BMPMiscGroup::GetInstance());
+			ChosenCaptureGroup::GetMvDetect_add_Instance(),
+			BMPMiscGroup::GetInstance()
+			);
 	env2.init(PanoCaptureGroup::GetSubInstance(),
 			ChosenCaptureGroup::GetSubInstance(),
+			NULL,
 			NULL,
 			BMPMiscGroup::GetInstance()
 			);

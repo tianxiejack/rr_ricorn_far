@@ -7,9 +7,11 @@ using namespace cv;
 #include"StlGlDefines.h"
 #include"cv_version.h"
 #include"MvDetect.h"
+
 #define MAX_TARGET_NUM 4
 #define CC 3
-#if 0
+#define MAX_X_POS (1920*CAM_COUNT)
+#if 1
 enum{
 	BIG,
 	SMALL
@@ -19,35 +21,49 @@ enum{
 	END
 };
 
-class MotionDetectorROI:public IF_MotionDetectorROI
+class MotionDetectorROI//:public IF_MotionDetectorROI
 {
 public :
-	MotionDetectorROI(int sumTarget,MvDetect *pmv);
+	MotionDetectorROI(int sumTarget,MvDetect *pmv,int mainOrsub);
 
 	void ChooseNext(int targetidx){chooseNext[targetidx]=true;};
 	void ChoosePre(int targetidx){choosePre[targetidx]=true;};
 	void ChooseUp(int targetidx){chooseUp[targetidx]=true;};
 	void ChooseDown(int targetidx){chooseDown[targetidx]=true;};
+	void MoveN(){ moveN=true;};
+	void MoveP(){ moveP=true;};
 
 	void resetChooseN(int targetidx){chooseNext[targetidx]=false;};
 	void resetChooseP(int targetidx){choosePre[targetidx]=false;};
 	void resetChooseUp(int targetidx){chooseUp[targetidx]=false;};
 	void resetChooseDown(int targetidx){chooseDown[targetidx]=false;};
+	void resetMoveN(){ moveN=false;};
+	void resetMoveP(){ moveP=false;};
 
 	bool IsChooseN(int targetidx){return chooseNext[targetidx];};
 	bool IsChooseP(int targetidx){return choosePre[targetidx];};
 	bool IsChooseUp(int targetidx){return chooseUp[targetidx];};
 	bool IsChooseDown(int targetidx){return chooseDown[targetidx];};
+	bool IsMoveN(){return moveN;};
+	bool IsMoveP(){return moveP;};
+
 
 	void SetRange(float startAngle,float endAngle){
-			range[START]=startAngle;
-			range[END]=endAngle;
-			if(range[END]>360.0)
-				range[END]-=360.0;
+			range[START]=startAngle*(MAX_X_POS)/360.0;
+			if(range[START]<0)
+				range[START]=0;
+			else if(range[START]>=MAX_X_POS)
+				range[START]=MAX_X_POS-1;
+
+			range[END]=endAngle*(MAX_X_POS)/360.0;;
+			if(range[START]<0)
+				range[START]=0;
+			else if(range[START]>=MAX_X_POS)
+				range[START]=MAX_X_POS-1;
 		};
 //	float GetRange(int startOrend){return range[startOrend];};
 
-	void DrawAllRectOri(int fourOrsix);
+	void DrawAllRectOri(int mainOrsub,int fourOrsix=0);
 	void MRectangle(int fourOrsix,mvRect *p);
 	bool ISanySingleRect(){
 		for(int i=0;i<m_sumTarget;i++)
@@ -82,15 +98,21 @@ public :
 //	void RankVectorClear(int targetidx){RankRect[targetidx].clear();};
 	mvRect *Rank(int targetidx,int bigOrsmall);
 
-	void RectfromSrc(int fourOrsix,int targetidx,int x,int y,int w,int h);
+	void RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x,int y,int w,int h);
 	unsigned char * GetRoiSrc(int targetidx);
 	void SettempSrc4(unsigned char *src);
 	void SettempSrc6(unsigned char *src);
 
+
 	unsigned char * GetpRoiSrc(int targetidx){return RoiSrc[targetidx];};
+
+
+
 private:
 	double RectColor[MAX_TARGET_NUM][CC];
 	float range[2]; //0～右～45～前～135～左～225～后～315～右～360
+	bool moveN;
+	bool moveP;
 	bool chooseNext[MAX_TARGET_NUM];
 	bool choosePre[MAX_TARGET_NUM];
 	bool chooseUp[MAX_TARGET_NUM];
@@ -100,13 +122,13 @@ private:
 //	std::vector<mvRect> RankRect[MAX_TARGET_NUM];
 	unsigned char *tempSrc4;
 	unsigned char *tempSrc6;
-
 	Mat m4;//[MAX_TARGET_NUM];
 	Mat m6;//[MAX_TARGET_NUM];
 	unsigned char *RoiSrc[MAX_TARGET_NUM];
 	int m_sumTarget;
 	bool selectSingleRect[MAX_TARGET_NUM];
 	MvDetect *m_pmv;
+	int m_MAIN_SUB;
 };
 
 #endif

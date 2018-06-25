@@ -61,7 +61,6 @@ void RenderMain::initGlut(int argc, char **argv,int startx,int starty)
 	glutInitWindowPosition(startx,  starty);
 	glutInitDisplayMode ( GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	{
-
 	sprintf(arg1,"First %s (%s, %s):",VERSION_STRING, __DATE__,__TIME__);
 	strcat (arg1, argv[1]);
 	strcat (arg1, "+");
@@ -88,7 +87,7 @@ void RenderMain::initGlut(int argc, char **argv,int startx,int starty)
 		glutSetOption(GLUT_RENDERING_CONTEXT,GLUT_USE_CURRENT_CONTEXT);
 		glutCreateWindow (arg1);
 	}
-	glutSetCursor(GLUT_CURSOR_NONE);
+	//glutSetCursor(GLUT_CURSOR_NONE);
 	/* Register the event callback functions since we are using GLUT */
 
 
@@ -184,14 +183,21 @@ int RenderMain::start(int argc, char** argv)
 		initGlut(argc, argv);
 		initGlew();
 		render.initPixle();
-		glutFullScreen();
-		render.SetupRC(1920, 1080);//1920,1080);//
+		//glutFullScreen();
+		//render.SetupRC(1920, 1080);//1920,1080);//
 #if DOUBLE_SCREEN
 	doubleScreenInit(argc, argv);
 	initGlew();
 	glutFullScreen();
 //	render.SetupRCDS(1920, 1080);//1920,1080);//
 #endif
+	glutSetWindow(1);
+	glutHideWindow();
+	glutShowWindow();
+	glutFullScreen();
+	render.SetupRC(1920, 1080);//1920,1080);//
+
+
 	glutMainLoop();
 	return 0;
 }

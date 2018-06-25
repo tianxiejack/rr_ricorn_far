@@ -30,6 +30,10 @@
 #include"Thread_Priority.h"
 #include"MvDetect.h"
 #include "thread_idle.h"
+#include"MvDrawRect.h"
+#include <cuda.h>
+#include <cuda_gl_interop.h>
+#include <cuda_runtime_api.h>
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
@@ -46,8 +50,15 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_main[6];
 //unsigned char * sdi_data_sub[6];
 unsigned char * target_data[CAM_COUNT];
-
+extern unsigned char * p_newestMvSrc[CAM_COUNT];
+extern MotionDetectorROI
+mdRoi_mainT,
+mdRoi_subT,
+mdRoi_mainA,
+mdRoi_subA;
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
+
+extern bool enable_hance;
 
 
 
@@ -78,7 +89,7 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			bufSize 	= imgwidth * imgheight * 2;
 			imgtype     = CV_8UC2;
 			memType = MEMORY_NORMAL;
-			bufferCount = 8;
+			bufferCount = 3;
 			if(Once_buffer)
 			{
 				init_buffer(NULL,NULL,NULL,NULL,NULL);
@@ -592,12 +603,88 @@ void save_gray(char *filename,void *pic,int w,int h)
 	imwrite(filename,Pic);
 }
 
+/*
+void YUYVEnhanceFour(unsigned char * dst,unsigned char * src,int w,int h)
+{
+#if 1//ENABLE_ENHANCE_FUNCTION
+		static unsigned char * gpu_uyvyFour;
+		static unsigned char * gpu_rgbFour;
+		static unsigned char * gpu_enhFour;
+		static unsigned char * cpu_uyvyFour;
+		static bool once =true;
+		static cudaStream_t m_cuStreamFour[2];
+		if(once)
+		{
+			cudaMalloc((void **)&gpu_uyvyFour,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*2);
+			cudaMalloc((void **)&gpu_rgbFour,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*3);
+			cudaMalloc((void **)&gpu_enhFour,(FPGA_SINGLE_PIC_W)*(FPGA_SINGLE_PIC_H*4)*3);
+
+			for(int i=0; i<2; i++){
+				cudaStreamCreate(&m_cuStreamFour[0]);
+			}
+			once=false;
+			cpu_uyvyFour=(unsigned char *)malloc(FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*4*2);
+		}
+		int noww=FPGA_SINGLE_PIC_W,nowh=0;
+	//	if(w=1280)
+	//	{
+	//		nowh=FPGA_SINGLE_PIC_H*4;
+	//	}
+	//	else if(w==1920)
+		{
+			nowh=FPGA_SINGLE_PIC_H*4;
+		}
+		cudaMemcpy(gpu_uyvyFour,src,noww*nowh*2,cudaMemcpyHostToDevice);
+		//yuyv2bgr_(gpu_rgb,gpu_yuyv,SDI_WIDTH,SDI_HEIGHT,m_cuStream[0]);
+		uyvy2bgr_(gpu_rgbFour,gpu_uyvyFour,noww,nowh,m_cuStreamFour[0]);
+		Mat dst1(nowh,noww,CV_8UC3,gpu_enhFour);
+		Mat src1(nowh,noww,CV_8UC3,gpu_rgbFour);
+		cuClahe( src1,dst1);		//, 4,4,4.5,0);
+		cudaMemcpy(dst,gpu_enhFour,noww*nowh*3,cudaMemcpyDeviceToHost);
+#endif
+}
+void YUYVEnhance(unsigned char * dst,unsigned char * src,int w,int h)
+{
+#if 1//ENABLE_ENHANCE_FUNCTION
+		static unsigned char * gpu_uyvy;
+		static unsigned char * gpu_rgb;
+		static unsigned char * gpu_enh;
+		static unsigned char * cpu_uyvy;
+		static bool once =true;
+		static cudaStream_t m_cuStream[2];
+		if(once)
+		{
+			cudaMalloc((void **)&gpu_uyvy,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*2);
+			cudaMalloc((void **)&gpu_rgb,FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*3);
+			cudaMalloc((void **)&gpu_enh,(FPGA_SINGLE_PIC_W)*(FPGA_SINGLE_PIC_H*6)*3);
+
+			for(int i=0; i<2; i++){
+				cudaStreamCreate(&m_cuStream[i]);
+			}
+			once=false;
+			cpu_uyvy=(unsigned char *)malloc(FPGA_SINGLE_PIC_W*FPGA_SINGLE_PIC_H*6*2);
+		}
+		int noww=FPGA_SINGLE_PIC_W,nowh=0;
+	//	if(w=1280)
+	//	{
+	//		nowh=FPGA_SINGLE_PIC_H*4;
+	//	}
+	//	else if(w==1920)
+		{
+			nowh=FPGA_SINGLE_PIC_H*6;
+		}
+		cudaMemcpy(gpu_uyvy,src,noww*nowh*2,cudaMemcpyHostToDevice);
+		//yuyv2bgr_(gpu_rgb,gpu_yuyv,SDI_WIDTH,SDI_HEIGHT,m_cuStream[0]);
+		uyvy2bgr_(gpu_rgb,gpu_uyvy,noww,nowh,m_cuStream[0]);
+		Mat dst1(nowh,noww,CV_8UC3,gpu_enh);
+		Mat src1(nowh,noww,CV_8UC3,gpu_rgb);
+		cuClahe( src1,dst1);		//, 4,4,4.5,0);
+		cudaMemcpy(dst,gpu_enh,noww*nowh*3,cudaMemcpyDeviceToHost);
+#endif
+}
+*/
 int HDv4l_cam::read_frame(int now_pic_format)
 {
-	int t[10]={0};
- timeval startT[20]={0};
-
-
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -620,14 +707,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 				assert(buf.index < n_buffers);
 			 if (buffers[buf.index].start!=NULL)
 			{
-				 if(now_pic_format==0)
-				 {
-					 printf("now_pic_format=0,0 dev is not used!\n");
-					 assert(false);
-				 }
 				 char filename[20];
-				 static int mvDectCount=0;
-				 static int mv_count=0;
+				 int CC_enh_mvd=0;
 					int chid[2]={-1,-1};
 					int nowGrayidx=-1;
 					int nowpicW=SDI_WIDTH,nowpicH=SDI_HEIGHT;
@@ -652,12 +733,25 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						transformed_src_main=&select_bgr_data_main;
 						break;
 					case MVDECT_CN:
+					case MVDECT_ADD_CN:
 					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
+						if(nowGrayidx>=11||nowGrayidx<=0) 
+						{
+						//	printf("nowGrayidx~~~~~~~~~~~~~~~~~~=%d\n",nowGrayidx);
+						chid[MAIN]=0;
+						//nowGrayidx=mv_count;
+						transformed_src_main=&MVDECT_data_main[0];
+						
+						}
+						else
+						{
+
 						chid[MAIN]=nowGrayidx+1;
 						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
+						}
 						break;
 					case FPGA_SIX_CN:
 						chid[MAIN]=MAIN_FPGA_SIX;
@@ -670,14 +764,20 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					}
 					if(chid[MAIN]!=-1) //车长
 					{
-						if(now_pic_format==MVDECT_CN)//移动检测
+						if(now_pic_format==MVDECT_CN
+								||now_pic_format==MVDECT_ADD_CN)//移动检测
 						{
 						{
 							#if MVDECT
 							//if(mv_detect.MDisStart())
 							if(IsMvDetect)
 							{
+							if(nowGrayidx>=1&&nowGrayidx<=10)
+							{
+								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
 								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
+							}
 							}
 							#endif
 						}
@@ -699,20 +799,29 @@ int HDv4l_cam::read_frame(int now_pic_format)
 							}
 							else
 							{
+//#if ENABLE_ENHANCE_FUNCTION
+							if(	enable_hance)
+							{
+								CC_enh_mvd=2;
+								memcpy(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW*nowpicH*2);
+							}
+							else
+							{
+								CC_enh_mvd=3;
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-								//todo //４副　６副
+							}
+							//４副　６副
 #if MVDECT
-							//	if(mv_detect.MDisStart())
 								if(IsMvDetect)
 								{
 									mv_detect.SetoutRect();
 									if(nowpicW==1280)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR);
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
 									}
 									else if (nowpicW==1920)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX);
+										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
 									}
 								}
 #endif
@@ -732,7 +841,8 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 							UYVY2UYV(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 						}
-						else if(now_pic_format==MVDECT_CN)//移动检测
+						else if(now_pic_format==MVDECT_CN
+								||MVDECT_ADD_CN==now_pic_format)//移动检测
 						{
 						}
 						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
@@ -1004,6 +1114,9 @@ void HDv4l_cam::mainloop(int now_pic_format)
 		case	 MVDECT_CN	:
 			l=THREAD_L_MVDECT;
 						break;
+		case MVDECT_ADD_CN:
+			l=THREAD_L_MVDECT;
+			break;
 		case	 FPGA_SIX_CN :
 			l=THREAD_L_6;
 						break;
@@ -1101,11 +1214,23 @@ void HDAsyncVCap4::Run()
 	//cap in background thread
 	while(thread_state == THREAD_RUNNING)
 	{
-		if(tIdle.isToIdle(pic_format))
+	/*	if(pic_format==	SUB_CN
+		||pic_format==	MAIN_CN
+		||pic_format==	MVDECT_CN
+		)
+		{
+			usleep(500*1000);
+		}*/
+		/*		if(tIdle.isToIdle(pic_format))
 		{
 			usleep(500*1000);
 		}
-		else
+
+		if(0)
+		{
+
+		}*/
+	//	else
 		{
 			HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
 			if(pcore){

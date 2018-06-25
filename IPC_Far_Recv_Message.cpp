@@ -5,7 +5,6 @@
  *      Author: xz
  */
 #include <stdio.h>
-#if 1
 #include <pthread.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -21,8 +20,6 @@
 #include  <arpa/inet.h>
 #include "IPC_Far_Recv_Message.h"
 
-	KEY_TYPE keytype;
-	coor_p coor;
 typedef enum {
 	TRANSFER_TO_EPHOR = 0x00, TRANSFER_TO_PASSENGER = 0x01, IPC_NUM,
 } IPC_NUM_TYPE;
@@ -71,15 +68,27 @@ struct sockaddr_in servaddr;
 void *Recv_ipc_Ephor(void *arg);
 void *Recv_ipc_Passenger(void *arg);
 
-void udpinit() {
+int udpinit() {
+	int ret_bind;
+	struct sockaddr_in localaddr;
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 		perror("socket");
 		exit(-1);
 	}
+	
+	localaddr.sin_family = AF_INET;
+	localaddr.sin_addr.s_addr = 0;
+	localaddr.sin_port = htons(6664);
+	ret_bind = bind(sockfd, (struct sockaddr*) &localaddr,sizeof(localaddr));
+	if (ret_bind < 0) {
+		perror("fail to bind!\n");
+		return -2;
+	}
+	
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(6664); //载员网络接收端口
 	servaddr.sin_addr.s_addr = inet_addr("192.9.200.203"); //载员ip
+	servaddr.sin_port = htons(6664); //载员网络接收端口
 }
 
 void IPC_Init(IPC_NUM_TYPE num) {
@@ -250,4 +259,3 @@ void SendPowerOnSelfTest() {
 			sizeof(servaddr));
 
 }
-#endif
