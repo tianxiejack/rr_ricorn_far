@@ -218,10 +218,10 @@ static buttonMask mask_foresight_mode_ui[]={
 
 //5增強模式
 static buttonMask mask_enhance_mode_ui[]={
-		{0, 7, BUTTON_ONE, 'P'},
-		{0, 6, BUTTON_TWO, 'P'},
-		{0, 5, BUTTON_THREE, 'P'},
-		{0, 4, BUTTON_FOUR, 'P'},
+		{0, 7, BUTTON_ONE, 'c'},
+		{0, 6, BUTTON_TWO, 'v'},
+		{0, 5, BUTTON_THREE, 'C'},
+		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
 
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
@@ -233,10 +233,10 @@ static buttonMask mask_enhance_mode_ui[]={
 };
 
 static buttonMask mask_enhance_tel_mode_ui[]={
-		{0, 7, BUTTON_ONE, 'P'},
-		{0, 6, BUTTON_TWO, 'P'},
-		{0, 5, BUTTON_THREE, 'P'},
-		{0, 4, BUTTON_FOUR, 'P'},
+		{0, 7, BUTTON_ONE, 'c'},
+		{0, 6, BUTTON_TWO, 'v'},
+		{0, 5, BUTTON_THREE, 'C'},
+		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
 
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
@@ -784,6 +784,7 @@ void multiLayerButtonGroup::Group_Draw()
 
            case GO_TO_SUBMENU_mask_mvdetect_mode_ui:
         	   SetcurrentActiveBGIndex(6);
+        	   p_Host->processKeycode('O');
         	   break;
            case GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui:
         	   SetcurrentActiveBGIndex(7);

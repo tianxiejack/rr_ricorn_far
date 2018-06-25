@@ -6637,6 +6637,7 @@ if(setpriorityOnce)
 		env.Getp_FboPboFacade()->DrawAndGet();
 	}
 
+
 #endif
 	#if 1
 #if USE_UART
@@ -7661,6 +7662,16 @@ if(setpriorityOnce)
 #endif// RENDER2FRON
 
 	button_array->Group_Draw();
+	if(displayMode!=ALL_VIEW_MODE
+			&&displayMode!=TELESCOPE_FRONT_MODE
+			&&displayMode!=TELESCOPE_RIGHT_MODE
+			&&displayMode!=TELESCOPE_BACK_MODE
+			&&displayMode!=TELESCOPE_LEFT_MODE
+					)
+	{
+		DetectMainOpen=false;
+		enable_hance=false;
+	}
 }
 
 

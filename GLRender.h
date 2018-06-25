@@ -51,6 +51,7 @@
 #include "RenderDrawBehaviour.h"
 #include"GLEnv.h"
 #include "set_button.h"
+#include"IPC_Far_Recv_Message.h"
 using namespace std;
 
 class RenderMain;
@@ -867,7 +868,16 @@ private:
 	vector <vector <int> > overlappoint[CAM_COUNT];
 public:
 	 void SetTouchPosX(int x){touch_pos_x=x;};
-	 int GetTouchPosX(){return touch_pos_x;};
+	 int GetTouchPosX(){
+			coor_p cp=getEphor_CoorPoint();
+			if(cp.point_x>=0)
+			{
+				SetTouchPosX(cp.point_x);
+				SetTouchPosY((g_windowHeight-cp.point_y));
+				printf("nowx=%d nowflipy=%d",cp.point_x,(g_windowHeight-cp.point_y));
+			}
+
+		 return touch_pos_x;};
 	 void SetTouchPosY(int y){touch_pos_y=y;};
 	 int GetTouchPosY(){return touch_pos_y;};
 	 int getGroupMenuIndex() ;
