@@ -27,6 +27,7 @@ public:
 	PBOReceiver *Getp_PBORcr();
 	PBOSender *Getp_PBOMgr();
 	PBOSender *Getp_PBOExtMgr();
+	PBOSender *Getp_PBORulerSmallMgr();
 	PBOSender *Getp_PBOVGAMgr();
 	PBOSender *Getp_PBOTargetMgr();
 	PBOSender *Getp_PBOSDIMgr();
@@ -41,6 +42,9 @@ public:
 	GLBatch *Getdegreescale45Batch(){return &degreescale45Batch;};
 	GLBatch *Getdegreescale90Batch(){return &degreescale90Batch;};
 	GLBatch *Getdegreescale180Batch(){return &degreescale180Batch;};
+	GLBatch *Getdegreescale45_small_Batch(){return &degreescale45_small_Batch;};
+	GLBatch *Getdegreescale90_small_Batch(){return &degreescale90_small_Batch;};
+	GLBatch *Getdegreescale180_small_Batch(){return &degreescale180_small_Batch;};
 private:
 	CaptureGroup * m_panoCaptureGroup;
 	CaptureGroup * m_chosenCaptureGroup;
@@ -58,9 +62,13 @@ private:
 	GLBatch degreescale45Batch; //the degree scale (45-0-45)
 	GLBatch degreescale90Batch; //the degree scale (90-0-90)
 	GLBatch degreescale180Batch; //the degree scale (180-0-180)
+	GLBatch degreescale45_small_Batch; //the degree scale (45-0-45)
+	GLBatch degreescale90_small_Batch; //the degree scale (90-0-90)
+	GLBatch degreescale180_small_Batch; //the degree scale (180-0-180)
 	PBOReceiver PBORcr;
 	PBOSender PBOMgr;
 	PBOSender PBOExtMgr;
+	PBOSender PBORulerSmallMgr;
 	PBOSender PBOVGAMgr;
 	PBOSender PBOTargetMgr;
 	PBOSender PBOSDIMgr;

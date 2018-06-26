@@ -82,37 +82,52 @@ enum{
 	GO_TO_SUBMENU_mask_enhance_mode_ui,
 	GO_TO_SUBMENU_mask_enhance_tel_mode_ui,
 	GO_TO_SUBMENU_mask_record_mode_ui,
+
+	GO_TO_SUBMENU_mask_zero_pos_ui,
 	GO_TO_SUBMENU_LAST
 };
 
 //1.1車長基礎界面
 static buttonMask mask_basic_ui[]={
 		{0, 3, BUTTON_ALLVIEW, GO_TO_SUBMENU_mask_default_round_ui},
-		{0, 2, BUTTON_ERROR_STATE, '4'}
+		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 1, BUTTON_RETURN, '?'}
 };
 
 //2.1全景調節界面，默認環視模式
 static buttonMask mask_default_round_ui[]={
-		{0, 3, BUTTON_ZERO_POSITION, 0},
+		{0, 3, BUTTON_ZERO_POSITION, GO_TO_SUBMENU_mask_zero_pos_ui},
 		{0, 2, BUTTON_RETURN, GO_TO_SUBMENU_mask_basic_ui},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 	//	{2, 0, BUTTON_TARGET, 'O'},
 	//	{4, 0, BUTTON_ENHANCE, 'P'},
 	//	{6, 0, BUTTON_FORESIGHT, 6},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
+};
+
+//0位置調整
+static buttonMask mask_zero_pos_ui[]={
+		{0, 3, BUTTON_ZERO_POSITION, 0},
+		{0, 2, BUTTON_RETURN, GO_TO_SUBMENU_mask_default_round_ui},
+		{0, 1, BUTTON_ERROR_STATE, '?'},
+		{0, 7, BUTTON_LEFT, 'x'},
+		{0, 5, BUTTON_RIGHT, 'z'},
+
+
 };
 
 //2.2模式選擇界面
 static buttonMask mask_choose_mode_ui[]={
 		{0, 6, BUTTON_TELESCOPE, GO_TO_SUBMENU_mask_telescope_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui},
+		{8, 0, BUTTON_RECORD, 'J'},
 		//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		//	{4, 0, BUTTON_ENHANCE, 'P'},
 		//	{2, 0, BUTTON_TARGET, 'O'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
+		{0, 2, BUTTON_RETURN, GO_TO_SUBMENU_mask_basic_ui},
 		{0, 5, BUTTON_SINGLE_CHANNEL, GO_TO_SUBMENU_mask_single_channel_mode_ui},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 7, BUTTON_AROUND,GO_TO_SUBMENU_mask_around_mode_ui }
 
 
@@ -127,12 +142,12 @@ static buttonMask mask_choose_mode_ui[]={
 //2.3環視模式
 static buttonMask mask_around_mode_ui[]={
 		{0, 7, BUTTON_AROUND, '|'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
 		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -143,12 +158,12 @@ static buttonMask mask_telescope_mode_ui[]={
 		{0, 4, BUTTON_BACK, '6'},
 		{0, 3, BUTTON_LEFT, '7'},
 		{0, 2, BUTTON_RIGHT, '8'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_tel_mode_ui},
 		//{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -158,12 +173,12 @@ static buttonMask mask_single_channel_mode_ui[]={
 		{0, 5, BUTTON_SINGLE_CHANNEL, 't'},
 		{0, 4, BUTTON_ANTI_CLOCKWISE, 'u'},
 		{0, 3, BUTTON_CLOCKWISE, 'i'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 	//	{2, 0, BUTTON_TARGET, 'O'},
 	//	{4, 0, BUTTON_ENHANCE, 'P'},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -173,32 +188,32 @@ static buttonMask mask_mvdetect_mode_ui[]={
 		{0, 6, BUTTON_DOWN, 'l'},
 		{0, 5, BUTTON_LEFT, 'j'},
 		{0, 4, BUTTON_RIGHT, 'k'},
-		{0, 3, BUTTON_SINGLE_SELECTION, '|'},
-		{0, 2, BUTTON_CANCLE, '|'},
-		{0, 1, BUTTON_CLOSE, 'o'},
-
+		{0, 3, BUTTON_SINGLE_SELECTION, 'O'},
+		{0, 2, BUTTON_CANCLE, 'o'},
+		//{0, 1, BUTTON_CLOSE, 'o'},
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_around_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
 static buttonMask mask_mvdetect_return_tel_mode_ui[]={
-		{0, 7, BUTTON_UP, 'l'},
-		{0, 6, BUTTON_DOWN, 'l'},
+	//	{0, 7, BUTTON_UP, 'l'},
+	//	{0, 6, BUTTON_DOWN, 'l'},
 		{0, 5, BUTTON_LEFT, 'j'},
 		{0, 4, BUTTON_RIGHT, 'k'},
-		{0, 3, BUTTON_SINGLE_SELECTION, '|'},
-		{0, 2, BUTTON_CANCLE, '|'},
-		{0, 1, BUTTON_CLOSE, 'o'},
-
+		{0, 3, BUTTON_SINGLE_SELECTION, 'O'},
+		{0, 2, BUTTON_CANCLE, 'o'},
+	//	{0, 1, BUTTON_CLOSE, 'o'},
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_telescope_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_tel_mode_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -208,42 +223,42 @@ static buttonMask mask_foresight_mode_ui[]={
 		{0, 6, BUTTON_DOWN, '$'},
 		{0, 5, BUTTON_LEFT, '!'},
 		{0, 4, BUTTON_RIGHT, '@'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
 		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_around_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 };
 
 //5增強模式
 static buttonMask mask_enhance_mode_ui[]={
-		{0, 7, BUTTON_ONE, 'P'},
-		{0, 6, BUTTON_TWO, 'P'},
-		{0, 5, BUTTON_THREE, 'P'},
-		{0, 4, BUTTON_FOUR, 'P'},
+		{0, 7, BUTTON_ONE, 'c'},
+		{0, 6, BUTTON_TWO, 'v'},
+		{0, 5, BUTTON_THREE, 'C'},
+		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_around_mode_ui},
 		{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
 static buttonMask mask_enhance_tel_mode_ui[]={
-		{0, 7, BUTTON_ONE, 'P'},
-		{0, 6, BUTTON_TWO, 'P'},
-		{0, 5, BUTTON_THREE, 'P'},
-		{0, 4, BUTTON_FOUR, 'P'},
+		{0, 7, BUTTON_ONE, 'c'},
+		{0, 6, BUTTON_TWO, 'v'},
+		{0, 5, BUTTON_THREE, 'C'},
+		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
-
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_telescope_mode_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -256,7 +271,7 @@ static buttonMask mask_record_mode_ui[]={
 	//	{2, 0, BUTTON_TARGET, 'O'},
 	//	{4, 0, BUTTON_ENHANCE, 'P'},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 };
 
 //7零位校正
@@ -268,7 +283,7 @@ static buttonMask mask_zero_position_mode_ui[]={
 	//	{2, 0, BUTTON_TARGET, 'O'},
 	//	{4, 0, BUTTON_ENHANCE, 'P'},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
-		{8, 0, BUTTON_RECORD, GO_TO_SUBMENU_mask_record_mode_ui}
+		{8, 0, BUTTON_RECORD, 'J'}
 
 };
 
@@ -282,7 +297,7 @@ static buttonMask mask_disappear_mode_ui[]={
 //1.1駕駛員基礎界面
 static buttonMask mask_driver_basic_mode_ui[]={
 
-		{0, 1, BUTTON_ERROR_STATE, 's'},
+		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 2, BUTTON_NEAR, 's'},
 		{0, 3, BUTTON_ALLVIEW, 's'},
 };
@@ -349,7 +364,7 @@ static buttonMask mask_driver_near_overlook_mode_ui[]={
 
 
 
-#define MAX_LAYEDED_GROUP_COUNT 21
+#define MAX_LAYEDED_GROUP_COUNT 22
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
 		mask_basic_ui,						//0
@@ -372,7 +387,9 @@ static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
 		mask_driver_near_allview_mode_ui,			//17
 		mask_driver_near_single_channel_mode_ui,			//18
 		mask_driver_near_enhance_mode_ui,			//19
-		mask_driver_near_overlook_mode_ui};			//20
+		mask_driver_near_overlook_mode_ui,	//20
+		mask_zero_pos_ui//21;
+};			//20
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_basic_ui)/sizeof(mask_basic_ui[0]),
@@ -395,7 +412,9 @@ static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_driver_near_allview_mode_ui)/sizeof(mask_driver_near_allview_mode_ui[0]),
 		sizeof(mask_driver_near_single_channel_mode_ui)/sizeof(mask_driver_near_single_channel_mode_ui[0]),
 		sizeof(mask_driver_near_enhance_mode_ui)/sizeof(mask_driver_near_enhance_mode_ui[0]),
-		sizeof(mask_driver_near_overlook_mode_ui)/sizeof(mask_driver_near_overlook_mode_ui[0])
+		sizeof(mask_driver_near_overlook_mode_ui)/sizeof(mask_driver_near_overlook_mode_ui[0]),
+		sizeof(mask_zero_pos_ui)/sizeof(mask_zero_pos_ui[0])
+
 };
 //---------------------------------------------------------------
 
@@ -596,10 +615,6 @@ void MenuButton::SetTgaFileName(const char * name)
 }
 
 bool MenuButton::FindPointOnButton(float x,float y){
-	if(x>0 &&y>0)
-			printf("find_x=%f  find_y=%f \nstart_x=%f  endx=%f  \nstart_y=%f  endy=%f\n\n",
-				x,y,start_x,start_x+button_width,start_y,start_y+button_height);
-
 	if(x>=start_x&&x<=(start_x+button_width))
 	{
 		if(y>=start_y&&y<=(start_y+button_height))
@@ -653,7 +668,6 @@ if(pos_x>0 ||pos_y>0)
 
 	if(currentHightLightButtonId>=0){
 		int keyData = m_buttonsVect[currentHightLightButtonId]->getKeycode();
-		printf("keyData=%d\n",keyData);
 		if(keyData >= 0){
 			p_Host->processKeycode(keyData);
 		}
@@ -709,16 +723,12 @@ int ButtonGroup::FindButton(float x,float y,int window_width,int window_height)
 	int activatedbutton=-1;
 	float posx=x/(window_width-1.0);
 	float posy=y/(window_height -1.0);
-//	if(x>0 &&y>0)
-//					printf("~~~~!!!!~!~~~~~x=%f   y=%f  posx=%f  posy=%f\n",x,y,posx,posy);
-
 	for(int i=0;i<m_buttonsVect.size();i++)
 	{
 		if(m_buttonsVect[i]->FindPointOnButton(posx,posy))
 		{
 			activatedbutton=i;
 						m_buttonsVect[i]->choose_state=1;
-			printf("find@i=%d\n",i);
 			break;
 		}
 	}
@@ -784,22 +794,30 @@ void multiLayerButtonGroup::Group_Draw()
 
            case GO_TO_SUBMENU_mask_mvdetect_mode_ui:
         	   SetcurrentActiveBGIndex(6);
+        	   p_Host->processKeycode('O');
         	   break;
            case GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui:
         	   SetcurrentActiveBGIndex(7);
+        	   p_Host->processKeycode('O');
         	   break;
            case GO_TO_SUBMENU_mask_foresight_mode_ui:
            	   SetcurrentActiveBGIndex(8);
            	   break;
            case GO_TO_SUBMENU_mask_enhance_mode_ui:
          	   SetcurrentActiveBGIndex(9);
+         	   p_Host->processKeycode('P');
          	   break;
            case GO_TO_SUBMENU_mask_enhance_tel_mode_ui:
          	   SetcurrentActiveBGIndex(10);
+         	  p_Host->processKeycode('P');
          	   break;
            case   GO_TO_SUBMENU_mask_record_mode_ui:
         	   SetcurrentActiveBGIndex(11);
         	   break;
+           case GO_TO_SUBMENU_mask_zero_pos_ui:
+        	   SetcurrentActiveBGIndex(21);
+        	   p_Host->processKeycode('1');
+
            default:
         	   break;
            }

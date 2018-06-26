@@ -13,10 +13,10 @@
 #define	OUTER_RECT_AND_PANO_TWO_TIMES_CAM_LIMIT 16.8
 #define PER_CAM_ANGLE  36//(360/CAM_COUNT)
 
-#define OSD_NAME_X	240.0
-#define OSD_NAME_Y	998.0
+#define OSD_NAME_X	95//240.0
+#define OSD_NAME_Y	1//998.0
 #define OSD_NAME_W	380.0
-#define OSD_NAME_H	460.0
+#define OSD_NAME_H	480.0
 typedef enum{
 	CAM_0,
 	CAM_1,
@@ -99,6 +99,8 @@ enum
 
 #define RULER_WIDTH	2160
 #define RULER_HEIGHT	70
+#define RULER_WIDTH_2	(2160/3)
+#define RULER_HEIGHT_2	70
 #if USE_12
 #define TELXLIMIT 8.0
 enum{
@@ -435,8 +437,29 @@ static const float *DEFAULT_TEXT_COLOR = vWhite;
 #define OSD_ALL_VIEW_NAME_TGA "osd_all_view_name.tga"
 #define OSD_TEL_VIEW_NAME_TGA	"osd_tel_view_name.tga"
 #define OSD_SINGLE_VIEW_NAME_TGA	"osd_single_view_name.tga"
-#define OSD_HANCING_TGA		"osd_hancing_tga"
-#define OSD_MVDETECTING_TGA		"osd_mvdetecting_tga"
+#define OSD_HANCING_TGA		"osd_hancing.tga"
+#define OSD_MVDETECTING_TGA		"osd_mvdetecting.tga"
+#define OSD_RECORDING_TGA		"osd_recording.tga"
+
+#define OSD_FAR_CAM_1_TGA	"osd_far_cam_1.tga"
+#define OSD_FAR_CAM_2_TGA	"osd_far_cam_2.tga"
+#define OSD_FAR_CAM_3_TGA	"osd_far_cam_3.tga"
+#define OSD_FAR_CAM_4_TGA	"osd_far_cam_4.tga"
+#define OSD_FAR_CAM_5_TGA	"osd_far_cam_5.tga"
+#define OSD_FAR_CAM_6_TGA	"osd_far_cam_6.tga"
+#define OSD_FAR_CAM_7_TGA	"osd_far_cam_7.tga"
+#define OSD_FAR_CAM_8_TGA	"osd_far_cam_8.tga"
+#define OSD_FAR_CAM_9_TGA	"osd_far_cam_9.tga"
+#define OSD_FAR_CAM_10_TGA	"osd_far_cam_10.tga"
+#define OSD_NEAR_CAM_1_TGA	"osd_near_cam_1.tga"
+#define OSD_NEAR_CAM_2_TGA	"osd_near_cam_2.tga"
+#define  OSD_NEAR_CAM_3_TGA	"osd_near_cam_3.tga"
+#define OSD_NEAR_CAM_4_TGA	"osd_near_cam_4.tga"
+#define OSD_SCREEN_TGA	"osd_screen.tga"
+#define OSD_MESSAGE_TGA	"osd_message.tga"
+#define OSD_GOOD_TGA	"osd_good.tga"
+#define OSD_ERROR_TGA	"osd_error.tga"
+#define OSD_ROI_TGA		"osd_roi.tga"
 
 typedef enum CURRENT_MODE
 {
@@ -514,9 +537,26 @@ enum CCT_COUNT {
  OSD_SINGLE_VIEW_NAME_T,
  OSD_HANCING_T,
  OSD_MVDETECTING_T,
-
-
-
+ OSD_RECORDING_T,
+ OSD_FAR_CAM_1_T,
+ OSD_FAR_CAM_2_T,
+ OSD_FAR_CAM_3_T,
+ OSD_FAR_CAM_4_T,
+ OSD_FAR_CAM_5_T,
+ OSD_FAR_CAM_6_T,
+ OSD_FAR_CAM_7_T,
+ OSD_FAR_CAM_8_T,
+ OSD_FAR_CAM_9_T,
+ OSD_FAR_CAM_10_T,
+ OSD_NEAR_CAM_1_T,
+  OSD_NEAR_CAM_2_T,
+  OSD_NEAR_CAM_3_T,
+  OSD_NEAR_CAM_4_T,
+  OSD_SCREEN_T,
+  OSD_MESSAGE_T,
+  OSD_GOOD_T,
+  OSD_ERROR_T,
+  OSD_ROI_T,
 		CCT_COUNT
 		};
 
@@ -693,6 +733,9 @@ typedef enum{
 	RULER_45=0,
 	RULER_90,
 	RULER_180,
+	RULER_45_samll,
+	RULER_90_small,
+	RULER_180_small,
 	RULER_COUNT
 }RULER_ANGLE;
 enum{
@@ -701,6 +744,9 @@ enum{
 	ICON_180DEGREESCALE,
 	CHOSEN_PIC_MAIN,
 	CHOSEN_PIC_SUB,
+	ICON_45_small_DEGREESCALE,
+	ICON_90_small_DEGREESCALE,
+	ICON_180_small_DEGREESCALE,
 	ICON_COUNT
 };
 #define MAX_PANO_CAMERA_COUNT 16

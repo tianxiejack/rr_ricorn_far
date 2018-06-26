@@ -8,6 +8,10 @@
 extern GLEnv env1,env2;
 extern thread_idle tIdle;
 float ruler_move=0.0;
+extern float xxx;
+extern float yyy;
+extern float ruler_90_pos;
+extern float ruler_180_pos;
 void Render::FBOdraw()
 {
 	//int t[10]={0};
@@ -67,12 +71,15 @@ void Render::FBOdraw()
 		{
 			RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,MAIN,MY_ALL_VIEW_559_MODE);
 			RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,MAIN);
+#if USE_BMPCAP
+		RenderRulerView(env,(ruler_90_pos)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
+		RenderRulerView(env,(ruler_180_pos)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
+#else
 			RenderRulerView(env,(-1920.0*1920.0)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
 			RenderRulerView(env,(-1920.0*1920.0)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
+#endif
 			RenderMilView(CURRENT_FBO_ALL_VIEW_559_MODE ,env,0, 0,1920, 1080);
 		}
-		RenderRulerView(env,(-1920.0*1920.0+ruler_move)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
-		RenderRulerView(env,(-1920.0*1920.0-ruler_move)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
 
 	}
 	 break;

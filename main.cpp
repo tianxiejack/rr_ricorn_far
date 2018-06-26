@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 			ChosenCaptureGroup::GetMvDetect_add_Instance(),
 			BMPMiscGroup::GetInstance()
 			);
-	env2.init(PanoCaptureGroup::GetSubInstance(),
+	env2.init(NULL,
 			ChosenCaptureGroup::GetSubInstance(),
 			NULL,
 			NULL,

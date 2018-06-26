@@ -737,7 +737,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					//	chid[MAIN]=ChangeIdx2chid(MAIN);
 						nowGrayidx=GetNowPicIdx((unsigned char *)buffers[buf.index].start);
 			//todo  change
-						if(nowGrayidx>=11||nowGrayidx<=0) 
+						if(nowGrayidx>=11||nowGrayidx<=0)
 						{
 						//	printf("nowGrayidx~~~~~~~~~~~~~~~~~~=%d\n",nowGrayidx);
 						chid[MAIN]=0;
@@ -1221,16 +1221,11 @@ void HDAsyncVCap4::Run()
 		{
 			usleep(500*1000);
 		}*/
-		/*		if(tIdle.isToIdle(pic_format))
+			if(tIdle.isToIdle(pic_format))
 		{
 			usleep(500*1000);
 		}
-
-		if(0)
-		{
-
-		}*/
-	//	else
+		else
 		{
 			HDv4l_cam * pcore = dynamic_cast<HDv4l_cam*>(m_core.get());
 			if(pcore){

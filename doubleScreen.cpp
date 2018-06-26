@@ -24,11 +24,11 @@ static float delayT=20.0;
 extern bool IsMvDetect;
 extern bool DetectSubOpen;
 extern bool enable_hance;
-
+extern int Enhance_level;
+bool isToshow=false;
+int ScreenState=-1;
 
 extern MotionDetectorROI
-
-
 mdRoi_mainT,
 mdRoi_subT,
 mdRoi_mainA,
@@ -66,13 +66,25 @@ void Render::RenderSceneDS()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 #if MVDECT
-	if(mv_detect.CanUseMD(SUB) ||mv_detect.CanUseMD(MAIN))
+	/*if(mv_detect.CanUseMD(SUB) ||mv_detect.CanUseMD(MAIN))
 	{
 		tIdle.threadRun(MVDECT_CN);
+		tIdle.threadRun(MVDECT_ADD_CN);
 	}
 	else
 	{
 		tIdle.threadIdle(MVDECT_CN);
+		tIdle.threadIdle(MVDECT_ADD_CN);
+	}*/
+	if(IsMvDetect)
+	{
+		tIdle.threadRun(MVDECT_CN);
+		tIdle.threadRun(MVDECT_ADD_CN);
+	}
+	else
+	{
+		tIdle.threadIdle(MVDECT_CN);
+		tIdle.threadIdle(MVDECT_ADD_CN);
 	}
 #endif
 	static bool setpriorityOnce=true;
@@ -98,6 +110,12 @@ void Render::RenderSceneDS()
 	//static SECOND_DISPLAY Now_Tel_Mode=-1;
 	switch(getPassenger_KeyType())
 	{
+	case SELF_TEST_DISPLAY_STATE_TEMPERATURE_NORMAL:
+		ScreenState=1;
+		break;
+	case SELF_TEST_DISPLAY_STATE_TEMPERATURE_OVER:
+		ScreenState=0;
+		break;
 	case PASSENGER_PERISCOPE_MODE:
 		SecondDisplayMode=SECOND_TELESCOPE_FRONT_MODE;
 		break;
@@ -114,14 +132,17 @@ void Render::RenderSceneDS()
 		DetectSubOpen=false;
 				break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_1:
-	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_1\n");
-	//	break;
+		enable_hance=true;
+		Enhance_level=1;
+		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_2:
-	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_2\n");
-	//	break;
+		enable_hance=true;
+		Enhance_level=2;
+		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_3:
-	//	printf("PASSENGER_IMAGE_ENHANCEMENT_ON_3\n");
-	//	break;
+		enable_hance=true;
+		Enhance_level=3;
+		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_OFF:
 				if(enable_hance)
 					enable_hance=false;
@@ -130,28 +151,74 @@ void Render::RenderSceneDS()
 	//	printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
 		break;
 	case	PASSENGER_T_D_ON_MOVE_RIGHT:
-		printf("PASSENGER_T_D_ON_MOVE_RIGHT\n");
+		if(DetectSubOpen==true)
+		{
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+					||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			{
+				RoiFocusCamidx::GetInstance()->decreaseRoiFocusCamidx();
+			}
+		}
 		break;
 	case		PASSENGER_T_D_ON_MOVE_LEFT:
-		printf("PASSENGER_T_D_ON_MOVE_LEFT\n");
+		if(DetectSubOpen==true)
+		{
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			{
+				RoiFocusCamidx::GetInstance()->increaseRoiFocusCamidx();
+			}
+		}
 		break;
 	case		PASSENGER_T_D_ON_MOVE_UP:
-		printf("PASSENGER_T_D_ON_MOVE_UP\n");
+		if(DetectSubOpen==true)
+		{
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+			{
+			RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
+			}
+			else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			{
+				ChangeSecondTelMode(true);
+			}
+		}
 		break;
 	case		PASSENGER_T_D_ON_MOVE_DOWN:
-		printf("PASSENGER_T_D_ON_MOVE_DOWN\n");
+		if(DetectSubOpen==true)
+		{
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
+			{
+				RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
+			}
+			else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			{
+				ChangeSecondTelMode(false);
+			}
+		}
 		break;
 	case	PASSENGER_T_D_ON_AFFIRM:
-		printf("PASSENGER_T_D_ON_AFFIRM\n");
+		//printf("PASSENGER_T_D_ON_AFFIRM\n");
 	break;
 	case	PASSENGER_T_D_ON_AFFIRM_RIGHT:
-		printf("PASSENGER_T_D_ON_AFFIRM_RIGHT\n");
+		//printf("PASSENGER_T_D_ON_AFFIRM_RIGHT\n");
 	break;
 	case	PASSENGER_T_D_ON_AFFIRM_LEFT:
-		printf("PASSENGER_T_D_ON_AFFIRM_LEFT\n");
+		//printf("PASSENGER_T_D_ON_AFFIRM_LEFT\n");
 	break;
 	case	PASSENGER_T_D_ON_AFFIRM_CANCEL:
-		printf("PASSENGER_T_D_ON_AFFIRM_CANCEL\n");
+		//printf("PASSENGER_T_D_ON_AFFIRM_CANCEL\n");
 	break;
 
 
@@ -250,13 +317,6 @@ void Render::RenderSceneDS()
 		}
 		break;
 	case SECOND_ALL_VIEW_MODE:
-#if 1
-#if MVDECT
-		if(mv_detect.CanUseMD(SUB))
-		{
-	//		mv_detect.SetoutRect();
-		}
-#endif
 		tIdle.threadIdle(SUB_CN);
 		env.Getp_FboPboFacade()->Render2Front(SUB,g_subwindowWidth,g_subwindowHeight);
 		RenderRightForeSightView(env,0,g_subwindowHeight*538.0/768.0,g_subwindowWidth, g_subwindowHeight*116.0/768.0,SUB);
@@ -267,7 +327,6 @@ void Render::RenderSceneDS()
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
-#endif
 	//	RenderOnetimeView(env,g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*944.0/1920.0, g_subwindowHeight*537.0/1080,SUB);
 		RenderOnetimeView(env,0,0,g_subwindowWidth*944.0/1024.0, g_subwindowHeight*537.0/768.0,SUB);
 		break;
@@ -277,11 +336,15 @@ void Render::RenderSceneDS()
 	case SECOND_559_ALL_VIEW_MODE:
 		tIdle.threadIdle(SUB_CN);
 		env.Getp_FboPboFacade()->Render2Front(SUB,g_subwindowWidth,g_subwindowHeight);
+//if(isToshow)
+		if(1)
+{
 		glScissor(0,0,1621,563);
 			//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
+		DrawAllViewRoiArrow(RoiFocusCamidx::GetInstance()->GetRoiFocusCamidx());
 #if MVDECT
 		if(DetectSubOpen)
 		{
@@ -301,7 +364,7 @@ void Render::RenderSceneDS()
 			RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 			RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 			RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,SUB,MY_ALL_VIEW_559_MODE);
-			RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
+			//RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
 	//	RenderOnetimeView(env,g_windowWidth*6.0/1024,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
 	//	RenderTwotimesView(env,g_windowWidth*(354.0+6)/1024.0,0,g_windowWidth*348.0/1024.0, g_windowHeight*380.0/768.0,SUB);
 	//	RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
@@ -312,8 +375,9 @@ void Render::RenderSceneDS()
 		RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 		RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 		RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,SUB,MY_ALL_VIEW_559_MODE);
-		RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
+		//RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
 #endif
+}
 		break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
@@ -339,7 +403,6 @@ void Render::RenderSceneDS()
 				RenderMilView(CURRENT_SECOND_TELESCOPE_FRONT_MODE ,env,0, 0,1920, 1080);
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
-
 		tIdle.threadIdle(SUB_CN);
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
@@ -381,7 +444,6 @@ void Render::RenderSceneDS()
 
 	break;
 	case	SECOND_TELESCOPE_LEFT_MODE:
-
 		tIdle.threadIdle(SUB_CN);
 		  RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,LEFT,SUB);
@@ -949,6 +1011,8 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 					if(!DetectSubOpen)
 					{
 						DetectSubOpen=true;
+						tIdle.threadRun(MVDECT_CN);
+						tIdle.threadRun(MVDECT_ADD_CN);
 					}
 					else if(DetectSubOpen)
 					{

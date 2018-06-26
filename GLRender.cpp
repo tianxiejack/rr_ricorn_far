@@ -82,26 +82,29 @@ mdRoi_subA;
 #endif
  int Enhance_level=1;
  float angle_XXX=0.0;
+ float pt_angle=0.0;
  extern float ruler_move;
  int chooseMenu=0;
 extern thread_idle tIdle;
 extern unsigned char * target_data[CAM_COUNT];
 bool saveSinglePic[CAM_COUNT]={false};
 char chosenCam[2]={1,1};
-
+float xxx=0.0;
+float yyy=1026;
 extern bool IsMvDetect;
 bool DetectMainOpen=false;
 bool DetectSubOpen=false;
-
+extern int ScreenState;
 bool IsgstCap=false;
 int m_cam_pos=-1;
 
 extern GLEnv env1;
 extern GLEnv env2;
+bool IstoShowDeviceState[2]={false,false};
 bool enable_hance=false;
 
 bool isTracking=false;
-
+bool isSetZeroPos=true;
 PanoCamOnForeSight  panocamonforesight[2];
 TelCamOnForeSight	     telcamonforesight[2];
 
@@ -203,7 +206,8 @@ CVideoProcess* trackMode=CVideoProcess::getInstance();
 #if MVDETECTOR_MODE
 mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
-
+float ruler_90_pos=0;
+float ruler_180_pos=0;
 
 void readcanshu()
 {
@@ -757,6 +761,9 @@ Render::~Render()
 	glDeleteTextures(1,iconRuler45Textures);
 	glDeleteTextures(1,iconRuler90Textures);
 	glDeleteTextures(1,iconRuler180Textures);
+	glDeleteTextures(1,iconRuler45_small_Textures);
+	glDeleteTextures(1,iconRuler90_small_Textures);
+	glDeleteTextures(1,iconRuler180_small_Textures);
 #endif
 	delete p_ForeSightFacade;
 	delete p_ForeSightFacade2;
@@ -951,6 +958,25 @@ static void captureRuler180Cam(GLubyte *ptr, int index,GLEnv &env)
 	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_180DEGREESCALE);
 #endif
 }
+
+static void captureRuler45_small_Cam(GLubyte *ptr, int index,GLEnv &env)
+{
+#if USE_ICON
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_45_small_DEGREESCALE);
+#endif
+}
+static void captureRuler90_small_Cam(GLubyte *ptr, int index,GLEnv &env)
+{
+#if USE_ICON
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_90_small_DEGREESCALE);
+#endif
+}
+static void captureRuler180_small_Cam(GLubyte *ptr, int index,GLEnv &env)
+{
+#if USE_ICON
+	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_180_small_DEGREESCALE);
+#endif
+}
 #endif
 /* Sets up Projection matrix according to command switch -o or -p */
 /* called from initgl and the window resize function */
@@ -1031,6 +1057,7 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	}
 
 	if(!env.Getp_PBOMgr()->Init()
+			||!env.Getp_PBORulerSmallMgr()->Init()
 				|| !env.Getp_PBOExtMgr()->Init()
 				||!env.Getp_PBORcr()->Init()
 				|| !env.Getp_PBOVGAMgr()->Init()
@@ -1357,6 +1384,45 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH, RULER_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
+
+		glGenTextures(1, iconRuler45_small_Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler45_small_Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
+
+		glGenTextures(1, iconRuler90_small_Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler90_small_Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
+
+		glGenTextures(1, iconRuler180_small_Textures);
+		for(int i = 0; i < 1; i++){
+			glBindTexture(GL_TEXTURE_2D, iconRuler180_small_Textures[i]);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
+					format, GL_UNSIGNED_BYTE, 0);
+		}
 #endif
 	}
 	glMatrixMode(GL_MODELVIEW);
@@ -1470,6 +1536,21 @@ void Render::GenerateGLTextureIds()
 	GL_IconRuler180TextureIDs[0] = GL_TEXTURE19;
 	for(int i = 1; i < textureCount; i++){
 		GL_IconRuler180TextureIDs[i] = GL_IconRuler180TextureIDs[i-1] + 1;
+	}
+	textureCount = sizeof(GL_IconRuler45_small_TextureIDs)/sizeof(GL_IconRuler45_small_TextureIDs[0]);
+	GL_IconRuler45_small_TextureIDs[0] = GL_TEXTURE28;
+	for(int i = 1; i < textureCount; i++){
+		GL_IconRuler45_small_TextureIDs[i] = GL_IconRuler45_small_TextureIDs[i-1] + 1;
+	}
+	textureCount = sizeof(GL_IconRuler90_small_TextureIDs)/sizeof(GL_IconRuler90_small_TextureIDs[0]);
+	GL_IconRuler90_small_TextureIDs[0] = GL_TEXTURE29;
+	for(int i = 1; i < textureCount; i++){
+		GL_IconRuler90_small_TextureIDs[i] = GL_IconRuler90_small_TextureIDs[i-1] + 1;
+	}
+	textureCount = sizeof(GL_IconRuler180_small_TextureIDs)/sizeof(GL_IconRuler180_small_TextureIDs[0]);
+	GL_IconRuler180_small_TextureIDs[0] = GL_TEXTURE30;
+	for(int i = 1; i < textureCount; i++){
+		GL_IconRuler180_small_TextureIDs[i] = GL_IconRuler180_small_TextureIDs[i-1] + 1;
 	}
 #endif
 }
@@ -4629,8 +4710,12 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 		char text[8];
 		char text2[8];
 		char text3[100][10];
-		strcpy(text," ZSJP");
-		strcpy(text2," PAOT");
+		int pt=(int)getAngleFar_AzimuthAngle();
+		int zsj=(int)getAngleFar_PeriscopicLens();
+		sprintf(text,"%d",pt);
+		sprintf(text2,"%d",zsj);
+	//	strcpy(text," ZSJP");
+	//	strcpy(text2," PAOT");
 		int j=0;
 		for(int i=0;i<CAM_COUNT;i++)
 		{
@@ -5793,6 +5878,91 @@ p_ForeSightFacade[i]->Draw(m_env,render.getRulerAngle()->Load());
 		}
 	}
 }
+
+void Render::showDeviceState()
+{
+	GLEnv &env=env1;
+	float width=380*1.5;
+	float height=480*1.5;
+	int cols=4,rows=5;
+	float arrayX[4]={-100,-580,-1060,-1540};//遠1～5  遠1～5  顯示器/通信  近1～4
+	float arrayY[5]={850,700,550,400,250};
+	int gapX=-200;
+	int StateArray[16];
+	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		StateArray[i]=selfcheck.GetBrokenCam()[i];
+	}
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_1_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[0]/1920.0, g_windowHeight*arrayY[0]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_2_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[0]/1920.0, g_windowHeight*arrayY[1]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_3_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[0]/1920.0, g_windowHeight*arrayY[2]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_4_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[0]/1920.0, g_windowHeight*arrayY[3]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_5_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[0]/1920.0, g_windowHeight*arrayY[4]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_6_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[1]/1920.0, g_windowHeight*arrayY[0]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_7_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[1]/1920.0, g_windowHeight*arrayY[1]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_8_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[1]/1920.0, g_windowHeight*arrayY[2]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_9_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[1]/1920.0, g_windowHeight*arrayY[3]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_FAR_CAM_10_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[1]/1920.0, g_windowHeight*arrayY[4]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+/*	p_ChineseCBillBoard->ChooseTga=OSD_NEAR_CAM_1_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[3]/1920.0, g_windowHeight*arrayY[0]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_NEAR_CAM_2_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[3]/1920.0, g_windowHeight*arrayY[1]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_NEAR_CAM_3_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[3]/1920.0, g_windowHeight*arrayY[2]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	p_ChineseCBillBoard->ChooseTga=OSD_NEAR_CAM_4_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[3]/1920.0, g_windowHeight*arrayY[3]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+
+*/
+	StateArray[10]=ScreenState;
+	p_ChineseCBillBoard->ChooseTga=OSD_SCREEN_T;
+	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[2]/1920.0, g_windowHeight*arrayY[0]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+//	p_ChineseCBillBoard->ChooseTga=OSD_MESSAGE_T;
+//	RenderChineseCharacterBillBoardAt(env,-g_windowWidth*arrayX[2]/1920.0, g_windowHeight*arrayY[1]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+	int count =0;
+	for(int j=0;j<cols;j++)
+	{
+		for(int i=0;i<rows;i++)
+		{
+			if(j==3) //近景色相機位置不畫
+				break;
+			else if(i>0&&j==2)	//顯示器 通信 多餘位置不畫
+				break;
+			else
+			{
+				if(StateArray[count]==1)
+				{
+					p_ChineseCBillBoard->ChooseTga=OSD_GOOD_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(arrayX[j]+gapX)/1920.0, g_windowHeight*arrayY[i]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+					count++;
+
+				}
+				else if(StateArray[count]==0)
+				{
+					p_ChineseCBillBoard->ChooseTga=OSD_ERROR_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(arrayX[j]+gapX)/1920.0, g_windowHeight*arrayY[i]/1080.0, g_windowWidth*width/1920.0,g_windowHeight*height/1920.0);
+					count++;
+
+				}
+				else
+				{
+					count++;
+				}
+						}
+		}
+	}
+
+}
 void Render::RenderLeftForeSightView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int mainOrsub)
 {
 	glViewport(x,y,w,h);
@@ -6600,6 +6770,37 @@ void Render::SetdisplayMode( )
 #endif
 }
 
+void Render::PT_Move_Ruler()
+{
+
+	float pt=getAngleFar_AzimuthAngle();
+	pt_angle=pt/6000.0*360.0;
+	float tempangle=pt_angle;
+	tempangle+=angle_XXX;
+	if(tempangle>=180)
+	{
+		tempangle-=180*2;
+	}
+	else if(tempangle<-180)
+	{
+		tempangle+=180*2;
+	}
+	float temp_ruler_move=(1920*1920*2)/360.0*tempangle;
+	ruler_90_pos=-1920.0*1920.0+temp_ruler_move;
+	ruler_180_pos=-1920.0*1920.0-temp_ruler_move;
+}
+
+void Render::DrawAllViewRoiArrow(int camidx)
+{
+	GLEnv &env=env1;
+//	printf("camidx=%d\n",camidx);
+	float Xarray[10]={1430,1030,630,230,-170,-170,230,630,1030,1430};
+	float Yarray[2]={1850,1400};//1850
+	float w=380.0;
+	float h=150.0;
+	p_ChineseCBillBoard->ChooseTga=OSD_ROI_T;
+	RenderChineseCharacterBillBoardAt(env,g_windowWidth*Xarray[camidx]/1920.0, g_windowHeight*Yarray[camidx/5]/1920.0, g_windowWidth*w/1920.0,g_windowWidth*h/1920.0);
+}
 
 void Render::RenderScene(void)
 {
@@ -6615,6 +6816,7 @@ if(setpriorityOnce)
 	int billBoardx = 0, billBoardy = g_windowHeight*15/16;//7/8;
 	int extBillBoardx = 0, extBillBoardy = g_windowHeight*15/16;//*7/8;
 	static int last_mode=0;
+	PT_Move_Ruler();
 
 #ifdef GL_TIME_STAMP
 	GLuint queries[4];
@@ -6628,6 +6830,38 @@ if(setpriorityOnce)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, pVehicle->msFBO);
 #endif
 	// Clear the window with current clearing color
+
+	static int mv_open_once=true;
+	static int mv_close_once=true;
+	if(IsMvDetect)
+	{
+#if MVDECT
+		if(mv_open_once)
+		{
+			setFirst();
+			printf("setFirst+++++++++\n");
+			mv_open_once=false;
+			mv_close_once=true;
+		}
+#endif
+		tIdle.threadRun(MVDECT_CN);
+		tIdle.threadRun(MVDECT_ADD_CN);
+	}
+	else
+	{
+#if MVDECT
+		if(mv_close_once)
+		{
+			deleteZombie();
+			printf("deleteZombie--------------\n");
+			mv_open_once=true;
+			mv_close_once=false;
+		}
+#endif
+		tIdle.threadIdle(MVDECT_CN);
+		tIdle.threadIdle(MVDECT_ADD_CN);
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 #if 1
@@ -6636,6 +6870,9 @@ if(setpriorityOnce)
 		env.Getp_FBOmgr()->SetDrawBehaviour(&render);
 		env.Getp_FboPboFacade()->DrawAndGet();
 	}
+
+	//if(displayMode!=CHECK_VIEW_MODE)
+	//	lastMode=displayMode;
 
 #endif
 	#if 1
@@ -6836,9 +7073,13 @@ if(setpriorityOnce)
 	{
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
-		RenderRulerView(env,(-1920.0*1920.0+ruler_move)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
-		RenderRulerView(env,(-1920.0*1920.0-ruler_move)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);
+		DrawAllViewRoiArrow(RoiFocusCamidx::GetMainInstance()->GetRoiFocusCamidx());
 
+		#if !USE_BMPCAP
+		if(isSetZeroPos){
+			RenderRulerView(env,(ruler_90_pos)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
+			RenderRulerView(env,(ruler_180_pos)/1920.0,1080.0*772/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_180);		}
+#endif
 		#if			MVDECT
 		//if(mv_detect.CanUseMD(MAIN))
 			if(DetectMainOpen)
@@ -6998,6 +7239,7 @@ if(setpriorityOnce)
 		if(Once)
 		{
 			start_SelfCheck_thread();
+			SendPowerOnSelfTest();
 			Once=false;
 		}
 		//Show_first_mode(readFirstMode());
@@ -7417,7 +7659,7 @@ if(setpriorityOnce)
 	{
 		int idx=chosenCam[MAIN];
 		float start_van_x=-495.0;
-		float start_van_y=1540;
+		float start_van_y=1690;
 		float van_w=700.0;
 		float van_h=500.0;
 		p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
@@ -7659,8 +7901,37 @@ if(setpriorityOnce)
 #endif
 
 #endif// RENDER2FRON
-
+	if(displayMode!=ALL_VIEW_MODE
+			&&displayMode!=TELESCOPE_FRONT_MODE
+			&&displayMode!=TELESCOPE_RIGHT_MODE
+			&&displayMode!=TELESCOPE_BACK_MODE
+			&&displayMode!=TELESCOPE_LEFT_MODE
+					)
+	{
+		DetectMainOpen=false;
+		enable_hance=false;
+	}
+	if(IsgstCap)
+	{
+		p_ChineseCBillBoard->ChooseTga=OSD_RECORDING_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-1488)/1920.0, g_windowHeight*(1)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+	}
+	if(enable_hance)
+	{
+		p_ChineseCBillBoard->ChooseTga=OSD_HANCING_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-697)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+	}
+	if(DetectMainOpen)
+	{
+		p_ChineseCBillBoard->ChooseTga=OSD_MVDETECTING_T;
+		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-302)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+	}
+	if(IstoShowDeviceState[MAIN])
+	{
+		showDeviceState();
+	}
 	button_array->Group_Draw();
+
 }
 
 
@@ -7733,7 +8004,7 @@ void Render::DrawGLScene()
 void Render::mouseButtonPress(int button, int state, int x, int y)
 {
 //	if (common.isVerbose())
-		printf(" mouse--> %i %i %i %i\n", button, state, x, y);
+	//	printf(" mouse--> %i %i %i %i\n", button, state, x, y);
 	setMouseCor(x,y);
 	setMouseButton(button);
 	if(state==1)
@@ -8370,6 +8641,8 @@ GLEnv & env=env1;
 			{
 				IsMvDetect=true;
 			}
+			tIdle.threadRun(MVDECT_CN);
+			tIdle.threadRun(MVDECT_ADD_CN);
 			//mv_detect.OpenMD(MAIN);
 		//	mode = OitVehicle::USER_OIT;
 			break;
@@ -8380,15 +8653,35 @@ GLEnv & env=env1;
 			mode = OitVehicle::USER_BLEND;
 			break;
 		case '1':
+			//xxx+=1;
+			//printf("xxx=%f\n",xxx);
 			displayMode=ALL_VIEW_MODE;
 			break;
 		case '2':
-			displayMode=TELESCOPE_FRONT_MODE;
+			//xxx-=1;
+			//printf("xxx=%f\n",xxx);
+			//todo
+	/*	static DISPLAYMODE last_mode=displayMode;
+			if(last_mode!=TELESCOPE_FRONT_MODE
+					&&last_mode!=TELESCOPE_BACK_MODE
+					&&last_mode!=TELESCOPE_RIGHT_MODE
+					&&last_mode!=TELESCOPE_LEFT_MODE)*/
+			{
+				displayMode=TELESCOPE_FRONT_MODE;
+			}
+		//	else
+		//		displayMode=last_mode;
+
 			break;
 		case '3':
+		//	yyy+=1;
+		//	printf("yyy=%f\n",yyy);
+
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
+		//yyy-=1;
+		//printf("yyy=%f\n",yyy);
 			displayMode=PURE_MODE;
 			break;
 		case '5':
@@ -8531,12 +8824,19 @@ GLEnv & env=env1;
 			}
 		}
 			break;
+		case 'm':
+			glutReshapeWindow(g_nonFullwindowWidth,g_nonFullwindowHeight);
+			glutPostRedisplay();
+			glutPositionWindow(200,0);
+			sleep(1);
+			glutFullScreen();
+			break;
 		case 'n':
-		{
-
-			//FBO_MODE nextMode=FBO_MODE(((int)fboMode+1)%FBO_MODE_COUNT);
-			//fboMode = nextMode;
-		}
+			glutReshapeWindow(g_nonFullwindowWidth,g_nonFullwindowHeight);
+			glutPostRedisplay();
+			glutPositionWindow(2000,0);
+			sleep(1);
+			glutFullScreen();
 		break;
 		case 'L':
 
@@ -8663,11 +8963,11 @@ GLEnv & env=env1;
 		case 'l':
 			RoiFocusCamidx::GetMainInstance()->flipRoiFocusCamidx();
 			break;
-		case 'J':
-			if(rotateangle_per_second<72)
-			{
-				rotateangle_per_second=rotateangle_per_second+2;
-			}
+	//	case 'J':
+	//		if(rotateangle_per_second<72)
+	//		{
+	//			rotateangle_per_second=rotateangle_per_second+2;
+	//		}
 			break;
 		//case 'k':
 		case 'K':
@@ -8844,6 +9144,9 @@ GLEnv & env=env1;
 	            	}
 			break;
 
+		case 'J':
+			IsgstCap=!IsgstCap;
+			break;
 		case 'g'://PTZ--FIR
 			IsgstCap=false;
 			break;
@@ -8851,22 +9154,24 @@ GLEnv & env=env1;
 				IsgstCap=true;
 			break;
 		case 'z'://steady on
+			isSetZeroPos=true;
 			angle_XXX+=1.0;
 			if(angle_XXX>=180)
 			{
 				angle_XXX-=180*2;
 			}
 			ruler_move=(1920*1920*2)/360.0*angle_XXX;
-			printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
+		//	printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
 			break;
 		case 'x'://steady off
+			isSetZeroPos=true;
 			angle_XXX-=1.0;
 			if(angle_XXX<-180)
 			{
 				angle_XXX+=180*2;
 			}
 			ruler_move=(1920*1920*2)/360.0*angle_XXX;
-			printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
+		//	printf("ruler_move=%f angle_XXX=%f \n",ruler_move,angle_XXX);
 			break;
 	/*	case 'c'://follow on
 			if(!getFollowValue())
@@ -9458,14 +9763,16 @@ GLEnv & env=env1;
 				break;
 			case '?':
 			{
-
+				IstoShowDeviceState[MAIN]=!IstoShowDeviceState[MAIN];
 			//	int Vanw,Vanh;
 			//	Vanw=glutGet(GLUT_WINDOW_WIDTH);
 			//	Vanh=glutGet(GLUT_WINDOW_HEIGHT);
 			//	cout<<"W===="<<Vanw<<"H===="<<Vanh<<endl;
 			}
 				break;
-
+			case '/':
+		//		displayMode=lastMode;
+				break;
 			case '{':
 			{
 				int set_track_params[4];
@@ -10459,11 +10766,36 @@ void Render::CompassBillBoard::DoTextureBinding()
 Render::ChineseCharacterBillBoard::ChineseCharacterBillBoard(GLMatrixStack &modelViewMat,GLMatrixStack	&projectionMat,GLShaderManager* mgr)
 :BaseBillBoard((modelViewMat),(projectionMat),(mgr))
 {
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_1_T], OSD_FAR_CAM_1_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_2_T], OSD_FAR_CAM_2_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_3_T], OSD_FAR_CAM_3_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_4_T], OSD_FAR_CAM_4_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_5_T], OSD_FAR_CAM_5_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_6_T], OSD_FAR_CAM_6_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_7_T], OSD_FAR_CAM_7_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_8_T], OSD_FAR_CAM_8_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_9_T], OSD_FAR_CAM_9_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_FAR_CAM_10_T], OSD_FAR_CAM_10_TGA);
+
+	 strcpy( ChineseC_TextureFileName[OSD_NEAR_CAM_1_T], OSD_NEAR_CAM_1_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_NEAR_CAM_2_T], OSD_NEAR_CAM_2_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_NEAR_CAM_3_T], OSD_NEAR_CAM_3_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_NEAR_CAM_4_T], OSD_NEAR_CAM_4_TGA);
+
+	 strcpy( ChineseC_TextureFileName[OSD_SCREEN_T], OSD_SCREEN_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_MESSAGE_T], OSD_MESSAGE_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_GOOD_T], OSD_GOOD_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_ERROR_T], OSD_ERROR_TGA);
+
+	 strcpy( ChineseC_TextureFileName[OSD_ROI_T], OSD_ROI_TGA);
+
 	 strcpy( ChineseC_TextureFileName[OSD_ALL_VIEW_NAME_T], OSD_ALL_VIEW_NAME_TGA);
 	 strcpy( ChineseC_TextureFileName[OSD_TEL_VIEW_NAME_T], OSD_TEL_VIEW_NAME_TGA);
 	 strcpy( ChineseC_TextureFileName[OSD_SINGLE_VIEW_NAME_T], OSD_SINGLE_VIEW_NAME_TGA);
 	 strcpy( ChineseC_TextureFileName[OSD_HANCING_T], OSD_HANCING_TGA);
 	 strcpy( ChineseC_TextureFileName[OSD_MVDETECTING_T], OSD_MVDETECTING_TGA);
+	 strcpy( ChineseC_TextureFileName[OSD_RECORDING_T], OSD_RECORDING_TGA);
+
 
 	strcpy( ChineseC_TextureFileName[CHOSEN_FRONT_LEFT_T], CHOSEN_FRONT_LEFT_TGA);
 	strcpy( ChineseC_TextureFileName[CHOSEN_FRONT_RIGHT_T], CHOSEN_FRONT_RIGHT_TGA);
@@ -12481,8 +12813,8 @@ void Render::RenderRulerView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,int
 	M3DMatrix44f mCamera;
 
 
-		static bool once[3];
-		for(int i=0;i<3;i++)
+		static bool once[RULER_COUNT];
+		for(int i=0;i<RULER_COUNT;i++)
 		{
 			once[i]=true;
 		}
@@ -12529,6 +12861,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler45Textures[idx]);
 		}
+		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 		break;
 	case RULER_90:
 		m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
@@ -12540,6 +12873,7 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler90Textures[idx]);
 		}
+		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 		break;
 	case RULER_180:
 		m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
@@ -12551,13 +12885,48 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		else{
 			glBindTexture(GL_TEXTURE_2D, iconRuler180Textures[idx]);
 		}
+		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 		break;
+
+	case RULER_45_samll:
+			glActiveTexture(GL_IconRuler45_small_TextureIDs[idx]);
+
+			if(needSendData){
+						m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler45_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45_small_Cam,ICON_45_small_DEGREESCALE+MAGICAL_NUM);
+			}
+			else{
+				glBindTexture(GL_TEXTURE_2D, iconRuler45_small_Textures[idx]);
+			}
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+28);//ICON texture start from 16
+			break;
+		case RULER_90_small:
+			m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
+			glActiveTexture(GL_IconRuler90_small_TextureIDs[idx]);
+
+			if(needSendData){
+				m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler90_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90_small_Cam,ICON_90_small_DEGREESCALE+MAGICAL_NUM);
+			}
+			else{
+				glBindTexture(GL_TEXTURE_2D, iconRuler90_small_Textures[idx]);
+			}
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+29);//ICON texture start from 16
+			break;
+		case RULER_180_small:
+		//	m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
+			glActiveTexture(GL_IconRuler180_small_TextureIDs[idx]);
+
+			if(needSendData){
+				m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler180_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180_small_Cam,ICON_180_small_DEGREESCALE+MAGICAL_NUM);
+			}
+			else{
+				glBindTexture(GL_TEXTURE_2D, iconRuler180_small_Textures[idx]);
+			}
+			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);//ICON texture start from 16
+			break;
 	}
-#if 0
-	shaderManager.UseStockShader(GLT_SHADER_ORI,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
-#else
-	shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
-#endif
+
+
+
 	switch(type)
 	{
 	case RULER_45:
@@ -12568,6 +12937,15 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		break;
 	case RULER_180:
 		m_env.Getdegreescale180Batch()->Draw();
+		break;
+	case RULER_45_samll:
+		m_env.Getdegreescale45_small_Batch()->Draw();
+		break;
+	case RULER_90_small:
+		m_env.Getdegreescale90_small_Batch()->Draw();
+		break;
+	case RULER_180_small:
+		m_env.Getdegreescale180_small_Batch()->Draw();
 		break;
 	}
 
