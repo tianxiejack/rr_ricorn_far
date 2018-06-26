@@ -107,12 +107,17 @@ void PBOSender::sendDataPBO(GLEnv &env,GLuint textureId, PFN_PBOFILLBUFFER fxn, 
 	}
 	// bind the texture and PBO
 	glBindTexture(GL_TEXTURE_2D, textureId);
+	error =glGetError();
+				if(GL_NO_ERROR != error){
+				//	printf("%d\n",idx);
+					cout<<"0textureId GLError = "<<gluErrorString(error)<<endl;
+				}
 	glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, pboIds[index]);
 	error =glGetError();
-			if(GL_NO_ERROR != error){
-			//	printf("%d\n",idx);
-				cout<<"0 GLError = "<<gluErrorString(error)<<endl;
-			}
+					if(GL_NO_ERROR != error){
+					//	printf("%d\n",idx);
+						cout<<"0pboIds GLError = "<<gluErrorString(error)<<endl;
+					}
 	// copy pixels from PBO to texture object
 	// Use offset instead of pointer.
 

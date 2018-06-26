@@ -15,7 +15,7 @@ public:
 	int GetRoiFocusCamidx(){return roiFocusCamidx;};
 	void increaseRoiFocusCamidx(){roiFocusCamidx++;roiFocusCamidx%=CAM_COUNT;};
 	void decreaseRoiFocusCamidx(){roiFocusCamidx+=(CAM_COUNT-1);roiFocusCamidx%=CAM_COUNT;};
-	void flipRoiFocusCamidx(){roiFocusCamidx=CAM_COUNT-roiFocusCamidx;};
+	void flipRoiFocusCamidx(){roiFocusCamidx=(CAM_COUNT-1)-roiFocusCamidx;};
 private:
 	 RoiFocusCamidx():roiFocusCamidx(0){};
 	 int roiFocusCamidx;

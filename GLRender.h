@@ -51,6 +51,7 @@
 #include "RenderDrawBehaviour.h"
 #include"GLEnv.h"
 #include "set_button.h"
+#include"IPC_Far_Recv_Message.h"
 using namespace std;
 
 class RenderMain;
@@ -116,6 +117,9 @@ public:
     void ChangeSecondTelMode(bool isright);
     void sendBack();
     void sendTrackSpeed(int w,int h);
+    void showDeviceState();
+
+    void DrawAllViewRoiArrow(int camidx);
 private:
 	#if TRACK_MODE
 	int getTrkId(int displayMode,int nextMode);
@@ -199,7 +203,6 @@ private:
 			 FBO_ALL_VIEW_MODE,
 			 FBO_MODE_COUNT
 		 }fboMode;
-
 	class TimeBar{
 		public:
 			TimeBar():delta_year(0),delta_month(0),delta_day(0),delta_hour(0),delta_minute(0),delta_second(0),indicator(0){buf[0] = 0;}
@@ -559,6 +562,7 @@ private:
 	void DrawTriangle(GLEnv &m_env);
 	 void set_SightWide(int recvWide);
 
+	 void PT_Move_Ruler();
 	void RenderScene(void);
 	void RenderSceneDS(void);
 	void DrawOitVehicle(GLEnv &m_env);
@@ -798,6 +802,13 @@ private:
 	GLuint GL_IconRuler180TextureIDs[1];
 	GLuint iconRuler180Textures[1];
 
+	GLuint GL_IconRuler45_small_TextureIDs[1];
+	GLuint iconRuler45_small_Textures[1];
+	GLuint GL_IconRuler90_small_TextureIDs[1];
+	GLuint iconRuler90_small_Textures[1];
+	GLuint GL_IconRuler180_small_TextureIDs[1];
+	GLuint iconRuler180_small_Textures[1];
+
 	inline void setMouseCor(int x, int y){MOUSEx = x;  MOUSEy = y;};
 	inline void setMouseButton(int button){BUTTON=button;};
 	inline void updateRotate(float x, float y){ROTx +=x; ROTy +=y;};
@@ -867,7 +878,16 @@ private:
 	vector <vector <int> > overlappoint[CAM_COUNT];
 public:
 	 void SetTouchPosX(int x){touch_pos_x=x;};
-	 int GetTouchPosX(){return touch_pos_x;};
+	 int GetTouchPosX(){
+			coor_p cp=getEphor_CoorPoint();
+			if(cp.point_x>=0)
+			{
+				SetTouchPosX(cp.point_x);
+				SetTouchPosY((g_windowHeight-cp.point_y));
+				printf("nowx=%d nowflipy=%d",cp.point_x,(g_windowHeight-cp.point_y));
+			}
+
+		 return touch_pos_x;};
 	 void SetTouchPosY(int y){touch_pos_y=y;};
 	 int GetTouchPosY(){return touch_pos_y;};
 	 int getGroupMenuIndex() ;
