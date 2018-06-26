@@ -17,12 +17,8 @@ void *SelfCheck_thread(void *arg)
 	selfcheck.initState();
 	while(1)
 	{
-<<<<<<< HEAD
-		//if(selfcheck.IScheck())
-		if(1)
-=======
+
 		if(selfcheck.IScheck())
->>>>>>> d160b54459e0d4514cc794b12f77408cfe70785b
 		{
 		selfcheck.CheckBrokenCam();
 		//selfcheck.Check12CAM();
