@@ -6871,8 +6871,11 @@ if(setpriorityOnce)
 		env.Getp_FboPboFacade()->DrawAndGet();
 	}
 
+<<<<<<< HEAD
 	//if(displayMode!=CHECK_VIEW_MODE)
 	//	lastMode=displayMode;
+=======
+>>>>>>> d160b54459e0d4514cc794b12f77408cfe70785b
 
 #endif
 	#if 1
@@ -7931,7 +7934,20 @@ if(setpriorityOnce)
 		showDeviceState();
 	}
 	button_array->Group_Draw();
+<<<<<<< HEAD
 
+=======
+	if(displayMode!=ALL_VIEW_MODE
+			&&displayMode!=TELESCOPE_FRONT_MODE
+			&&displayMode!=TELESCOPE_RIGHT_MODE
+			&&displayMode!=TELESCOPE_BACK_MODE
+			&&displayMode!=TELESCOPE_LEFT_MODE
+					)
+	{
+		DetectMainOpen=false;
+		enable_hance=false;
+	}
+>>>>>>> d160b54459e0d4514cc794b12f77408cfe70785b
 }
 
 
