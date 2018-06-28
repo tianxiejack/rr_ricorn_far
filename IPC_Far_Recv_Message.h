@@ -34,9 +34,9 @@ typedef enum {
 	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CCW_V,
 	PASSENGER_T_D_OFF_SINGLE_CHANNEL_CW_V,
 
-	EPHOR_CLICK_COORDINATE,//车长点击触屏坐标
-	SELF_TEST_DISPLAY_STATE_TEMPERATURE_NORMAL,//载员显示器正常
-	SELF_TEST_DISPLAY_STATE_TEMPERATURE_OVER,//载员显示器温度过高
+	EPHOR_CLICK_COORDINATE, //车长点击触屏坐标
+	SELF_TEST_DISPLAY_STATE_TEMPERATURE_NORMAL, //载员显示器正常
+	SELF_TEST_DISPLAY_STATE_TEMPERATURE_OVER, //载员显示器温度过高
 	MSG_TYPE_COUNT,
 } KEY_TYPE;
 
@@ -49,7 +49,8 @@ void IPC_Init_All(); //初始化所有消息队列
 void IPC_Destroy_All(); //删除所有消息队列
 
 coor_p getEphor_CoorPoint(); //得到车长触摸屏坐标,只能调用一次，之后数据会清除
-void SendPowerOnSelfTest();//给载员显示器发送开机自检信息
+void SendPowerOnSelfTest(); //给载员显示器发送开机自检信息
+void sendFarSelfTest(char *farresult); //参数是一个不小于10的数组，按字节保存从0~9相机的状态，0为异常，1为正常
 KEY_TYPE getPassenger_KeyType(); //得到载员显示器指令类型,只能调用一次，之后数据会清除
 float getAngleFar_PeriscopicLens(); //得到周视镜方位信息，数据会一直保存当前角度,备用
 float getAngleFar_AzimuthAngle(); //得到炮塔方位信息，数据会一直保存当前角度，备用
