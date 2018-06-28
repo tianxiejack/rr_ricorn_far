@@ -884,7 +884,7 @@ public:
 			{
 				SetTouchPosX(cp.point_x);
 				SetTouchPosY((g_windowHeight-cp.point_y));
-				printf("nowx=%d nowflipy=%d",cp.point_x,(g_windowHeight-cp.point_y));
+			//	printf("nowx=%d nowflipy=%d",cp.point_x,(g_windowHeight-cp.point_y));
 			}
 
 		 return touch_pos_x;};

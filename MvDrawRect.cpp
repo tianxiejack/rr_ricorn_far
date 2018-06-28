@@ -521,7 +521,7 @@ void MotionDetectorROI::RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x
 {
 	if(p_newestMvSrc[camIdx]==NULL)
 	{
-		printf("p_newestMvSrc %d==NULL",camIdx);
+	//	printf("p_newestMvSrc %d==NULL",camIdx);
 	}
 	else if(p_newestMvSrc[camIdx]!=NULL)
 	{
