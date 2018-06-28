@@ -17,13 +17,21 @@ void *SelfCheck_thread(void *arg)
 	selfcheck.initState();
 	while(1)
 	{
+		//if(selfcheck.IScheck())
+		if(1)
+		{
 		selfcheck.CheckBrokenCam();
+
+		//sendFarSelfTest((char *)selfcheck.GetBrokenCam());
+		//todo
+
 		//selfcheck.Check12CAM();
 		//selfcheck.CheckExtra2CAM();
 	//	selfcheck.Check2HD();
 	//	selfcheck.CaptureCheckAll();
 		//selfcheck.SendBrokenCAM();
-	 sleep(10);
+		}
+		sleep(10);
 	}
 	return 0;
 }

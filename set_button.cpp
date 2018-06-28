@@ -813,7 +813,9 @@ void multiLayerButtonGroup::Group_Draw()
         	   break;
            case GO_TO_SUBMENU_mask_single_channel_mode_ui:
         	   SetcurrentActiveBGIndex(5);
+        	   p_Host->processKeycode('o');
         	   p_Host->processKeycode('3');
+        	   p_Host->processKeycode('p');
         	   break;
 
            case GO_TO_SUBMENU_mask_mvdetect_mode_ui:

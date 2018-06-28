@@ -81,6 +81,15 @@ void Render::FBOdraw()
 			RenderMilView(CURRENT_FBO_ALL_VIEW_559_MODE ,env,0, 0,1920, 1080);
 		}
 
+		p_ChineseCBillBoard->ChooseTga=TURRET_T;
+		RenderChineseCharacterBillBoardAt(env,1920.0*1115.0/1920.0, 1080.0*182.0/1080.0, 1920.0*800.0/1920.0,1080.0*1000.0/1920.0);
+		p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+		RenderChineseCharacterBillBoardAt(env,1920.0*1115.0/1920.0, 1080.0*90.0/1080.0, 1920.0*800.0/1920.0,1080.0*1000.0/1920.0);
+
+		p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+		RenderChineseCharacterBillBoardAt(env,1920.0*820.0/1920.0, 1080.0*174.0/1080.0, 1920.0*1100.0/1920.0,1080.0*960.0/1080.0);
+
+
 	}
 	 break;
 

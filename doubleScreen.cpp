@@ -361,7 +361,7 @@ void Render::RenderSceneDS()
 //if(isToshow)
 		if(1)
 {
-		glScissor(0,0,1621,563);
+		glScissor(0,0,g_subwindowWidth*1630.0/1920.0,573);
 			//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 		glEnable(GL_SCISSOR_TEST);
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -370,11 +370,11 @@ void Render::RenderSceneDS()
 #if MVDECT
 		if(DetectSubOpen)
 		{
-			glScissor(0,0,1920,565);
+	//		glScissor(0,0,1620,573);
 				//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
-			glEnable(GL_SCISSOR_TEST);
-			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-			glDisable(GL_SCISSOR_TEST);
+	//		glEnable(GL_SCISSOR_TEST);
+	//		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	//		glDisable(GL_SCISSOR_TEST);
 
 		mdRoi_subA.DrawAllRectOri(SUB);
 		TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,SUB_TARGET_A0);
@@ -398,11 +398,21 @@ void Render::RenderSceneDS()
 		RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,SUB);
 		RenderOnetimeView(env,1920.0*60.0/1920.0,1080.0*2/1080.0,1920.0*1000.0/1920, 1080.0*562.5/1080,SUB,MY_ALL_VIEW_559_MODE);
 		//RenderTwotimesView(env,1920.0*1120.0/1920.0,1080.0*2/1080.0,1920.0*500.0/1920.0, 1080.0*562.5/1080.0,SUB);
-#endif
+
+		if(	DetectSubOpen)
+		{
+			glScissor(0,0,g_subwindowWidth*1630.0/1920.0,573);
+			glEnable(GL_SCISSOR_TEST);
+			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+			glDisable(GL_SCISSOR_TEST);
+		}
+		#endif
 }
 		break;
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
+		DetectSubOpen=false;
+		Sub_enable_hance=false;
 		RenderChosenView(env,0,0,g_subwindowWidth, g_subwindowHeight,SUB,true);
 		RenderMilView(CURRENT_SECOND_CHOSEN_VIEW_MODE ,env,0, 0,1920, 1080);
 		break;
@@ -497,9 +507,10 @@ void Render::RenderSceneDS()
 			 {
 			p_ChineseCBillBoard->ChooseTga=ONEX_REALTIME_T;
 			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*1050.0/1920.0, g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
-			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
-				RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
+		//	p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
+		//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 			 }
+			 /*
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 				p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
@@ -507,7 +518,7 @@ void Render::RenderSceneDS()
 
 				p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
-
+*/
 			//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
 			//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				if(Sub_enable_hance)
@@ -1064,11 +1075,13 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 					if(Sub_enable_hance)
 					{
 						enable_hance=true;
+					//	printf("Sub_enh=true----ENH=true!\n");
 					}
 					else if(Sub_enable_hance==false
 							&&Main_enable_hance==false)
 					{
 						enable_hance=false;
+					//	printf("Sub_enh=false!  Main_enh=false!------ENH=false!\n   ");
 					}
 					break;
 				case 'O':
@@ -1076,21 +1089,26 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 					if(!DetectSubOpen)
 					{
 						DetectSubOpen=true;
+						IsMvDetect=true;
 						tIdle.threadRun(MVDECT_CN);
 						tIdle.threadRun(MVDECT_ADD_CN);
+					//	printf("Sub_mv=true!---MV=true!\n");
 					}
 					else if(DetectSubOpen)
 					{
 						DetectSubOpen=false;
+						//printf("Sub_mv=false\n");
 					}
 					if(DetectSubOpen==false
 					&&DetectMainOpen==false)
 					{
 						IsMvDetect=false;
+				//		printf("Sub_mv=false!  Main_mv=false ---MV=false!\n");
 					}
 					else
 					{
 						IsMvDetect=true;
+				//		printf("MV=true!\n");
 					}
 					break;
 		#endif

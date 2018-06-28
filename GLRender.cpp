@@ -221,7 +221,7 @@ void readcanshu()
 			for(i=0;i<16;i++)
 			{
 				fscanf(fp,"%f\n",&canshu[i]);
-				printf("%f\n",canshu[i]);
+				//printf("%f\n",canshu[i]);
 			}
 			fclose(fp);
 		}
@@ -876,17 +876,19 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 								break;
 
 				case		MAIN_TARGET_T0:
-					ptr=mdRoi_mainT.GetRoiSrc(0);
+				//	ptr=mdRoi_mainT.GetRoiSrc(0);
 							break;
 				case			MAIN_TARGET_T1:
-					ptr=mdRoi_mainT.GetRoiSrc(1);
+				//	ptr=mdRoi_mainT.GetRoiSrc(1);
 								break;
 				case			SUB_TARGET_T0:
-					ptr=mdRoi_subT.GetRoiSrc(0);
+					//ptr=mdRoi_subT.GetRoiSrc(0);
 								break;
 				case		SUB_TARGET_T1:
-					ptr=mdRoi_subT.GetRoiSrc(1);
+				//	ptr=mdRoi_subT.GetRoiSrc(1);
 									break;
+				default:
+					break;
 							}
 			if(ptr){
 				memcpy(pDst,ptr,ROIW*ROIH*3);
@@ -4712,20 +4714,22 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 		char text3[100][10];
 		int pt=(int)getAngleFar_AzimuthAngle();
 		int zsj=(int)getAngleFar_PeriscopicLens();
+	//	pt=1234;
+	//	zsj=5678;
 		sprintf(text,"%d",pt);
 		sprintf(text2,"%d",zsj);
-	//	strcpy(text," ZSJP");
-	//	strcpy(text2," PAOT");
 		int j=0;
 		for(int i=0;i<CAM_COUNT;i++)
 		{
 		if(selfcheck.GetBrokenCam()[i]==0)
 		{
-			sprintf(text3[j],"Q%d",i+1);
+			sprintf(text3[j],"%.2d",i+1);
 			  j++;
 		}
 		}
-		if(nowMode==CURRENT_FBO_ALL_VIEW_559_MODE)
+		if(nowMode==CURRENT_FBO_ALL_VIEW_559_MODE
+				||nowMode==CURRENT_CHOSEN_VIEW_MODE
+				||nowMode==CURRENT_CHOSEN_VIEW_MODE)
 		{
 			Rect2i rect1(1920*1620.0/1920.0,1080*60.0/1920.0, 300, 200);
 			DrawAngleCordsView(m_env,&rect1,text,0.65);
@@ -4736,7 +4740,7 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 				||nowMode==CURRENT_TELESCOPE_LEFT_MODE
 				||nowMode==CURRENT_TELESCOPE_FRONT_MODE
 				||nowMode==CURRENT_TELESCOPE_BACK_MODE
-				||nowMode==CURRENT_CHOSEN_VIEW_MODE
+
 			)
 		{
 			//if(DetectMainOpen)
@@ -4756,7 +4760,7 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 					||nowMode==CURRENT_SECOND_TELESCOPE_RIGHT_MODE
 					||nowMode==CURRENT_SECOND_TELESCOPE_BACK_MODE
 					||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE
-					||nowMode==CURRENT_CHOSEN_VIEW_MODE)
+					)
 		{
 			if(0)//if(DetectSubOpen)
 			{
@@ -7091,7 +7095,7 @@ if(setpriorityOnce)
 		//if(mv_detect.CanUseMD(MAIN))
 			if(DetectMainOpen)
 			{
-				glScissor(0,0,1920,563);
+				glScissor(0,0,1630,573);
 					//glScissor(g_subwindowWidth*448.0/1920.0,g_subwindowHeight*156.0/1080.0,g_subwindowWidth*1024,g_subwindowHeight*537);
 				glEnable(GL_SCISSOR_TEST);
 				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -7113,7 +7117,14 @@ if(setpriorityOnce)
 
 				RenderRightForeSightView(env,0,g_subwindowHeight*(572)/1080.0,g_subwindowWidth, g_subwindowHeight*216.0/1080.0,MAIN);
 				RenderLeftForeSightView(env,0,g_subwindowHeight*(828)/1080.0,g_subwindowWidth, g_subwindowHeight*218.0/1080.0,MAIN);
-		//		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
+			if(	DetectMainOpen)
+			{
+				glScissor(0,0,g_subwindowWidth*1630.0/1920.0,573);
+				glEnable(GL_SCISSOR_TEST);
+				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+				glDisable(GL_SCISSOR_TEST);
+			}
+				//		RenderPositionView(env,g_windowWidth*728.0/1024.0,g_windowHeight*340.0/768.0,g_windowWidth,g_windowHeight);
 			#endif
 
 		//RenderRightPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN);
@@ -7596,12 +7607,13 @@ if(setpriorityOnce)
 			p_ChineseCBillBoard->ChooseTga=TWOX_REALTIME_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*0.0/1920.0,g_windowHeight*120.0/1080.0, g_windowWidth*1344.0/1920.0,g_windowHeight*1536.0/1920.0);
 		 }
-			p_ChineseCBillBoard->ChooseTga=TURRET_T;
+	/*		p_ChineseCBillBoard->ChooseTga=TURRET_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+*/
 	}
 	else if(displayMode==TELESCOPE_FRONT_MODE
 			||displayMode==TELESCOPE_RIGHT_MODE
@@ -8645,28 +8657,34 @@ GLEnv & env=env1;
 			if(DetectMainOpen==false
 				&&DetectSubOpen==false)
 			{
+		//		printf("QQQQ_Main_mv=false,Sub_mv=false ------MV=false\n");
 				IsMvDetect=false;
 			}
 			if(DetectMainOpen==true
 			||DetectSubOpen==true)
 			{
+			//	printf("QQQQ_MV=true\n");
 				IsMvDetect=true;
 			}
 			break;
 		case 'o':
 			DetectMainOpen=false;
+		//	printf("ooooo____Main_mv=false!\n");
 			if(DetectMainOpen==false
 				&&DetectSubOpen==false)
 			{
+		//		printf("oooo___MV=false!\n");
 				IsMvDetect=false;
 			}
 			break;
 		case 'O':
 			DetectMainOpen=true;
+	//		printf("OOOO——————Main_mv=true!\n");
 			if(DetectMainOpen==true
 			||DetectSubOpen==true)
 			{
 				IsMvDetect=true;
+	//			printf("OOOO-------MV=true!\n");
 			}
 			tIdle.threadRun(MVDECT_CN);
 			tIdle.threadRun(MVDECT_ADD_CN);
@@ -8872,12 +8890,15 @@ GLEnv & env=env1;
 		case 'P':
 			Main_enable_hance=true;
 				enable_hance=true;
+		//		printf("P------Main_enh=true!---ENH=true!\n");
 				break;
 		case 'p':
 			Main_enable_hance=false;
+		//	printf("ppppppp____-Main_enh=false!\n");
 			if(Main_enable_hance==false
-			||Sub_enable_hance==false)
+			&&Sub_enable_hance==false)
 			{
+		//		printf("ppppp_____ENH=false!\n");
 				enable_hance=false;
 			}
 			break;

@@ -246,6 +246,7 @@ void MotionDetectorROI:: DrawAllRectOri(int mainOrsub,int fourOrsix)
 			}
 		}
 	}
+#if 0
 if(toprint)
 {
 	for(int i=0;i<tempV.size();i++)
@@ -253,6 +254,7 @@ if(toprint)
 		printf("i=%d START=%f  END=%f x_angle()=%f\n",i,range[START],range[END],tempV[i].x_angle());
 	}
 }
+#endif
 	wholeV=&tempV;
 
 		//按x从小到达排序
