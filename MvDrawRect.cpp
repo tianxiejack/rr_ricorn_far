@@ -260,7 +260,7 @@ if(toprint)
 	if(m_MAIN_SUB==SUB)
 	sort(wholeV->begin(),wholeV->end(),CmpCamIdxSmaller);
 	else if(m_MAIN_SUB==MAIN)
-		sort(wholeV->begin(),wholeV->end(),CmpCamIdxSmallerMAIN);
+	sort(wholeV->begin(),wholeV->end(),CmpCamIdxSmallerMAIN);
 		/*****找出所以的框*****/
 		for(int i=0;i<wholeV->size();i++)
 		{

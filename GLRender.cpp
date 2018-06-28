@@ -97,12 +97,12 @@ bool DetectSubOpen=false;
 extern int ScreenState;
 bool IsgstCap=false;
 int m_cam_pos=-1;
-
 extern GLEnv env1;
 extern GLEnv env2;
 bool IstoShowDeviceState[2]={false,false};
 bool enable_hance=false;
-
+bool Main_enable_hance=false;
+bool Sub_enable_hance=false;
 bool isTracking=false;
 bool isSetZeroPos=true;
 PanoCamOnForeSight  panocamonforesight[2];
@@ -4736,9 +4736,11 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 				||nowMode==CURRENT_TELESCOPE_LEFT_MODE
 				||nowMode==CURRENT_TELESCOPE_FRONT_MODE
 				||nowMode==CURRENT_TELESCOPE_BACK_MODE
+				||nowMode==CURRENT_CHOSEN_VIEW_MODE
 			)
 		{
-			if(DetectMainOpen)
+			//if(DetectMainOpen)
+			if(0)
 			{
 
 			}
@@ -4753,9 +4755,10 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 		else if(nowMode==CURRENT_SECOND_TELESCOPE_FRONT_MODE
 					||nowMode==CURRENT_SECOND_TELESCOPE_RIGHT_MODE
 					||nowMode==CURRENT_SECOND_TELESCOPE_BACK_MODE
-					||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE)
+					||nowMode==CURRENT_SECOND_TELESCOPE_LEFT_MODE
+					||nowMode==CURRENT_CHOSEN_VIEW_MODE)
 		{
-			if(DetectSubOpen)
+			if(0)//if(DetectSubOpen)
 			{
 
 			}
@@ -4768,29 +4771,33 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 			}
 
 		}
+	int color =1;
+	selfcheck.CalculateTime(1);
+	if(selfcheck.IsOnesec()){
 		for(int k=0;k<j;k++)
 		{
 			if(k<3)
 			{
 				Rect2i rect1(1024*(3010.0+k*100)/1920.0,768*(590.0)/1920.0, 300, 200);
-				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65,color);
 			}
 			else if(k<6)
 			{
 				Rect2i rect1(1024*(3010.0+(k-3)*100)/1920.0,768*(690.0)/1920.0, 300, 200);
-				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65,color);
 			}
 			else if(k<9)
 			{
 				Rect2i rect1(1024*(3010.0+(k-6)*100)/1920.0,768*(790.0)/1920.0, 300, 200);
-				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65,color);
 			}
 			else if(k<10)
 			{
 				Rect2i rect1(1024*(3010.0+(k-9)*100)/1920.0,768*(890.0)/1920.0, 300, 200);
-				DrawAngleCordsView(m_env,&rect1,text3[k],0.65);
+				DrawAngleCordsView(m_env,&rect1,text3[k],0.65,color);
 			}
 		}
+	}
 	}
 	m_env.GetmodelViewMatrix()->PopMatrix();
 }
@@ -6516,10 +6523,10 @@ void Render::DrawCordsView(GLEnv &m_env,Rect* rec, char* text)
 	DrawCords(m_env,rec->width, rec->height, text);
 }
 
-void Render::DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale)
+void Render::DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale,int color)
 {
 	glViewport(rec->x, rec->y, rec->width, rec->height);
-	DrawAngleCords(m_env,rec->width, rec->height, text,toScale);
+	DrawAngleCords(m_env,rec->width, rec->height, text,toScale,color);
 }
 
 void Render::DrawSigleScale(GLEnv &m_env,Rect* rec, GLint idx, bool needSendData)
@@ -6839,7 +6846,7 @@ if(setpriorityOnce)
 		if(mv_open_once)
 		{
 			setFirst();
-			printf("setFirst+++++++++\n");
+		//	printf("setFirst+++++++++\n");
 			mv_open_once=false;
 			mv_close_once=true;
 		}
@@ -6853,7 +6860,7 @@ if(setpriorityOnce)
 		if(mv_close_once)
 		{
 			deleteZombie();
-			printf("deleteZombie--------------\n");
+		//	printf("deleteZombie--------------\n");
 			mv_open_once=true;
 			mv_close_once=false;
 		}
@@ -6871,11 +6878,8 @@ if(setpriorityOnce)
 		env.Getp_FboPboFacade()->DrawAndGet();
 	}
 
-
 	//if(displayMode!=CHECK_VIEW_MODE)
 	//	lastMode=displayMode;
-
-
 
 #endif
 	#if 1
@@ -7125,6 +7129,7 @@ if(setpriorityOnce)
 	case CHOSEN_VIEW_MODE:
 		tIdle.threadRun(MAIN_CN);
 		RenderChosenView(env,0,0,g_windowWidth, g_windowHeight,MAIN,true);
+		RenderMilView(CURRENT_CHOSEN_VIEW_MODE ,env,0, 0,1920, 1080);
 		break;
 
 
@@ -7153,7 +7158,7 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,FRONT);
-#if			MVDECT
+#if			0
 			if(DetectMainOpen)
 			{
 				toprint=true;
@@ -7176,7 +7181,7 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,RIGHT);
-#if			MVDECT
+#if			0
 			if(DetectMainOpen)
 			{toprint=true;
 				mdRoi_mainT.SetRange(270,360.0);
@@ -7198,7 +7203,7 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,BACK);
-#if			MVDECT
+#if			0
 			if(DetectMainOpen)
 			{toprint=true;
 				mdRoi_mainT.SetRange(180.0,270.0);
@@ -7220,7 +7225,7 @@ if(setpriorityOnce)
 			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,LEFT);
-#if			MVDECT
+#if			0
 			if(DetectMainOpen)
 			{toprint=true;
 				mdRoi_mainT.SetRange(90.0,180.0);
@@ -7598,7 +7603,6 @@ if(setpriorityOnce)
 			p_ChineseCBillBoard->ChooseTga=ANGLE_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
 	}
-
 	else if(displayMode==TELESCOPE_FRONT_MODE
 			||displayMode==TELESCOPE_RIGHT_MODE
 			||displayMode==TELESCOPE_BACK_MODE
@@ -7606,7 +7610,7 @@ if(setpriorityOnce)
 	{
 		p_ChineseCBillBoard->ChooseTga=OSD_TEL_VIEW_NAME_T;
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
-		if(DetectMainOpen)
+		if(0)//if(DetectMainOpen)
 		{
 			p_ChineseCBillBoard->ChooseTga=TURRET_T;
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
@@ -7627,7 +7631,7 @@ if(setpriorityOnce)
 		 if(displayMode==TELESCOPE_FRONT_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
-			if(DetectMainOpen)
+			if(0)//if(DetectMainOpen)
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			else
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -7635,7 +7639,7 @@ if(setpriorityOnce)
 		else if(displayMode==TELESCOPE_RIGHT_MODE)
 		{
 				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
-				if(DetectMainOpen)
+				if(0)//if(DetectMainOpen)
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -7643,7 +7647,7 @@ if(setpriorityOnce)
 		else if(displayMode==TELESCOPE_BACK_MODE)
 		{
 			p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
-			if(DetectMainOpen)
+			if(0)//if(DetectMainOpen)
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 			else
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -7651,7 +7655,7 @@ if(setpriorityOnce)
 		else if(displayMode==TELESCOPE_LEFT_MODE)
 		{
 		p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
-		if(DetectMainOpen)
+		if(0)//if(DetectMainOpen)
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 		else
 			RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -7665,6 +7669,13 @@ if(setpriorityOnce)
 		float start_van_y=1690;
 		float van_w=700.0;
 		float van_h=500.0;
+
+		p_ChineseCBillBoard->ChooseTga=TURRET_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+		p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+		p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+		RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
 		p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		switch(idx)
@@ -7912,14 +7923,14 @@ if(setpriorityOnce)
 					)
 	{
 		DetectMainOpen=false;
-		enable_hance=false;
+		Main_enable_hance=false;
 	}
 	if(IsgstCap)
 	{
 		p_ChineseCBillBoard->ChooseTga=OSD_RECORDING_T;
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-1488)/1920.0, g_windowHeight*(1)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 	}
-	if(enable_hance)
+	if(Main_enable_hance)
 	{
 		p_ChineseCBillBoard->ChooseTga=OSD_HANCING_T;
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-697)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
@@ -7934,19 +7945,6 @@ if(setpriorityOnce)
 		showDeviceState();
 	}
 	button_array->Group_Draw();
-
-
-
-	if(displayMode!=ALL_VIEW_MODE
-			&&displayMode!=TELESCOPE_FRONT_MODE
-			&&displayMode!=TELESCOPE_RIGHT_MODE
-			&&displayMode!=TELESCOPE_BACK_MODE
-			&&displayMode!=TELESCOPE_LEFT_MODE
-					)
-	{
-		DetectMainOpen=false;
-		enable_hance=false;
-	}
 
 }
 
@@ -8642,6 +8640,19 @@ GLEnv & env=env1;
 		case ';':
 			stop_scan=!stop_scan;
 			break;
+		case 'Q':
+			DetectMainOpen=!DetectMainOpen;
+			if(DetectMainOpen==false
+				&&DetectSubOpen==false)
+			{
+				IsMvDetect=false;
+			}
+			if(DetectMainOpen==true
+			||DetectSubOpen==true)
+			{
+				IsMvDetect=true;
+			}
+			break;
 		case 'o':
 			DetectMainOpen=false;
 			if(DetectMainOpen==false
@@ -8859,10 +8870,16 @@ GLEnv & env=env1;
 			DISPLAYMODE_SWITCH_TO(TRIPLE_VIEW_MODE);
 			break;
 		case 'P':
+			Main_enable_hance=true;
 				enable_hance=true;
 				break;
 		case 'p':
-			enable_hance=false;
+			Main_enable_hance=false;
+			if(Main_enable_hance==false
+			||Sub_enable_hance==false)
+			{
+				enable_hance=false;
+			}
 			break;
 		case 'M':
 		//case 'm':
@@ -8881,18 +8898,22 @@ GLEnv & env=env1;
 			}
 			break;
 		case 'c':
+			Main_enable_hance=true;
 			enable_hance=true;
 			Enhance_level=1;
 			break;
 		case 'v':
+			Main_enable_hance=true;
 			enable_hance=true;
 			Enhance_level=2;
 			break;
 		case 'C':
+			Main_enable_hance=true;
 			enable_hance=true;
 			Enhance_level=3;
 			break;
 		case 'V':
+			Main_enable_hance=true;
 			enable_hance=true;
 			Enhance_level=4;
 				break;
@@ -8908,9 +8929,9 @@ GLEnv & env=env1;
 			isDirectionOn = !isDirectionOn;
 			break;
 		//case 'q':
-		case 'Q':
-			DISPLAYMODE_SWITCH_TO(SINGLE_PORT_MODE);
-			break;
+	//	case 'Q':
+	//		DISPLAYMODE_SWITCH_TO(SINGLE_PORT_MODE);
+	//		break;
 		case 'A':
 		//case 'a':
 			{
@@ -10301,14 +10322,36 @@ void Render::DrawCords(GLEnv &m_env,int w, int h, const char* s)
 }
 
 
-void Render::DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale)
+void Render::DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale,int coloridx)
 {
+	 float my_vWhite[] 	= { 1.0f, 1.0f, 1.0f, 1.0f};
+	 float my_vYellow[]    = { 0.98f, 0.96f, 0.00f, 1.00f };
+	 float my_vGreen[]     = {0.0f, 255/255.0, 0.0f, 1.0f};
+	 float my_vRed[]       = {109/255.0,10/255.0,12/255.0,1.0f};
     char quote[1][160];
     bzero(quote[0],160);
     int i,l,lenghOfQuote;
      int numberOfQuotes=1;
-    const GLfloat *PDefaultColor = vWhite;
-    const GLfloat *pColor = PDefaultColor;
+     GLfloat *pColor = my_vWhite;
+ //   const GLfloat *PDefaultColor = vWhite;
+  //  const GLfloat *pColor = PDefaultColor;
+     switch(coloridx)
+     {
+     case 0:
+    	 pColor = my_vWhite;
+           	 break;
+     case 1:
+    	 pColor =  my_vYellow;
+    	 break;
+     case 2:
+    	 pColor =  my_vGreen;
+        	 break;
+     case 3:
+    	 pColor =  my_vRed;
+        	 break;
+     default:
+    	 	 break;
+     }
     strcpy(quote[0],"         ");
     int min=MIN(160,strlen(s));
     if(s)
@@ -10328,7 +10371,7 @@ void Render::DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toSca
         for (i = 0; i < lenghOfQuote; i++)
         {
         	m_env.GetmodelViewMatrix()->Translate((90.0f), 0.0, 0.0);
-        	pColor = PDefaultColor;
+        	//pColor = PDefaultColor;
             shaderManager.UseStockShader(GLT_SHADER_FLAT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), pColor);
             glutStrokeCharacter(GLUT_STROKE_ROMAN, quote[l][i]);
         }
@@ -13077,7 +13120,7 @@ int Render::getGroupMenuIndex()
 	if(DetectMainOpen){
 		idx = 6;
 	}
-	if(enable_hance){
+	if(Main_enable_hance){
 		idx = 8;
 	}
 	if(IsgstCap){

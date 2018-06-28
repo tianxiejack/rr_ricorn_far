@@ -393,7 +393,7 @@ private:
 	}*p_FixedBBD_1M, *p_FixedBBD_2M, 	*p_FixedBBD_5M, *p_FixedBBD_8M;
 	void DrawTrackFixBBDs(GLEnv &m_env,M3DMatrix44f camera);
 	void DrawCords(GLEnv &m_env,int w, int h, const char* s);
-	void DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale);
+	void DrawAngleCords(GLEnv &m_env,int w, int h, const char* s,float toScale,int coloridx=0);
 	void RememberTime();
 	void DrawFrontBackTracks(GLEnv &m_env);
 	void Draw4CrossLines(GLEnv &m_env);
@@ -428,7 +428,7 @@ private:
 	void InitCornerMarkerGroup(GLEnv &m_env);
 	void InitBillBoard(GLEnv &m_env);
 	void DrawCordsView(GLEnv &m_env,Rect* rec, char* text);
-	void DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale);
+	void DrawAngleCordsView(GLEnv &m_env,Rect* rec, char* text,float toScale,int color=0);
 	void DrawInitView(GLEnv &m_env,Rect* rec, bool needSendData);
 	void DrawSigleScale(GLEnv &m_env,Rect* rec, GLint idx, bool needSendData);
 	void DrawSigleVideo(GLEnv &m_env,GLint idx, bool needSendData);

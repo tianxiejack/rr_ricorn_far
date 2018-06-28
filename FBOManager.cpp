@@ -511,6 +511,7 @@ void FBOManager::DrawTex2Front(int mainOrsub,int w,int h)
 {
 	GLEnv &env=env1;
 	glViewport(0, 0, w, h);
+			glClear(GL_DEPTH_BUFFER_BIT);
 			env.GetviewFrustum()->SetPerspective(90.0f, float(w) / float(h), 1.0f, 4000.0f);
 			env.GetprojectionMatrix()->LoadMatrix(env.GetviewFrustum()->GetProjectionMatrix());
 

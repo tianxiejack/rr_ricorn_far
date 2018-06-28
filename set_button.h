@@ -3,7 +3,7 @@
 #define MENU_BUTTON_HOR_COUNT 10
 #define MENU_BUTTON_VER_COUNT 8
 #define MENU_BUTTON_COUNT (MENU_BUTTON_HOR_COUNT*MENU_BUTTON_VER_COUNT)
-#define MENU_GROUP_COUNT 22
+#define MENU_GROUP_COUNT 23
 class MenuButton;
 class GLShaderManager;
 class ButtonGroup;

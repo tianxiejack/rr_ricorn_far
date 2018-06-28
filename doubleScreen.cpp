@@ -23,7 +23,11 @@ extern char chosenCam[2];
 static float delayT=20.0;
 extern bool IsMvDetect;
 extern bool DetectSubOpen;
+extern bool DetectMainOpen;
 extern bool enable_hance;
+extern bool Main_enable_hance;
+extern bool Sub_enable_hance;
+
 extern int Enhance_level;
 bool isToshow=false;
 int ScreenState=-1;
@@ -107,6 +111,17 @@ void Render::RenderSceneDS()
 		foresightPos[SUB].SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
 		SpeedSetOnce=false;
 	}
+
+	if(SecondDisplayMode!=SECOND_559_ALL_VIEW_MODE
+			&&SecondDisplayMode!=SECOND_TELESCOPE_FRONT_MODE
+			&&SecondDisplayMode!=SECOND_TELESCOPE_RIGHT_MODE
+			&&SecondDisplayMode!=SECOND_TELESCOPE_BACK_MODE
+			&&SecondDisplayMode!=SECOND_TELESCOPE_LEFT_MODE
+					)
+	{
+		DetectMainOpen=false;
+		Sub_enable_hance=false;
+	}
 	//static SECOND_DISPLAY Now_Tel_Mode=-1;
 	switch(getPassenger_KeyType())
 	{
@@ -132,49 +147,56 @@ void Render::RenderSceneDS()
 		DetectSubOpen=false;
 				break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_1:
+		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=1;
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_2:
+		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=2;
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_3:
+		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=3;
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_OFF:
-				if(enable_hance)
+		Sub_enable_hance=false;
+		if(Sub_enable_hance==false
+		&&Main_enable_hance==false)
+		{
 					enable_hance=false;
-				else
-					enable_hance=true;
+		}
 	//	printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
 		break;
 	case	PASSENGER_T_D_ON_MOVE_RIGHT:
 		if(DetectSubOpen==true)
 		{
-			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
-					||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 			{
 				RoiFocusCamidx::GetInstance()->decreaseRoiFocusCamidx();
 			}
 		}
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+				ChangeSecondTelMode(true);
 		break;
 	case		PASSENGER_T_D_ON_MOVE_LEFT:
 		if(DetectSubOpen==true)
 		{
-			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+			if(SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 			{
 				RoiFocusCamidx::GetInstance()->increaseRoiFocusCamidx();
 			}
 		}
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+				ChangeSecondTelMode(false);
 		break;
 	case		PASSENGER_T_D_ON_MOVE_UP:
 		if(DetectSubOpen==true)
@@ -183,13 +205,13 @@ void Render::RenderSceneDS()
 			{
 			RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
 			}
-			else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
-			{
-				ChangeSecondTelMode(true);
-			}
+		}
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+		{
+			ChangeSecondTelMode(true);
 		}
 		break;
 	case		PASSENGER_T_D_ON_MOVE_DOWN:
@@ -199,13 +221,13 @@ void Render::RenderSceneDS()
 			{
 				RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
 			}
-			else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
-				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
-			{
-				ChangeSecondTelMode(false);
-			}
+		}
+		if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
+		||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
+		{
+			ChangeSecondTelMode(false);
 		}
 		break;
 	case	PASSENGER_T_D_ON_AFFIRM:
@@ -382,13 +404,14 @@ void Render::RenderSceneDS()
 	case	SECOND_CHOSEN_VIEW_MODE:
 		tIdle.threadRun(SUB_CN);
 		RenderChosenView(env,0,0,g_subwindowWidth, g_subwindowHeight,SUB,true);
+		RenderMilView(CURRENT_SECOND_CHOSEN_VIEW_MODE ,env,0, 0,1920, 1080);
 		break;
 	case 	SECOND_TELESCOPE_FRONT_MODE:
 		tIdle.threadIdle(SUB_CN);
 
 			    RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,FRONT,SUB);
-#if			MVDECT
+#if			0
 				if(DetectSubOpen)
 				{
 					mdRoi_subT.SetRange(0,90.0);
@@ -407,7 +430,7 @@ void Render::RenderSceneDS()
 			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,RIGHT,SUB);
-#if			MVDECT
+#if			0
 				if(DetectSubOpen)
 					{
 					mdRoi_subT.SetRange(270,360.0);
@@ -427,7 +450,7 @@ void Render::RenderSceneDS()
 		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
 		   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 		   RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,BACK,SUB);
-#if			MVDECT
+#if			0
 			if(DetectSubOpen)
 				{
 				mdRoi_subT.SetRange(180.0,270.0);
@@ -447,7 +470,7 @@ void Render::RenderSceneDS()
 		tIdle.threadIdle(SUB_CN);
 		  RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,LEFT,SUB);
-#if			MVDECT
+#if			0
 			if(DetectSubOpen)
 				{
 				mdRoi_subT.SetRange(90.0,180.0);
@@ -487,7 +510,16 @@ void Render::RenderSceneDS()
 
 			//	p_ChineseCBillBoard->ChooseTga=LOCATION_T;
 			//		RenderChineseCharacterBillBoardAt(env,g_windowWidth*950.0/1920.0, g_windowHeight*50/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
-
+				if(Sub_enable_hance)
+				{
+					p_ChineseCBillBoard->ChooseTga=OSD_HANCING_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-697)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+				}
+				if(DetectSubOpen)
+				{
+					p_ChineseCBillBoard->ChooseTga=OSD_MVDETECTING_T;
+					RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-302)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+				}
 		}
 
 		else if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE
@@ -495,10 +527,21 @@ void Render::RenderSceneDS()
 				||SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE
 				||SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 		{
+			if(Sub_enable_hance)
+			{
+				p_ChineseCBillBoard->ChooseTga=OSD_HANCING_T;
+				RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-697)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+			}
+			if(DetectSubOpen)
+			{
+				p_ChineseCBillBoard->ChooseTga=OSD_MVDETECTING_T;
+				RenderChineseCharacterBillBoardAt(env,-g_windowWidth*(-302)/1920.0, g_windowHeight*(1.0)/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
+			}
 			p_ChineseCBillBoard->ChooseTga=OSD_TEL_VIEW_NAME_T;
 			RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 
-			 if(DetectSubOpen)
+			// if(DetectSubOpen)
+			if(0)
 			 {
 				p_ChineseCBillBoard->ChooseTga=TURRET_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
@@ -521,7 +564,7 @@ void Render::RenderSceneDS()
 			 if(SecondDisplayMode==SECOND_TELESCOPE_FRONT_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_FRONT_T;
-				if(DetectSubOpen)
+				if(0)//if(DetectSubOpen)
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -529,7 +572,7 @@ void Render::RenderSceneDS()
 			else if(SecondDisplayMode==SECOND_TELESCOPE_RIGHT_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_RIGHT_T;
-				if(DetectSubOpen)
+				if(0)//if(DetectSubOpen)
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -537,7 +580,7 @@ void Render::RenderSceneDS()
 			else if(SecondDisplayMode==SECOND_TELESCOPE_BACK_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_BACK_T;
-				if(DetectSubOpen)
+				if(0)//if(DetectSubOpen)
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -545,7 +588,7 @@ void Render::RenderSceneDS()
 			else if(SecondDisplayMode==SECOND_TELESCOPE_LEFT_MODE)
 			{
 				p_ChineseCBillBoard->ChooseTga=RADAR_LEFT_T;
-				if(DetectSubOpen)
+				if(0)//if(DetectSubOpen)
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*750.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
 				else
 					RenderChineseCharacterBillBoardAt(env,g_windowWidth*200.0/1920.0, g_windowHeight*200/1920.0, g_windowWidth*1000.0/1920.0,g_windowWidth*798.0/1920.0);
@@ -555,66 +598,76 @@ void Render::RenderSceneDS()
 		{
 			int idx=chosenCam[SUB];
 			float start_van_x=-495.0;
-				float start_van_y=1540;
-				float van_w=700.0;
-				float van_h=500.0;
+					float start_van_y=1690;
+					float van_w=700.0;
+					float van_h=500.0;
 				p_ChineseCBillBoard->ChooseTga=OSD_SINGLE_VIEW_NAME_T;
 				RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 
-			switch(idx)
-			{
-			case 1:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+				{
+					p_ChineseCBillBoard->ChooseTga=TURRET_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*182.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+					p_ChineseCBillBoard->ChooseTga=PANORAMIC_MIRROR_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*1115.0/1920.0, g_windowHeight*90.0/1080.0, g_windowWidth*800.0/1920.0,g_windowHeight*1000.0/1920.0);
+					p_ChineseCBillBoard->ChooseTga=ANGLE_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*820.0/1920.0, g_windowHeight*174.0/1080.0, g_windowWidth*1100.0/1920.0,g_windowHeight*960.0/1080.0);
+				}
 
-						break;
-			case 2:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+				switch(idx)
+				{
+				case 1:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 3:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 2:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 4:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
-						break;
-			case 5:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 3:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 6:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 4:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 7:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 5:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 8:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 6:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 9:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+							break;
+				case 7:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-						break;
-			case 10:
-				p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
-					RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
-				break;
-			defalut :
-						break;
+							break;
+				case 8:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
-			}
+							break;
+				case 9:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+
+							break;
+				case 10:
+					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
+						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
+					break;
+				defalut :
+							break;
+
+				}
 		}
 
 }
@@ -954,11 +1007,11 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 			case ')':
 				foresightPos[SUB].SetSpeedY((render.get_PanelLoader().Getextent_pos_z()-render.get_PanelLoader().Getextent_neg_z())/1920.0*20.0);
 				break;
-			case'N':
+			case 'N':
 			{
 				SECOND_DISPLAY nextMode=SECOND_DISPLAY(((int)SecondDisplayMode+1)%SECOND_TOTAL_MODE_COUNT);
 				if(nextMode==SECOND_ALL_VIEW_MODE)
-					nextMode=SECOND_PURE_MODE;
+					nextMode=SECOND_559_ALL_VIEW_MODE;
 				SecondDisplayMode = nextMode;
 			}
 				break;
@@ -1006,8 +1059,20 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 				case '#':
 					RoiFocusCamidx::GetInstance()->flipRoiFocusCamidx();
 				break;
+				case 'P':
+					Sub_enable_hance=!Sub_enable_hance;
+					if(Sub_enable_hance)
+					{
+						enable_hance=true;
+					}
+					else if(Sub_enable_hance==false
+							&&Main_enable_hance==false)
+					{
+						enable_hance=false;
+					}
+					break;
 				case 'O':
-		#if MVDECT
+		#if 1
 					if(!DetectSubOpen)
 					{
 						DetectSubOpen=true;
@@ -1018,15 +1083,16 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 					{
 						DetectSubOpen=false;
 					}
-					if(DetectSubOpen==true
-							||DetectSubOpen==true)
-					{
-						IsMvDetect=true;
-					}
-					else
+					if(DetectSubOpen==false
+					&&DetectMainOpen==false)
 					{
 						IsMvDetect=false;
 					}
+					else
+					{
+						IsMvDetect=true;
+					}
+					break;
 		#endif
 
 #if 0

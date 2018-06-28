@@ -75,11 +75,13 @@ enum{
 	GO_TO_SUBMENU_mask_around_mode_ui,
 	GO_TO_SUBMENU_mask_foresight_mode_ui,
 	GO_TO_SUBMENU_mask_telescope_mode_ui,
+	GO_TO_SUBMENU_mask_telescope_mode_teturn_ui,
 	GO_TO_SUBMENU_mask_single_channel_mode_ui,
 
 	GO_TO_SUBMENU_mask_mvdetect_mode_ui,
 	GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui,
 	GO_TO_SUBMENU_mask_enhance_mode_ui,
+	GO_TO_SUBMENU_mask_enhance_noforesights_mode_ui,
 	GO_TO_SUBMENU_mask_enhance_tel_mode_ui,
 	GO_TO_SUBMENU_mask_record_mode_ui,
 
@@ -110,7 +112,7 @@ static buttonMask mask_default_round_ui[]={
 static buttonMask mask_zero_pos_ui[]={
 		{0, 3, BUTTON_ZERO_POSITION, 0},
 		{0, 2, BUTTON_RETURN, GO_TO_SUBMENU_mask_default_round_ui},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 7, BUTTON_LEFT, 'x'},
 		{0, 5, BUTTON_RIGHT, 'z'},
 
@@ -141,8 +143,8 @@ static buttonMask mask_choose_mode_ui[]={
 
 //2.3環視模式
 static buttonMask mask_around_mode_ui[]={
-		{0, 7, BUTTON_AROUND, '|'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 7, BUTTON_AROUND, '|'},
+	//	{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
@@ -153,14 +155,14 @@ static buttonMask mask_around_mode_ui[]={
 
 //2.4潛望模式
 static buttonMask mask_telescope_mode_ui[]={
-		{0, 6, BUTTON_TELESCOPE, '|'},
+	//	{0, 6, BUTTON_TELESCOPE, '|'},
 		{0, 5, BUTTON_FRONT, '5'},
 		{0, 4, BUTTON_BACK, '6'},
 		{0, 3, BUTTON_LEFT, '7'},
 		{0, 2, BUTTON_RIGHT, '8'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
-		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui},
+		{2, 0, BUTTON_TARGET, 'Q'},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_tel_mode_ui},
 		//{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		{8, 0, BUTTON_RECORD, 'J'}
@@ -170,10 +172,10 @@ static buttonMask mask_telescope_mode_ui[]={
 //2.5單通道模式
 static buttonMask mask_single_channel_mode_ui[]={
 
-		{0, 5, BUTTON_SINGLE_CHANNEL, 't'},
+	//	{0, 5, BUTTON_SINGLE_CHANNEL, 't'},
 		{0, 4, BUTTON_ANTI_CLOCKWISE, 'u'},
 		{0, 3, BUTTON_CLOCKWISE, 'i'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 	//	{2, 0, BUTTON_TARGET, 'O'},
 	//	{4, 0, BUTTON_ENHANCE, 'P'},
@@ -191,10 +193,10 @@ static buttonMask mask_mvdetect_mode_ui[]={
 		{0, 3, BUTTON_SINGLE_SELECTION, 'O'},
 		{0, 2, BUTTON_CANCLE, 'o'},
 		//{0, 1, BUTTON_CLOSE, 'o'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+	//	{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_around_mode_ui},
-		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
+		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_noforesights_mode_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		{8, 0, BUTTON_RECORD, 'J'}
 
@@ -208,9 +210,10 @@ static buttonMask mask_mvdetect_return_tel_mode_ui[]={
 		{0, 3, BUTTON_SINGLE_SELECTION, 'O'},
 		{0, 2, BUTTON_CANCLE, 'o'},
 	//	{0, 1, BUTTON_CLOSE, 'o'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+//		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
-		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_telescope_mode_ui},
+		//{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_telescope_mode_ui},
+		{2, 0, BUTTON_TARGET, 'Q'},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_tel_mode_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		{8, 0, BUTTON_RECORD, 'J'}
@@ -223,7 +226,7 @@ static buttonMask mask_foresight_mode_ui[]={
 		{0, 6, BUTTON_DOWN, '$'},
 		{0, 5, BUTTON_LEFT, '!'},
 		{0, 4, BUTTON_RIGHT, '@'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+//		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_enhance_mode_ui},
@@ -238,7 +241,7 @@ static buttonMask mask_enhance_mode_ui[]={
 		{0, 5, BUTTON_THREE, 'C'},
 		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+//		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
 		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_around_mode_ui},
@@ -247,16 +250,31 @@ static buttonMask mask_enhance_mode_ui[]={
 
 };
 
+static buttonMask mask_enhance_noforesight_mode_ui[]={
+		{0, 7, BUTTON_ONE, 'c'},
+		{0, 6, BUTTON_TWO, 'v'},
+		{0, 5, BUTTON_THREE, 'C'},
+		{0, 4, BUTTON_FOUR, 'V'},
+		{0, 3, BUTTON_CLOSE, 'p'},
+//		{0, 1, BUTTON_ERROR_STATE, '?'},
+		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
+		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_mode_ui},
+		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_around_mode_ui},
+		{8, 0, BUTTON_RECORD, 'J'}
+
+};
+
+
 static buttonMask mask_enhance_tel_mode_ui[]={
 		{0, 7, BUTTON_ONE, 'c'},
 		{0, 6, BUTTON_TWO, 'v'},
 		{0, 5, BUTTON_THREE, 'C'},
 		{0, 4, BUTTON_FOUR, 'V'},
 		{0, 3, BUTTON_CLOSE, 'p'},
-		{0, 1, BUTTON_ERROR_STATE, '?'},
+//		{0, 1, BUTTON_ERROR_STATE, '?'},
 		{0, 0, BUTTON_MODE, GO_TO_SUBMENU_mask_choose_mode_ui},
 		{2, 0, BUTTON_TARGET, GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui},
-		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_telescope_mode_ui},
+		{4, 0, BUTTON_ENHANCE, GO_TO_SUBMENU_mask_telescope_mode_teturn_ui},
 	//	{6, 0, BUTTON_FORESIGHT, GO_TO_SUBMENU_mask_foresight_mode_ui},
 		{8, 0, BUTTON_RECORD, 'J'}
 
@@ -364,7 +382,7 @@ static buttonMask mask_driver_near_overlook_mode_ui[]={
 
 
 
-#define MAX_LAYEDED_GROUP_COUNT 22
+#define MAX_LAYEDED_GROUP_COUNT 23
 //以下两个数组要同步更改
 static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
 		mask_basic_ui,						//0
@@ -388,8 +406,9 @@ static buttonMask* pMasks[MAX_LAYEDED_GROUP_COUNT]= {
 		mask_driver_near_single_channel_mode_ui,			//18
 		mask_driver_near_enhance_mode_ui,			//19
 		mask_driver_near_overlook_mode_ui,	//20
-		mask_zero_pos_ui//21;
-};			//20
+		mask_zero_pos_ui,//21;
+		mask_enhance_noforesight_mode_ui//22
+};
 
 static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_basic_ui)/sizeof(mask_basic_ui[0]),
@@ -413,7 +432,9 @@ static int MaskLengths[MAX_LAYEDED_GROUP_COUNT] = {
 		sizeof(mask_driver_near_single_channel_mode_ui)/sizeof(mask_driver_near_single_channel_mode_ui[0]),
 		sizeof(mask_driver_near_enhance_mode_ui)/sizeof(mask_driver_near_enhance_mode_ui[0]),
 		sizeof(mask_driver_near_overlook_mode_ui)/sizeof(mask_driver_near_overlook_mode_ui[0]),
-		sizeof(mask_zero_pos_ui)/sizeof(mask_zero_pos_ui[0])
+		sizeof(mask_zero_pos_ui)/sizeof(mask_zero_pos_ui[0]),
+		sizeof(mask_enhance_noforesight_mode_ui)/sizeof(mask_enhance_noforesight_mode_ui[0]),
+
 
 };
 //---------------------------------------------------------------
@@ -787,6 +808,9 @@ void multiLayerButtonGroup::Group_Draw()
 			   SetcurrentActiveBGIndex(4);
 			   p_Host->processKeycode('2');
 			   break;
+           case GO_TO_SUBMENU_mask_telescope_mode_teturn_ui:
+        	   SetcurrentActiveBGIndex(4);
+        	   break;
            case GO_TO_SUBMENU_mask_single_channel_mode_ui:
         	   SetcurrentActiveBGIndex(5);
         	   p_Host->processKeycode('3');
@@ -797,16 +821,21 @@ void multiLayerButtonGroup::Group_Draw()
         	   p_Host->processKeycode('O');
         	   break;
            case GO_TO_SUBMENU_mask_mvdetect_tel_mode_ui:
-        	   SetcurrentActiveBGIndex(7);
-        	   p_Host->processKeycode('O');
+        	   SetcurrentActiveBGIndex(4);
+        	   p_Host->processKeycode('Q');
         	   break;
            case GO_TO_SUBMENU_mask_foresight_mode_ui:
            	   SetcurrentActiveBGIndex(8);
+           	 p_Host->processKeycode('o');
            	   break;
            case GO_TO_SUBMENU_mask_enhance_mode_ui:
          	   SetcurrentActiveBGIndex(9);
          	   p_Host->processKeycode('P');
          	   break;
+           case GO_TO_SUBMENU_mask_enhance_noforesights_mode_ui:
+        	   SetcurrentActiveBGIndex(22);
+			   p_Host->processKeycode('P');
+			   break;
            case GO_TO_SUBMENU_mask_enhance_tel_mode_ui:
          	   SetcurrentActiveBGIndex(10);
          	  p_Host->processKeycode('P');
@@ -817,7 +846,7 @@ void multiLayerButtonGroup::Group_Draw()
            case GO_TO_SUBMENU_mask_zero_pos_ui:
         	   SetcurrentActiveBGIndex(21);
         	   p_Host->processKeycode('1');
-
+        	   break;
            default:
         	   break;
            }
