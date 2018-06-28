@@ -537,7 +537,7 @@ bool BMPVcap::Open()
 	pic = cvLoadImage(pFileName);
 	if(strcmp(pFileName,"45.bmp")==0)
 	{
-		printf("0\n");
+		//printf("0\n");
 	}
 	if(pic == NULL)
 	{
