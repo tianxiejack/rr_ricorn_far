@@ -4729,7 +4729,7 @@ void Render::RenderMilView(CurrentMode nowMode,GLEnv &m_env,GLint x, GLint y,GLi
 		}
 		if(nowMode==CURRENT_FBO_ALL_VIEW_559_MODE
 				||nowMode==CURRENT_CHOSEN_VIEW_MODE
-				||nowMode==CURRENT_CHOSEN_VIEW_MODE)
+				||nowMode==CURRENT_SECOND_CHOSEN_VIEW_MODE)
 		{
 			Rect2i rect1(1920*1620.0/1920.0,1080*60.0/1920.0, 300, 200);
 			DrawAngleCordsView(m_env,&rect1,text,0.65);
@@ -7085,7 +7085,7 @@ if(setpriorityOnce)
 		tIdle.threadIdle(MAIN_CN);
 		env.Getp_FboPboFacade()->Render2Front(MAIN,g_windowWidth,g_windowHeight);
 		DrawAllViewRoiArrow(RoiFocusCamidx::GetMainInstance()->GetRoiFocusCamidx());
-
+	//	p_ForeSightFacade[MAIN]->Reset(ALL_VIEW_MODE);
 		#if !USE_BMPCAP
 		if(isSetZeroPos){
 			RenderRulerView(env,(ruler_90_pos)/1920.0,1080.0*1026/1080.0,1920.0*3,1080.0*140.0/1080.0/2.0,RULER_90);
@@ -7166,7 +7166,7 @@ if(setpriorityOnce)
 
 	case	TELESCOPE_FRONT_MODE:
 		tIdle.threadIdle(MAIN_CN);
-			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
+		//	p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_FRONT_MODE);
 		    RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,FRONT);
 #if			0
@@ -7189,7 +7189,7 @@ if(setpriorityOnce)
 		case	TELESCOPE_RIGHT_MODE:
 			tIdle.threadIdle(MAIN_CN);
 
-			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
+		//	p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_RIGHT_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,RIGHT);
 #if			0
@@ -7211,7 +7211,7 @@ if(setpriorityOnce)
 		case	TELESCOPE_BACK_MODE:
 			tIdle.threadIdle(MAIN_CN);
 
-			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
+		//	p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_BACK_MODE);
 			   RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			   RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,BACK);
 #if			0
@@ -7233,7 +7233,7 @@ if(setpriorityOnce)
 		case	TELESCOPE_LEFT_MODE:
 			tIdle.threadIdle(MAIN_CN);
 
-			p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
+		//	p_ForeSightFacade2[MAIN]->Reset(TELESCOPE_LEFT_MODE);
 			  RenderRulerView(env,-g_windowWidth*3.0/1920.0,g_windowHeight*980.0/1080.0,g_windowWidth,g_windowHeight*140.0/1080.0,RULER_45);
 			RenderPanoTelView(env,0,g_windowHeight*434.0/1080,g_windowWidth, g_windowHeight*576.0/1080.0,LEFT);
 #if			0

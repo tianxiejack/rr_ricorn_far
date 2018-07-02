@@ -139,34 +139,67 @@ void Render::RenderSceneDS()
 			break;
 	case PASSENGER_SINGLE_CHANNEL_MODE:
 			SecondDisplayMode=SECOND_CHOSEN_VIEW_MODE;
+			DetectSubOpen=false;
+			if(DetectSubOpen==false
+			&&DetectMainOpen==false)
+			{
+				IsMvDetect=false;
+			}
+			Sub_enable_hance=false;
+			if(Sub_enable_hance==false
+			&&Main_enable_hance==false)
+			{
+						enable_hance=false;
+			}
 			break;
 	case PASSENGER_TARGET_DETECTION_ON:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		DetectSubOpen=true;
+		IsMvDetect=true;
+		tIdle.threadRun(MVDECT_CN);
+		tIdle.threadRun(MVDECT_ADD_CN);
+		}
 				break;
 	case PASSENGER_TARGET_DETECTION_OFF:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		DetectSubOpen=false;
+		if(DetectSubOpen==false
+		&&DetectMainOpen==false)
+		{
+			IsMvDetect=false;
+	//		printf("Sub_mv=false!  Main_mv=false ---MV=false!\n");
+		}
+		}
 				break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_1:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=1;
+		}
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_2:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=2;
+		}
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_ON_3:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		Sub_enable_hance=true;
 		enable_hance=true;
 		Enhance_level=3;
+		}
 		break;
 	case			PASSENGER_IMAGE_ENHANCEMENT_OFF:
+		if(SecondDisplayMode!=SECOND_CHOSEN_VIEW_MODE){
 		Sub_enable_hance=false;
 		if(Sub_enable_hance==false
 		&&Main_enable_hance==false)
 		{
 					enable_hance=false;
+		}
 		}
 	//	printf("PASSENGER_IMAGE_ENHANCEMENT_OFF\n");
 		break;
@@ -367,7 +400,8 @@ void Render::RenderSceneDS()
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_SCISSOR_TEST);
 		DrawAllViewRoiArrow(RoiFocusCamidx::GetInstance()->GetRoiFocusCamidx());
-#if MVDECT
+//		p_ForeSightFacade[SUB]->Reset(SECOND_559_ALL_VIEW_MODE);
+		#if MVDECT
 		if(DetectSubOpen)
 		{
 	//		glScissor(0,0,1620,573);
@@ -437,7 +471,7 @@ void Render::RenderSceneDS()
 	break;
 	case	SECOND_TELESCOPE_RIGHT_MODE:
 		tIdle.threadIdle(SUB_CN);
-			p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
+			//p_ForeSightFacade2[SUB]->Reset(TELESCOPE_RIGHT_MODE,SUB);
 			   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 				RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,RIGHT,SUB);
 #if			0
@@ -457,7 +491,7 @@ void Render::RenderSceneDS()
 	case	SECOND_TELESCOPE_BACK_MODE:
 		tIdle.threadIdle(SUB_CN);
 
-		p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
+	//	p_ForeSightFacade2[SUB]->Reset(TELESCOPE_BACK_MODE,SUB);
 		   RenderRulerView(env,-g_subwindowWidth*3.0/1920.0,g_subwindowHeight*980.0/1080.0,g_subwindowWidth,g_subwindowHeight*140.0/1080.0,RULER_45);
 		   RenderPanoTelView(env,0,g_subwindowHeight*434.0/1080,g_subwindowWidth, g_subwindowHeight*576.0/1080.0,BACK,SUB);
 #if			0

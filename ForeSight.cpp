@@ -209,8 +209,8 @@ void ForeSight_decorator::Draw( GLEnv &m_env)
 			lastMode=nowmode;
 			foresightPosX=0.0;
 			foresightPosY=0.0;
-			waitIntheright=true;
-			waitIntheleft=true;
+		//	waitIntheright=true;
+		//	waitIntheleft=true;
 			return true;
 		}
 		return false;
