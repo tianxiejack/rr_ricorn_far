@@ -6457,13 +6457,13 @@ void Render::DrawInitView(GLEnv &m_env,Rect* rec, bool needSendData)
 	int pic_count_hor=CAM_COUNT/2;
 	int wid = rec->width/pic_count_hor, hei = rec->height/2;
 	int startx,starty;
-	for(int i=0; i<CAM_COUNT; i++)
+/*	for(int i=0; i<CAM_COUNT; i++)
 	{
 		startx = rec->x + wid*(i%pic_count_hor);
 		starty = rec->y + hei*(1 - i/pic_count_hor);
 		DrawSigleScale(m_env,new Rect(startx,starty,wid,hei), i, needSendData);
 	}
-
+*/
 	if(common.Scaned())
 	{
 		char text[]="O K     ";
@@ -6477,7 +6477,7 @@ void Render::DrawInitView(GLEnv &m_env,Rect* rec, bool needSendData)
 		if(common.getStateChannel(i))
 		{
 			char text[]="Pass     ";
-			startx = wid*(i%4) + (wid/pic_count_hor);
+			startx = wid*(i%pic_count_hor) + (wid/pic_count_hor);
 			starty = hei*(1 - i/pic_count_hor) ;
 			DrawCordsView(m_env,new Rect(startx, starty,rec->width/24,rec->height/10),text);
 		}
@@ -7692,52 +7692,52 @@ if(setpriorityOnce)
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		switch(idx)
 		{
-		case 1:
+		case 2:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 2:
+		case 3:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 3:
+		case 4:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 4:
+		case 5:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 5:
+		case 6:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 6:
+		case 7:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 7:
+		case 8:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 8:
+		case 9:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 9:
+		case 10:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 10:
+		case 1:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 			break;
@@ -8971,6 +8971,7 @@ GLEnv & env=env1;
 				p_BillBoard->m_Direction = lastSingleViewDirection;
 			}
 			displayMode = nextMode;
+			EnterSinglePictureSaveMode=true;
 		}
 			break;
 		//case 'u'://forward
@@ -9010,8 +9011,6 @@ GLEnv & env=env1;
 		case 'R':
 			stopcenterviewrotate=!stopcenterviewrotate;
 			break;
-		case 'h':
-			break;
 		case 'j':
 			RoiFocusCamidx::GetMainInstance()->increaseRoiFocusCamidx();
 			break;
@@ -9034,24 +9033,45 @@ GLEnv & env=env1;
 				rotateangle_per_second=rotateangle_per_second-2;
 			}
 			break;
+		case 'h':
+			if(displayMode=CHOSEN_VIEW_MODE)
+			{
+				for(int i=0;i<CAM_COUNT;i++)
+				{
+					render.ProcessOitKeys(env,'~', 0, 0);
+					sleep(2);
+					render.ProcessOitKeys(env,'i', 0, 0);
+					sleep(2);
+				}
+				//render.ProcessOitKeys(env,'H', 0, 0);
+			}
+			break;
 		case 'H':
-		//case 'h':
+			//system("./cmd_pano.sh");
 		{
+			//int aret=123;
+			//aret=system("rm tttt.cpp");
+			//printf("ret=%d\n",aret);
+		}
+		//case 'h':
+			{
+				EnterSinglePictureSaveMode=true;
+				displayMode=INIT_VIEW_MODE;
 					common.setScanned(true);
 					DISPLAYMODE nextMode = INIT_VIEW_MODE;
 					if(BACK_VIEW_MODE != displayMode){
 						p_BillBoard->m_Direction = lastSingleViewDirection;
 					}
 					displayMode = nextMode;
-
-					if((INIT_VIEW_MODE==displayMode)&&(EnterSinglePictureSaveMode==true))
+					SetThreadStitchState(STITCH_ONLY);
+				/*	if((INIT_VIEW_MODE==displayMode)&&(EnterSinglePictureSaveMode==true))
 					{
 						SetThreadStitchState(STITCH_ONLY);
 					}
 					else
 					{
 						SetThreadStitchState(SAVEPIC_STITCH);
-					}
+					}*/
 				}
 					break;
 		case 'r':
