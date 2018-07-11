@@ -63,12 +63,14 @@ pthread_mutex_t Mutex[2] = PTHREAD_MUTEX_INITIALIZER;
 #define  IPC_ftok_path "/home/"
 int sockfd;
 char buf[22] = { 0 };
+char buf1[26] = { 0 };
 struct sockaddr_in servaddr;
+struct sockaddr_in nearaddr;
 
 void *Recv_ipc_Ephor(void *arg);
 void *Recv_ipc_Passenger(void *arg);
 
-int udpinit() {
+void udpinit() {
 	int ret_bind;
 	struct sockaddr_in localaddr;
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
@@ -82,13 +84,17 @@ int udpinit() {
 	ret_bind = bind(sockfd, (struct sockaddr*) &localaddr,sizeof(localaddr));
 	if (ret_bind < 0) {
 		perror("fail to bind!\n");
-		return -2;
 	}
 	
 	bzero(&servaddr, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
 	servaddr.sin_addr.s_addr = inet_addr("192.9.200.203"); //载员ip
 	servaddr.sin_port = htons(6664); //载员网络接收端口
+
+	bzero(&nearaddr, sizeof(nearaddr));
+	nearaddr.sin_family = AF_INET;
+	nearaddr.sin_addr.s_addr = inet_addr("192.9.200.202"); //近景板ip 192.9.200.202
+	nearaddr.sin_port = htons(6664); //载员网络接收端口
 }
 
 void IPC_Init(IPC_NUM_TYPE num) {
@@ -147,7 +153,8 @@ void *Recv_ipc_Ephor(void *arg) {
 	printf("\n%x\n", ipc_qid[TRANSFER_TO_EPHOR]);
 	while (1) {
 		memset(&msg, 0, sizeof(IPC_msg));
-		ret_value = msgrcv(ipc_qid[TRANSFER_TO_EPHOR], &msg, sizeof(msg.payload), 0, 0);
+		ret_value = msgrcv(ipc_qid[TRANSFER_TO_EPHOR], &msg,
+				sizeof(msg.payload), 0, 0);
 		if (ret_value < 0) {
 			printf("%s Receive  IPC msg failed,errno=%d !!!\n", __FUNCTION__,
 			errno);
@@ -180,8 +187,8 @@ void *Recv_ipc_Passenger(void *arg) {
 	printf("\n%x\n", ipc_qid[TRANSFER_TO_PASSENGER]);
 	while (1) {
 		memset(&msg, 0, sizeof(IPC_msg));
-		ret_value = msgrcv(ipc_qid[TRANSFER_TO_PASSENGER], &msg, sizeof(msg.payload), 0,
-				0);
+		ret_value = msgrcv(ipc_qid[TRANSFER_TO_PASSENGER], &msg,
+				sizeof(msg.payload), 0, 0);
 		if (ret_value < 0) {
 			printf("%s Receive  IPC msg failed,errno=%d !!!\n", __FUNCTION__,
 			errno);
@@ -242,6 +249,7 @@ float getAngleFar_AzimuthAngle() {
 	return angle_azimuth;
 }
 void SendPowerOnSelfTest() {
+	int ll;
 	buf[0] = buf[1] = buf[2] = 0;
 	buf[3] = 0xc9;
 	buf[4] = buf[5] = buf[6] = 0;
@@ -255,7 +263,19 @@ void SendPowerOnSelfTest() {
 	buf[18] = buf[19] = buf[20] = 0;
 	buf[21] = 0x01;
 
-	sendto(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &servaddr,
+	ll = sendto(sockfd, buf, sizeof(buf), 0, (struct sockaddr*) &servaddr,
 			sizeof(servaddr));
-
 }
+void sendFarSelfTest(char *farresult) {
+	int len;
+	buf1[0] = buf1[1] = buf1[2] = 0;
+	buf1[3] = 0xc9;
+	buf1[4] = buf1[5] = buf1[6] = 0;
+	buf1[7] = 0xca;
+	buf1[8] = buf1[9] = buf1[10] = 0;
+	buf1[11] = 0x0a;
+	buf1[12] = buf1[13] = buf1[14] = buf1[15] = 0x01;
+	memcpy(&buf1[16], farresult, 10);
+	len = sendto(sockfd, buf1, sizeof(buf1), 0, (struct sockaddr*) &nearaddr,
+			sizeof(nearaddr));
+} //参数是一个不小于10的数组，按字节保存从0~9相机的状态，0为异常，1为正常
