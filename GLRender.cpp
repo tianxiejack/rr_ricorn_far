@@ -4602,8 +4602,7 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 		//	printf("center_cam=%d\n",center_cam[MAIN]);
 		petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
-		petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
-
+		petal2[(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT]=(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT;
 		if(Cam_num[center_cam[mainOrsub]]==9)
 		{
 			petal3[0]=0;

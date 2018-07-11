@@ -53,7 +53,7 @@ ChosenCaptureGroup::~ChosenCaptureGroup()
 
 ChosenCaptureGroup * ChosenCaptureGroup::GetMvDetect_add_Instance()
 {
-	int queueid[10]={MAIN_1,
+	int queueid[5]={MAIN_1,
 			MAIN_2,
 			MAIN_3,
 			MAIN_4,
@@ -69,7 +69,7 @@ ChosenCaptureGroup * ChosenCaptureGroup::GetMvDetect_add_Instance()
 }
 ChosenCaptureGroup * ChosenCaptureGroup::GetMvDetectInstance()
 {
-	int queueid[10]={
+	int queueid[5]={
 			MAIN_6,
 			MAIN_7,
 			MAIN_8,

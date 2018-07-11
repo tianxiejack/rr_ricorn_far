@@ -791,7 +791,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 									if(saveSinglePic[i]==true)
 									{
 										saveSinglePic[i]=false;
-										sprintf(filename,"%.2d.bmp",i);
+										sprintf(filename,"%2d.bmp",i);
 										save_single_pic(filename,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
 									}
 								}
@@ -1149,7 +1149,7 @@ void HDv4l_cam::mainloop(int now_pic_format)
 		}else if (0 == ret)
 		{
 			fprintf(stderr, "select timeout\n");
-			exit(EXIT_FAILURE);
+			return;
 		}
 			if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
 				return;
