@@ -121,6 +121,9 @@ static float xdelta=0;
 static time_t time1,time2;
 unsigned int last_gpio_sdi=999;
 bool isinSDI=false;
+
+
+
 using namespace std;
 using namespace cv;
 
@@ -8645,6 +8648,7 @@ GLEnv & env=env1;
         GLenum format = GL_BGRA;
 
 	static unsigned int lastSingleViewDirection = BillBoard::BBD_FRONT;
+	static DISPLAYMODE rember_tel=SPLIT_VIEW_MODE;
 	do{
 		switch(key)
 		{
@@ -8705,11 +8709,14 @@ GLEnv & env=env1;
 			//xxx-=1;
 			//printf("xxx=%f\n",xxx);
 			//todo
-	/*	static DISPLAYMODE last_mode=displayMode;
-			if(last_mode!=TELESCOPE_FRONT_MODE
-					&&last_mode!=TELESCOPE_BACK_MODE
-					&&last_mode!=TELESCOPE_RIGHT_MODE
-					&&last_mode!=TELESCOPE_LEFT_MODE)*/
+			if(rember_tel==TELESCOPE_FRONT_MODE
+					||rember_tel==TELESCOPE_RIGHT_MODE
+					||rember_tel==TELESCOPE_BACK_MODE
+					||rember_tel==TELESCOPE_LEFT_MODE)
+			{
+				displayMode=rember_tel;
+			}
+			else
 			{
 				displayMode=TELESCOPE_FRONT_MODE;
 			}
@@ -8720,7 +8727,6 @@ GLEnv & env=env1;
 		case '3':
 		//	yyy+=1;
 		//	printf("yyy=%f\n",yyy);
-
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
@@ -8730,15 +8736,19 @@ GLEnv & env=env1;
 			break;
 		case '5':
 			displayMode=TELESCOPE_FRONT_MODE;
+			rember_tel=TELESCOPE_FRONT_MODE;
 			break;
 		case '6':
 			displayMode=TELESCOPE_BACK_MODE;
+			rember_tel=TELESCOPE_BACK_MODE;
 				break;
 		case '7':
 			displayMode=TELESCOPE_LEFT_MODE;
+			rember_tel=TELESCOPE_LEFT_MODE;
 				break;
 		case '8':
 			displayMode=TELESCOPE_RIGHT_MODE;
+			rember_tel=TELESCOPE_RIGHT_MODE;
 				break;
 		case 't':
 			displayMode=CHOSEN_VIEW_MODE;
