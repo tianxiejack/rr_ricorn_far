@@ -1040,10 +1040,9 @@ void Render::GetFPS()
 // This is the first opportunity to do any OpenGL related tasks.
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
-#if 1
 		ChangeMainChosenCamidx(1);
 		ChangeSubChosenCamidx(1);
-#endif
+		Read0pos();
 	GLEnv & env=env1;
 	GLubyte *pBytes;
 #if 1
@@ -8608,6 +8607,43 @@ void Render::SetShowDirection(int dir,bool show_mobile)
 
 }
 
+void Render::Read0pos()
+{
+	float temp_angle=-1;
+
+	FILE * fp=fopen("./data/ZeroPos.txt","r");
+	if(fp!=NULL)
+	{
+		fscanf(fp,"%f",&temp_angle);
+		fclose(fp);
+		angle_XXX=temp_angle;
+	}
+}
+void  Render::Save0pos()
+{
+	if(angle_XXX>=180)
+	{
+		angle_XXX-=180*2;
+	}
+	else if(angle_XXX<-180)
+	{
+		angle_XXX+=180*2;
+	}
+	char buf [12];
+	FILE *fp=fopen("./data/ZeroPos.txt","w");
+	if(fp!=NULL)
+	{
+		sprintf(buf,"%.3f",angle_XXX);
+		fwrite(buf,sizeof(buf),1,fp);
+		fclose(fp);
+	}
+	else
+	{
+		printf("There is no ./data/ZeroPos.txt  \n");
+		assert(false);
+	}
+}
+
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 GLEnv & env=env1;
@@ -8997,16 +9033,10 @@ GLEnv & env=env1;
 			SetShowDirection(BillBoard::BBD_REAR_RIGHT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 'x'://back
-		case 'X':
-			SetShowDirection(BillBoard::BBD_REAR, SHOW_DIRECTION_DYNAMIC);
-			break;
+
 		//case 'y'://left back
 		case 'Y':
 			SetShowDirection(BillBoard::BBD_REAR_LEFT, SHOW_DIRECTION_DYNAMIC);
-			break;
-		//case 'z'://left forward
-		case 'Z':
-			SetShowDirection(BillBoard::BBD_FRONT_LEFT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 't'://all + 712
 		case 'T':
@@ -9239,6 +9269,12 @@ GLEnv & env=env1;
 			break;
 		case 'G'://PTZ--CCD
 				IsgstCap=true;
+			break;
+		case 'Z':
+			Save0pos();
+			break;
+		case 'X':
+			Read0pos();
 			break;
 		case 'z'://steady on
 			isSetZeroPos=true;

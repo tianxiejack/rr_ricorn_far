@@ -38,6 +38,7 @@ static GLfloat vbuttonchoose[]={0.0,0.3,0.3,0.7};
 #define BUTTON_FORESIGHT "m_foresight.tga"
 #define BUTTON_FRONT "m_front.tga"
 #define BUTTON_LEFT "m_left.tga"
+#define BUTTON_ENSURET	 "m_ensure.tga"
 #define BUTTON_BACK "m_back.tga"
 #define BUTTON_MENU "m_menu.tga"
 #define BUTTON_MODE "m_mode.tga"
@@ -113,9 +114,10 @@ static buttonMask mask_zero_pos_ui[]={
 		{0, 3, BUTTON_ZERO_POSITION, 0},
 		{0, 2, BUTTON_RETURN, GO_TO_SUBMENU_mask_default_round_ui},
 	//	{0, 1, BUTTON_ERROR_STATE, '?'},
+
 		{0, 7, BUTTON_LEFT, 'x'},
 		{0, 5, BUTTON_RIGHT, 'z'},
-
+		{0, 4, BUTTON_ENSURET, 'Z'},
 
 };
 
