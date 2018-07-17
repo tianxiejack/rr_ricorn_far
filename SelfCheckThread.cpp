@@ -21,7 +21,8 @@ void *SelfCheck_thread(void *arg)
 		if(1)
 		{
 		selfcheck.CheckBrokenCam();
-		sendFarSelfTest((char *)selfcheck.GetBrokenCam());
+
+		//sendFarSelfTest((char *)selfcheck.GetBrokenCam());
 		//todo
 
 		//selfcheck.Check12CAM();

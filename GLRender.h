@@ -109,7 +109,8 @@ public:
         void readALPHA_ZOOM_SCALE(const char * filename);
         void writeALPHA_ZOOM_SCALE(char * filename,float ALPHA_ZOOM_SCALE);
 
-
+    void ReadPanoHorVerScaleData(char * filename);
+    void WritePanoHorVerScaleData(char * filename ,float * hor_data,float * ver_data);
 
     int SetWheelArcWidth(float arcWidth);
     void SetdisplayMode( );
@@ -587,8 +588,6 @@ private:
 	 void InitPanoScaleArrayData();
 	 void ReadPanoScaleArrayData(char * filename);
 	 void WritePanoScaleArrayData(char * filename,float * arraydata_left,float * arraydata_right,float * arraydata_level);
-	 void Save0pos();
-	 void Read0pos();
 public:
 
 	 GLShaderManager		shaderManager2;			// Shader Manager
@@ -872,6 +871,9 @@ private:
 	float channel_right_scale[CAM_COUNT];
 
 	float move_hor[CAM_COUNT];
+
+	float move_hor_scale[CAM_COUNT];
+	float move_ver_scale[CAM_COUNT];
 
 	float rotate_angle[CAM_COUNT];
 

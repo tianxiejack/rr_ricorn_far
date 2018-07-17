@@ -121,9 +121,6 @@ static float xdelta=0;
 static time_t time1,time2;
 unsigned int last_gpio_sdi=999;
 bool isinSDI=false;
-
-
-
 using namespace std;
 using namespace cv;
 
@@ -161,7 +158,8 @@ using namespace cv;
 #define PANO_ROTATE_ANGLE_FILENAME "rotateangledata.yml"
 #define DELTA_OF_PANO_SCALE 0.001
 #define DELTA_OF_PANO_HOR 1
-#define DELTA_OF_ROTATE_ANGLE 0.2
+#define DELTA_OF_ROTATE_ANGLE 0.01
+#define DELTA_OF_PANO_HOR_SCALE 0.01
 /* Stuff for the frame rate calculation */
 
 int window; /* The number of our GLUT window */
@@ -211,6 +209,16 @@ mvDetector* pSingleMvDetector=mvDetector::getInstance();
 #endif
 float ruler_90_pos=0;
 float ruler_180_pos=0;
+
+float define_channel_left_scale[10]  ={      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0};
+float define_channel_right_scale[10] ={      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0,      1.0};
+float define_move_hor[10]            ={    200.0,   -135.0,    -97.0,    399.0,   -201.0,    721.0,    -35.0,   -187.0,   -102.0,  	-227.0};
+float define_PanoFloatData[10]       ={     40.5,   -147.5,   -177.5,   -221.0,   -422.0,   -864.5,   -851.5,  -1273.5,  -1394.0,   -954.0};
+float define_rotate_angle[10]        ={      0.0,      0.0,      0.0,      0.0,      0.0,      0.0,      0.0,      0.0,      0.0,      0.0};
+float define_move_hor_scale[10]      ={     1.83,      1.5,     1.41,     1.76,      1.6,     1.79,     1.43,      1.9,     1.79,     1.74};
+float define_move_ver_scale[10]      ={     1.12,      1.12,     1.07,     1.06,     1.16,     1.36,     1.24,     1.32,     1.32,     1.19};
+
+
 
 void readcanshu()
 {
@@ -750,6 +758,11 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 			env1.Setp_Panel_Petal_OverLap(i,env1.Getp_Panel_OverLap(i));
 			env2.Setp_Panel_Petal_OverLap(i,env2.Getp_Panel_OverLap(i));
 		}
+
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		move_hor_scale[i]=1.0;
+	}
 }
 
 Render::~Render()
@@ -1040,9 +1053,10 @@ void Render::GetFPS()
 // This is the first opportunity to do any OpenGL related tasks.
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
+#if 1
 		ChangeMainChosenCamidx(1);
 		ChangeSubChosenCamidx(1);
-		Read0pos();
+#endif
 	GLEnv & env=env1;
 	GLubyte *pBytes;
 #if 1
@@ -2132,6 +2146,15 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 	base_x_scale=Point[0].x;
 	base_y_scale=Point[0].y;
 
+	float scale_hor[CAM_COUNT],scale_ver[CAM_COUNT];
+
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		getPointsValue(i*48,0,Point);
+		scale_hor[i]=Point[0].x;
+		scale_ver[i]=Point[0].y;
+	}
+
 	static cv::Point2f rotate_center[CAM_COUNT];
 	cv::Point2f rotate_point,rotate_point_pre;
 	static bool rotate_init=true;
@@ -2202,20 +2225,22 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 
 			//point1图０左边，point2图１右边
 					Point1[k].x = Point1[k].x/1920.0*640.0;
-					Point1[k].y = Point1[k].y/1080.0*540.0+(direction%CAM_COUNT)*540.0;
+					Point1[k].y = Point1[k].y/1080.0*540.0+((direction)%CAM_COUNT)*540.0;
 
 					Point2[k].x = Point2[k].x/1920.0*640.0;
 					Point2[k].y = Point2[k].y/1080.0*540.0+((direction+1)%CAM_COUNT)*540.0;
 
 
 
-					Point1[k].x=Point1[k].x+move_hor[(direction)%CAM_COUNT];
+					Point1[k].x=(Point1[k].x-scale_hor[direction])*move_hor_scale[direction]+scale_hor[direction]+move_hor[direction];
+					Point1[k].y=(Point1[k].y-scale_ver[direction])*move_ver_scale[direction]+scale_ver[direction];
 					Point1[k].y=(Point1[k].y-base_y_scale)*(channel_left_scale[direction])+base_y_scale+PanoFloatData[direction];
 					Point1[k]=RotatePoint( Point1[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
 
-					Point2[k].x=Point2[k].x+move_hor[(direction+1)%CAM_COUNT];
+					Point2[k].x=(Point2[k].x-scale_hor[(direction+1)%CAM_COUNT])*move_hor_scale[(direction+1)%CAM_COUNT]+scale_hor[(direction+1)%CAM_COUNT]+move_hor[(direction+1)%CAM_COUNT];
+					Point2[k].y=(Point2[k].y-scale_ver[(direction+1)%CAM_COUNT])*move_ver_scale[(direction+1)%CAM_COUNT]+scale_ver[(direction+1)%CAM_COUNT];
 					Point2[k].y=(Point2[k].y-base_y_scale)*(channel_right_scale[(direction+1)%CAM_COUNT])+base_y_scale+PanoFloatData[(direction+1)%CAM_COUNT];
-					Point2[k]=RotatePoint( Point2[k],rotate_center[direction+1],rotate_angle[direction+1],max_panel_length,CAM_COUNT);
+					Point2[k]=RotatePoint( Point2[k],rotate_center[(direction+1)%CAM_COUNT],rotate_angle[(direction+1)%CAM_COUNT],max_panel_length,CAM_COUNT);
 
 				}
 			}
@@ -2232,7 +2257,8 @@ void Render::InitPanel(GLEnv &m_env,int idx,bool reset)
 					Point[k].x = Point[k].x/1920.0*640.0;
 					Point[k].y= Point[k].y/1080.0*540.0+(direction%CAM_COUNT)*540.0;
 
-					Point[k].x=Point[k].x+move_hor[direction];
+					Point[k].x=(Point[k].x-scale_hor[direction])*move_hor_scale[direction]+scale_hor[direction]+move_hor[direction];
+					Point[k].y=(Point[k].y-scale_ver[direction])*move_ver_scale[direction]+scale_ver[direction];
 					Point[k].y=(Point[k].y-base_y_scale)*(channel_right_scale[direction]+(channel_left_scale[direction]-channel_right_scale[direction])*scale_count/thechannel_max_count)+base_y_scale+PanoFloatData[direction];
 					Point[k]=RotatePoint( Point[k],rotate_center[direction],rotate_angle[direction],max_panel_length,CAM_COUNT);
 				}
@@ -4604,7 +4630,8 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 		//	printf("center_cam=%d\n",center_cam[MAIN]);
 		petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
-		petal2[(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT]=(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT;
+		petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
+
 		if(Cam_num[center_cam[mainOrsub]]==9)
 		{
 			petal3[0]=0;
@@ -7693,52 +7720,52 @@ if(setpriorityOnce)
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		switch(idx)
 		{
-		case 2:
+		case 1:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 3:
+		case 2:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 4:
+		case 3:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 5:
+		case 4:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 6:
+		case 5:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 7:
+		case 6:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 8:
+		case 7:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 9:
+		case 8:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 10:
+		case 9:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 1:
+		case 10:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 			break;
@@ -8607,43 +8634,6 @@ void Render::SetShowDirection(int dir,bool show_mobile)
 
 }
 
-void Render::Read0pos()
-{
-	float temp_angle=-1;
-
-	FILE * fp=fopen("./data/ZeroPos.txt","r");
-	if(fp!=NULL)
-	{
-		fscanf(fp,"%f",&temp_angle);
-		fclose(fp);
-		angle_XXX=temp_angle;
-	}
-}
-void  Render::Save0pos()
-{
-	if(angle_XXX>=180)
-	{
-		angle_XXX-=180*2;
-	}
-	else if(angle_XXX<-180)
-	{
-		angle_XXX+=180*2;
-	}
-	char buf [12];
-	FILE *fp=fopen("./data/ZeroPos.txt","w");
-	if(fp!=NULL)
-	{
-		sprintf(buf,"%.3f",angle_XXX);
-		fwrite(buf,sizeof(buf),1,fp);
-		fclose(fp);
-	}
-	else
-	{
-		printf("There is no ./data/ZeroPos.txt  \n");
-		assert(false);
-	}
-}
-
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 GLEnv & env=env1;
@@ -8684,7 +8674,6 @@ GLEnv & env=env1;
         GLenum format = GL_BGRA;
 
 	static unsigned int lastSingleViewDirection = BillBoard::BBD_FRONT;
-	static DISPLAYMODE rember_tel=SPLIT_VIEW_MODE;
 	do{
 		switch(key)
 		{
@@ -8745,14 +8734,11 @@ GLEnv & env=env1;
 			//xxx-=1;
 			//printf("xxx=%f\n",xxx);
 			//todo
-			if(rember_tel==TELESCOPE_FRONT_MODE
-					||rember_tel==TELESCOPE_RIGHT_MODE
-					||rember_tel==TELESCOPE_BACK_MODE
-					||rember_tel==TELESCOPE_LEFT_MODE)
-			{
-				displayMode=rember_tel;
-			}
-			else
+	/*	static DISPLAYMODE last_mode=displayMode;
+			if(last_mode!=TELESCOPE_FRONT_MODE
+					&&last_mode!=TELESCOPE_BACK_MODE
+					&&last_mode!=TELESCOPE_RIGHT_MODE
+					&&last_mode!=TELESCOPE_LEFT_MODE)*/
 			{
 				displayMode=TELESCOPE_FRONT_MODE;
 			}
@@ -8763,6 +8749,7 @@ GLEnv & env=env1;
 		case '3':
 		//	yyy+=1;
 		//	printf("yyy=%f\n",yyy);
+
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
@@ -8772,19 +8759,15 @@ GLEnv & env=env1;
 			break;
 		case '5':
 			displayMode=TELESCOPE_FRONT_MODE;
-			rember_tel=TELESCOPE_FRONT_MODE;
 			break;
 		case '6':
 			displayMode=TELESCOPE_BACK_MODE;
-			rember_tel=TELESCOPE_BACK_MODE;
 				break;
 		case '7':
 			displayMode=TELESCOPE_LEFT_MODE;
-			rember_tel=TELESCOPE_LEFT_MODE;
 				break;
 		case '8':
 			displayMode=TELESCOPE_RIGHT_MODE;
-			rember_tel=TELESCOPE_RIGHT_MODE;
 				break;
 		case 't':
 			displayMode=CHOSEN_VIEW_MODE;
@@ -9033,10 +9016,16 @@ GLEnv & env=env1;
 			SetShowDirection(BillBoard::BBD_REAR_RIGHT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 'x'://back
-
+		case 'X':
+			SetShowDirection(BillBoard::BBD_REAR, SHOW_DIRECTION_DYNAMIC);
+			break;
 		//case 'y'://left back
 		case 'Y':
 			SetShowDirection(BillBoard::BBD_REAR_LEFT, SHOW_DIRECTION_DYNAMIC);
+			break;
+		//case 'z'://left forward
+		case 'Z':
+			SetShowDirection(BillBoard::BBD_FRONT_LEFT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 't'://all + 712
 		case 'T':
@@ -9138,6 +9127,18 @@ GLEnv & env=env1;
 					setCrossCenterPos(cross_pos);
 				}
 			}
+           	if(EnablePanoFloat==true)
+            	{
+    				if((TRIM_MODE==displayMode))
+    				{
+ 						move_ver_scale[testPanoNumber]=move_ver_scale[testPanoNumber]+DELTA_OF_PANO_HOR_SCALE;
+  						if(move_ver_scale[testPanoNumber]>3.0)
+  						{
+  							move_ver_scale[testPanoNumber]=3.0;
+  						}
+ 						InitPanel(m_env,0,true);
+    				}
+            	}
 			break;
 		case 's'://down
 			if(getFollowValue())
@@ -9165,7 +9166,22 @@ GLEnv & env=env1;
 							}
 							enterNumberofCam=0;
 						}
+
+			           	if(EnablePanoFloat==true)
+			            	{
+			    				if((TRIM_MODE==displayMode))
+			    				{
+			 						move_ver_scale[testPanoNumber]=move_ver_scale[testPanoNumber]-DELTA_OF_PANO_HOR_SCALE;
+			 						if(move_ver_scale[testPanoNumber]<0.01)
+			 						{
+			 							move_ver_scale[testPanoNumber]=0.01;
+			 						}
+			 						InitPanel(m_env,0,true);
+			    				}
+			            	}
 						break;
+
+
 		case 'a'://left
 			if(getFollowValue())
 			{
@@ -9269,12 +9285,6 @@ GLEnv & env=env1;
 			break;
 		case 'G'://PTZ--CCD
 				IsgstCap=true;
-			break;
-		case 'Z':
-			Save0pos();
-			break;
-		case 'X':
-			Read0pos();
 			break;
 		case 'z'://steady on
 			isSetZeroPos=true;
@@ -9938,6 +9948,35 @@ GLEnv & env=env1;
 			}
 			break;
 
+			case ':':
+	           	if(EnablePanoFloat==true)
+	            	{
+	    				if((TRIM_MODE==displayMode))
+	    				{
+	 						move_hor_scale[testPanoNumber]=move_hor_scale[testPanoNumber]-DELTA_OF_PANO_HOR_SCALE;
+	 						if(move_hor_scale[testPanoNumber]<0.01)
+	 						{
+	 							move_hor_scale[testPanoNumber]=0.01;
+	 						}
+	 						InitPanel(m_env,0,true);
+	    				}
+	            	}
+				break;
+			case '"':
+	           	if(EnablePanoFloat==true)
+	            	{
+	    				if((TRIM_MODE==displayMode))
+	    				{
+	 						move_hor_scale[testPanoNumber]=move_hor_scale[testPanoNumber]+DELTA_OF_PANO_HOR_SCALE;
+	 						if(move_hor_scale[testPanoNumber]>3.0)
+	 						{
+	 							move_hor_scale[testPanoNumber]=3.0;
+	 						}
+	 						InitPanel(m_env,0,true);
+	    				}
+	            	}
+				break;
+
 
 			case 0:
 				break;
@@ -10015,6 +10054,7 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
            		WritePanoScaleArrayData(PANO_SCALE_ARRAY_FILE,channel_left_scale,channel_right_scale,move_hor);
            		WritePanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME,PanoFloatData);
            		WriteRotateAngleDataToFile(PANO_ROTATE_ANGLE_FILENAME,rotate_angle);
+           		WritePanoHorVerScaleData(PANO_HOR_VER_SCALE_FILE,move_hor_scale,move_ver_scale);
            	}
 		else if(FREE_VIEW_MODE == displayMode){//save current position to YML file
 			mPresetCamGroup.SetCameraFrame(p_BillBoard->m_Direction,  m_freeCamera.GetFrame());
@@ -10122,11 +10162,13 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 
 		           	if((TRIM_MODE==displayMode)&&(EnablePanoFloat==true))
 		           	{
-		           			channel_left_scale[testPanoNumber]=1.0;
-		           			channel_right_scale[testPanoNumber]=1.0;
-		           			move_hor[testPanoNumber]=0.0;
-		           			PanoFloatData[testPanoNumber]=0.0;
-		           			rotate_angle[testPanoNumber]=0.0;
+		           			channel_left_scale[testPanoNumber]=define_channel_left_scale[testPanoNumber];
+		           			channel_right_scale[testPanoNumber]=define_channel_right_scale[testPanoNumber];
+		           			move_hor[testPanoNumber]=define_move_hor[testPanoNumber];
+		           			PanoFloatData[testPanoNumber]=define_PanoFloatData[testPanoNumber];
+		           			rotate_angle[testPanoNumber]=define_rotate_angle[testPanoNumber];
+		           			move_hor_scale[testPanoNumber]=define_move_hor_scale[testPanoNumber];
+		           			move_ver_scale[testPanoNumber]=define_move_ver_scale[testPanoNumber];
 		           			InitPanel(m_env,0,true);
 
 		           		
@@ -10148,11 +10190,13 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 		           	{
 					for(int set_i=0;set_i<CAM_COUNT;set_i++)
 					{
-		           			channel_left_scale[set_i]=1.0;
-		           			channel_right_scale[set_i]=1.0;
-		           			move_hor[set_i]=0.0;
-		           			PanoFloatData[set_i]=0.0;
-		           			rotate_angle[set_i]=0.0;
+		           			channel_left_scale[set_i]=define_channel_left_scale[set_i];
+		           			channel_right_scale[set_i]=define_channel_right_scale[set_i];
+		           			move_hor[set_i]=define_move_hor[set_i];
+		           			PanoFloatData[set_i]=define_PanoFloatData[set_i];
+		           			rotate_angle[set_i]=define_rotate_angle[set_i];
+		           			move_hor_scale[set_i]=define_move_hor_scale[set_i];
+		           			move_ver_scale[set_i]=define_move_ver_scale[set_i];
 					}
 					InitPanel(m_env,0,true);
 		           	}
@@ -11992,6 +12036,43 @@ void Render::writeScanAngle(const char * filename,float angle,float angleofruler
 	fclose(fp);
 }
 
+void Render::ReadPanoHorVerScaleData(char * filename)
+{
+	FILE * fp;
+	fp=fopen(filename,"r");
+	if(fp!=NULL)
+	{
+		for(int i=0;i<CAM_COUNT;i++)
+		{
+			fscanf(fp,"%f\n",&move_hor_scale[i]);
+		}
+		for(int i=0;i<CAM_COUNT;i++)
+		{
+			fscanf(fp,"%f\n",&move_ver_scale[i]);
+		}
+		fclose(fp);
+	}
+}
+
+void Render::WritePanoHorVerScaleData(char * filename,float * hor_data,float * ver_data)
+{
+	FILE * fp;
+	char data[30];
+	fp=fopen(filename,"w");
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		strcpy(data,"");
+		sprintf(data,"%f\n",hor_data[i]);
+		fwrite(data,strlen(data),1,fp);
+	}
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		strcpy(data,"");
+		sprintf(data,"%f\n",ver_data[i]);
+		fwrite(data,strlen(data),1,fp);
+	}
+	fclose(fp);
+}
 void Render::repositioncamera()
 {
 	float tel_pano_dis=0.0;
@@ -13146,7 +13227,16 @@ void Render::InitPanoScaleArrayData()
 		channel_left_scale[i]=1.0;
 		channel_right_scale[i]=1.0;
 	}
+
 	ReadPanoScaleArrayData(PANO_SCALE_ARRAY_FILE);
+
+
+	for(i=0;i<CAM_COUNT;i++)
+	{
+		move_hor_scale[i]=1.0;
+		move_ver_scale[i]=1.0;
+	}
+	ReadPanoHorVerScaleData(PANO_HOR_VER_SCALE_FILE);
 }
 
 
@@ -13465,11 +13555,15 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 	int y=0;
 	//int set_corner_angle[CAM_COUNT*2]={24,25,76,77,128,129,180,181,232,233,284,285,336,337,386,387,436,437,486,487};
 	//={20,21,64,65,106,107,148,149,192,193,234,235,276,277,320,321,364,365,406,408,448,449,490,491};
-	int set_corner_angle[CAM_COUNT*2]={0};
+//	int set_corner_angle[CAM_COUNT*2]={0};
 	int temp_count=0;
 //	temp_count=count%512;
 	temp_count=count%480;
 
+
+	int set_corner_angle[CAM_COUNT*2]={0,1,48,49,96,97,144,145,192,193,240,241,288,289,336,337,384,385,432,433};
+
+/*
 	for(y=0;y<CAM_COUNT;y++)
 	{
 		set_corner_angle[2*y]=240*SET_POINT_SCALE/(CAM_COUNT*2)+240*y*SET_POINT_SCALE/(CAM_COUNT);
@@ -13481,7 +13575,7 @@ void math_scale_pos(int direction,int count,int & scale_count,int & this_channel
 		}
 		set_corner_angle[2*y+1]=set_corner_angle[2*y]+1;
 	}
-
+*/
 	if(direction>0)
 	{
 		scale_count=temp_count-set_corner_angle[2*(direction-1)];

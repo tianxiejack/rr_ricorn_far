@@ -20,11 +20,7 @@ BMPMiscGroup * BMPMiscGroup::GetInstance()
 {
 	static bool once =true;
 	if(once){
-		#if USE_BMPCAP
 		miscCaptureGroup.init(NULL,ICON_COUNT);
-#else
-		miscCaptureGroup.init(NULL,ICON_COUNT-5);
-#endif
 		once =false;
 	}
 	return &miscCaptureGroup;

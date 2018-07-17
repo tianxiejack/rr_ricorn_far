@@ -1149,7 +1149,7 @@ void HDv4l_cam::mainloop(int now_pic_format)
 		}else if (0 == ret)
 		{
 			fprintf(stderr, "select timeout\n");
-			return;
+			exit(EXIT_FAILURE);
 		}
 			if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
 				return;
