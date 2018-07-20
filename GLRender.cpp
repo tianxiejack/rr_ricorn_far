@@ -890,19 +890,6 @@ static void TargetORI(GLubyte *pDst, int index,GLEnv &env)
 				case		SUB_TARGET_A3:
 					ptr=mdRoi_subA.GetRoiSrc(3);
 								break;
-
-				case		MAIN_TARGET_T0:
-				//	ptr=mdRoi_mainT.GetRoiSrc(0);
-							break;
-				case			MAIN_TARGET_T1:
-				//	ptr=mdRoi_mainT.GetRoiSrc(1);
-								break;
-				case			SUB_TARGET_T0:
-					//ptr=mdRoi_subT.GetRoiSrc(0);
-								break;
-				case		SUB_TARGET_T1:
-				//	ptr=mdRoi_subT.GetRoiSrc(1);
-									break;
 				default:
 					break;
 							}
@@ -1053,10 +1040,9 @@ void Render::GetFPS()
 // This is the first opportunity to do any OpenGL related tasks.
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
-#if 1
 		ChangeMainChosenCamidx(1);
 		ChangeSubChosenCamidx(1);
-#endif
+		Read0pos();
 	GLEnv & env=env1;
 	GLubyte *pBytes;
 #if 1
@@ -1065,9 +1051,6 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 #else
 	GLint nWidth=DEFAULT_IMAGE_WIDTH, nHeight=DEFAULT_IMAGE_HEIGHT, nComponents=GL_RGBA8;
 	GLenum format= GL_BGRA;
-#endif
-#if MVDECT
-	mv_detect.ReadConfig();
 #endif
 	if(!shaderManager.InitializeStockShaders()){
 		cout<<"failed to intialize shaders"<<endl;
@@ -4630,8 +4613,7 @@ void Render::RenderOnetimeView(GLEnv &m_env,GLint x, GLint y, GLint w, GLint h,i
 		}
 		//	printf("center_cam=%d\n",center_cam[MAIN]);
 		petal1[Cam_num[center_cam[mainOrsub]]]=Cam_num[center_cam[mainOrsub]];
-		petal2[Cam_num[center_cam[mainOrsub]]+1]=Cam_num[center_cam[mainOrsub]]+1;
-
+		petal2[(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT]=(Cam_num[center_cam[mainOrsub]]+1)%CAM_COUNT;
 		if(Cam_num[center_cam[mainOrsub]]==9)
 		{
 			petal3[0]=0;
@@ -7720,52 +7702,52 @@ if(setpriorityOnce)
 		RenderChineseCharacterBillBoardAt(env,-g_windowWidth*OSD_NAME_X/1920.0, g_windowHeight*OSD_NAME_Y/1080.0, g_windowWidth*OSD_NAME_W/1920.0,g_windowHeight*OSD_NAME_H/1920.0);
 		switch(idx)
 		{
-		case 1:
+		case 2:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 2:
+		case 3:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 3:
+		case 4:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 4:
+		case 5:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 5:
+		case 6:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 6:
+		case 7:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 7:
+		case 8:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 8:
+		case 9:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 9:
+		case 10:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 					break;
-		case 10:
+		case 1:
 			p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
 				RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 			break;
@@ -8634,6 +8616,43 @@ void Render::SetShowDirection(int dir,bool show_mobile)
 
 }
 
+void Render::Read0pos()
+{
+	float temp_angle=-1;
+
+	FILE * fp=fopen("./data/ZeroPos.txt","r");
+	if(fp!=NULL)
+	{
+		fscanf(fp,"%f",&temp_angle);
+		fclose(fp);
+		angle_XXX=temp_angle;
+	}
+}
+void  Render::Save0pos()
+{
+	if(angle_XXX>=180)
+	{
+		angle_XXX-=180*2;
+	}
+	else if(angle_XXX<-180)
+	{
+		angle_XXX+=180*2;
+	}
+	char buf [12];
+	FILE *fp=fopen("./data/ZeroPos.txt","w");
+	if(fp!=NULL)
+	{
+		sprintf(buf,"%.3f",angle_XXX);
+		fwrite(buf,sizeof(buf),1,fp);
+		fclose(fp);
+	}
+	else
+	{
+		printf("There is no ./data/ZeroPos.txt  \n");
+		assert(false);
+	}
+}
+
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 GLEnv & env=env1;
@@ -8674,6 +8693,7 @@ GLEnv & env=env1;
         GLenum format = GL_BGRA;
 
 	static unsigned int lastSingleViewDirection = BillBoard::BBD_FRONT;
+	static DISPLAYMODE rember_tel=SPLIT_VIEW_MODE;
 	do{
 		switch(key)
 		{
@@ -8734,11 +8754,14 @@ GLEnv & env=env1;
 			//xxx-=1;
 			//printf("xxx=%f\n",xxx);
 			//todo
-	/*	static DISPLAYMODE last_mode=displayMode;
-			if(last_mode!=TELESCOPE_FRONT_MODE
-					&&last_mode!=TELESCOPE_BACK_MODE
-					&&last_mode!=TELESCOPE_RIGHT_MODE
-					&&last_mode!=TELESCOPE_LEFT_MODE)*/
+			if(rember_tel==TELESCOPE_FRONT_MODE
+					||rember_tel==TELESCOPE_RIGHT_MODE
+					||rember_tel==TELESCOPE_BACK_MODE
+					||rember_tel==TELESCOPE_LEFT_MODE)
+			{
+				displayMode=rember_tel;
+			}
+			else
 			{
 				displayMode=TELESCOPE_FRONT_MODE;
 			}
@@ -8749,7 +8772,6 @@ GLEnv & env=env1;
 		case '3':
 		//	yyy+=1;
 		//	printf("yyy=%f\n",yyy);
-
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
@@ -8759,15 +8781,19 @@ GLEnv & env=env1;
 			break;
 		case '5':
 			displayMode=TELESCOPE_FRONT_MODE;
+			rember_tel=TELESCOPE_FRONT_MODE;
 			break;
 		case '6':
 			displayMode=TELESCOPE_BACK_MODE;
+			rember_tel=TELESCOPE_BACK_MODE;
 				break;
 		case '7':
 			displayMode=TELESCOPE_LEFT_MODE;
+			rember_tel=TELESCOPE_LEFT_MODE;
 				break;
 		case '8':
 			displayMode=TELESCOPE_RIGHT_MODE;
+			rember_tel=TELESCOPE_RIGHT_MODE;
 				break;
 		case 't':
 			displayMode=CHOSEN_VIEW_MODE;
@@ -9016,16 +9042,10 @@ GLEnv & env=env1;
 			SetShowDirection(BillBoard::BBD_REAR_RIGHT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 'x'://back
-		case 'X':
-			SetShowDirection(BillBoard::BBD_REAR, SHOW_DIRECTION_DYNAMIC);
-			break;
+
 		//case 'y'://left back
 		case 'Y':
 			SetShowDirection(BillBoard::BBD_REAR_LEFT, SHOW_DIRECTION_DYNAMIC);
-			break;
-		//case 'z'://left forward
-		case 'Z':
-			SetShowDirection(BillBoard::BBD_FRONT_LEFT, SHOW_DIRECTION_DYNAMIC);
 			break;
 		//case 't'://all + 712
 		case 'T':
@@ -9285,6 +9305,12 @@ GLEnv & env=env1;
 			break;
 		case 'G'://PTZ--CCD
 				IsgstCap=true;
+			break;
+		case 'Z':
+			Save0pos();
+			break;
+		case 'X':
+			Read0pos();
 			break;
 		case 'z'://steady on
 			isSetZeroPos=true;

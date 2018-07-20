@@ -588,6 +588,8 @@ private:
 	 void InitPanoScaleArrayData();
 	 void ReadPanoScaleArrayData(char * filename);
 	 void WritePanoScaleArrayData(char * filename,float * arraydata_left,float * arraydata_right,float * arraydata_level);
+	 void Save0pos();
+	 void Read0pos();
 public:
 
 	 GLShaderManager		shaderManager2;			// Shader Manager

@@ -40,26 +40,10 @@ public:
 	~MvDetect();
 
 	void DrawRectOnpic(unsigned char *src,int capidx,int cc);
-	void selectFrame(unsigned char *dst,unsigned char *src,int targetId,int camIdx);
-
-
 	void uyvy2gray(unsigned char* src,unsigned char* dst,int width=MAX_SCREEN_WIDTH,int height=MAX_SCREEN_HEIGHT);
 	void init(int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
 	void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
-	void saveConfig();
-	void ReadConfig();
-	bool GetMD(int mainorsub){return  enableMD[mainorsub];};
-	void SetMD(bool tof,int mainorsub){enableMD[mainorsub]=tof;};
-	void OpenMD(int mainorsub){MDopen[mainorsub]=true;};
-	void CloseMD(int mainorsub){MDopen[mainorsub]=false;};
-	bool CanUseMD(int mainorsub);
-	bool MDisStart(){
-		if(enableMD[MAIN]==true &&MDopen[MAIN]==true)///*&& enableMD[SUB]==true*/)
-			return true;
-	else if(enableMD[MAIN]==true&&MDopen[SUB]==true)
-			return true;
-	else
-	return false;};
+
 	void SetoutRect();//将检测到的每个通道里6个rect放入对应的6个容器里
 
 	std::vector<mvRect> *Getm_WholeRect(int mainOrsub)
@@ -72,8 +56,6 @@ public:
 
 
 private:
-	bool enableMD[2];
-	bool MDopen[2];
 	Rect_Srcptr  tempRect_Srcptr[CAM_COUNT];
 	unsigned char* grayFrame[CAM_COUNT];
 	std::vector<mvRect> outRect[CAM_COUNT];

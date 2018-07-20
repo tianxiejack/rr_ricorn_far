@@ -51,11 +51,6 @@ extern void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int Img
 //unsigned char * sdi_data_sub[6];
 unsigned char * target_data[CAM_COUNT];
 extern unsigned char * p_newestMvSrc[CAM_COUNT];
-extern MotionDetectorROI
-mdRoi_mainT,
-mdRoi_subT,
-mdRoi_mainA,
-mdRoi_subA;
 //static HDv4l_cam hdv4lcap(0,SDI_WIDTH,SDI_HEIGHT);
 
 extern bool enable_hance;
@@ -92,7 +87,7 @@ force_format(1),m_devFd(-1),n_buffers(0),bRun(false),Id(devId),BaseVCap()
 			bufferCount = 3;
 			if(Once_buffer)
 			{
-				init_buffer(NULL,NULL,NULL,NULL,NULL);
+				init_buffer();
 				Once_buffer=false;
 				for(int i=0;i<CAM_COUNT;i++){
 					target_data[i]=(unsigned char *)malloc(1920*1080*4);
@@ -1149,7 +1144,7 @@ void HDv4l_cam::mainloop(int now_pic_format)
 		}else if (0 == ret)
 		{
 			fprintf(stderr, "select timeout\n");
-			exit(EXIT_FAILURE);
+			return;
 		}
 			if (-1 == read_frame(now_pic_format))  /* EAGAIN - continue select loop. */
 				return;

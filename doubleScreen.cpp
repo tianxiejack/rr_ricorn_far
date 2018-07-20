@@ -660,52 +660,52 @@ void Render::RenderSceneDS()
 
 				switch(idx)
 				{
-				case 1:
+				case 2:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_FRONT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 2:
+				case 3:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_RIGHT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 3:
+				case 4:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_FRONT_LEFT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 4:
+				case 5:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_FRONT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 5:
+				case 6:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_MID_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 6:
+				case 7:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_LEFT_BACK_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 7:
+				case 8:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_LEFT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 8:
+				case 9:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_BACK_RIGHT_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 9:
+				case 10:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_BACK_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 
 							break;
-				case 10:
+				case 1:
 					p_ChineseCBillBoard->ChooseTga=CHOSEN_RIGHT_MID_T;
 						RenderChineseCharacterBillBoardAt(env,g_windowWidth*start_van_x/1920.0, g_windowHeight*start_van_y/1920.0, g_windowWidth*van_w/1920.0,g_windowWidth*van_h/1920.0);
 					break;

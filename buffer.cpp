@@ -14,16 +14,6 @@ extern MVModeSwith   mvSwitch;
 //using namespace cv;
 typedef unsigned char byte;
 
-
-
-
-
-static IF_MotionDect *pbeh=NULL;
-static 	IF_MotionDetectorROI *mp_mdRoi_mainT=NULL;
-static	IF_MotionDetectorROI *mp_mdRoi_subT=NULL;
-static	IF_MotionDetectorROI *mp_mdRoi_mainA=NULL;
-static	IF_MotionDetectorROI *mp_mdRoi_subA=NULL;
-
 Alg_Obj * queue_dis=NULL;
 Alg_Obj * queue_main_sub=NULL;
 void DeinterlaceYUV_Neon(unsigned char *lpYUVFrame, int ImgWidth, int ImgHeight, int ImgStride);
@@ -254,98 +244,12 @@ void get_buffer(unsigned char* ptr, int chId)
 	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
 #else
 	static int a=0;
-#if 0
-	if(pbeh!=NULL)
-	{
-								if(pbeh->MDisStart())
-								{
-									if(w==1280)
-									{
-						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
-						//					mp_mdRoi_mainT->SettempSrc4(bufdata);
-					//					if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
-					//						mp_mdRoi_subT->SettempSrc4(bufdata);
-						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
-							//				mp_mdRoi_mainA->SettempSrc4(bufdata);
-					//					if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
-					//						mp_mdRoi_subA->SettempSrc4(bufdata);
-									}
-									else if (w==1920)
-									{
-							//			if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
-								//			mp_mdRoi_mainT->SettempSrc6(bufdata);
-						//				if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
-						//				mp_mdRoi_subT->SettempSrc6(bufdata);
-						//				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
-						//					mp_mdRoi_mainA->SettempSrc6(bufdata);
-						//				if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
-							//				mp_mdRoi_subA->SettempSrc6(bufdata);
-									}
-								}
-	}
-#endif
-
 int h=SDI_HEIGHT/4;
 //#pragma omp parallel for
 		for(int i=0;i<4;i++)
 		{
 	memcpy(ptr+w*h*3*i,bufdata+w*h*3*i,w*h*3);
 		}
-#if 0
-	if(pbeh!=NULL)
-	{
-		if(pbeh->MDisStart())
-		{
-					if(w==1280)
-			{
-				if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
-				{
-					mp_mdRoi_mainA->SetM4data(ptr);
-					mp_mdRoi_mainA->DrawAllRectOri( MAIN_FPGA_FOUR);
-				}
-				if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
-					{
-						mp_mdRoi_mainT->SetM4data(ptr);
-						mp_mdRoi_mainT->DrawAllRectOri( MAIN_FPGA_FOUR);
-					}
-					if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
-					{
-						mp_mdRoi_subA->SetM4data(ptr);
-						mp_mdRoi_subA->DrawAllRectOri( MAIN_FPGA_FOUR);
-					}
-					if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
-					{
-						mp_mdRoi_subT->SetM4data(ptr);
-						mp_mdRoi_subT->DrawAllRectOri( MAIN_FPGA_FOUR);
-					}*/
-			}
-			else if (w==1920)
-			{
-							if(mvSwitch.IsSwitchOpen(MIAN_MV_ALL_VIEW_SWITCH))
-				{
-					mp_mdRoi_mainA->SetM6data(ptr);
-					mp_mdRoi_mainA->DrawAllRectOri( MAIN_FPGA_FOUR);
-				}
-			if(mvSwitch.IsSwitchOpen(MIAN_MV_TEL_VIEW_SWITCH))
-				{
-					mp_mdRoi_mainT->SetM6data(ptr);
-					mp_mdRoi_mainT->DrawAllRectOri( MAIN_FPGA_FOUR);
-				}
-				if(mvSwitch.IsSwitchOpen(SUB_MV_ALL_VIEW_SWITCH))
-				{
-					mp_mdRoi_subA->SetM6data(ptr);
-					mp_mdRoi_subA->DrawAllRectOri( MAIN_FPGA_FOUR);
-				}
-				if(mvSwitch.IsSwitchOpen(SUB_MV_TEL_VIEW_SWITCH))
-				{
-					mp_mdRoi_subT->SetM6data(ptr);
-					mp_mdRoi_subT->DrawAllRectOri( MAIN_FPGA_FOUR);
-				}
-			}
-		}
-	}
-
-#endif
 #endif
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
@@ -381,18 +285,8 @@ void get_bufferyuv(unsigned char* ptr, int chId)
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }
 
-void init_buffer(IF_MotionDect *p,
-		IF_MotionDetectorROI *p_mdRoi_mainT,
-		IF_MotionDetectorROI *p_mdRoi_subT,
-		IF_MotionDetectorROI *p_mdRoi_mainA,
-		IF_MotionDetectorROI *p_mdRoi_subA)
+void init_buffer()
 {
-	pbeh=p;
-	mp_mdRoi_mainT=p_mdRoi_mainT;
-	mp_mdRoi_subT=p_mdRoi_subT;
-	mp_mdRoi_mainA	=p_mdRoi_mainA;
-	mp_mdRoi_subA=p_mdRoi_subA;
-
 	queue_main_sub = (Alg_Obj *)alg_buf_init();
 	alg_obj_init(queue_main_sub);
 }
