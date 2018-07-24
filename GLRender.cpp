@@ -60,7 +60,10 @@
 #include"Cap_Spi_Message.h"
 #endif
 #include"Thread_Priority.h"
+#if MVDECT
 #include"MvDetect.h"
+#include "mvdetectInterface.h"
+#endif
 #include "thread_idle.h"
 #include "menu_button.h"
 #include "RoiFocusCamidx.h"
@@ -74,11 +77,10 @@
 extern bool toprint;
 extern MVModeSwith   mvSwitch;
 extern MotionDetectorROI
-mdRoi_mainT,
-mdRoi_subT,
 mdRoi_mainA,
 mdRoi_subA;
  extern MvDetect mv_detect;
+ extern MvDetectV2 mv_detectV2;
 #endif
  int Enhance_level=1;
  float angle_XXX=0.0;
@@ -839,7 +841,7 @@ static void captureSDICam(GLubyte *ptr, int index,GLEnv &env)
 	#if TRACK_MODE
 	Point p1,p2;
 	p1.x=track_pos[0];
-	p1.y=track_pos[1];
+	p1.y=track_pos[1];setFirst
 	p2.x=p1.x+track_pos[2];
 	p2.y=p1.y+track_pos[3];
 	if(track_pos[2]>0&&track_pos[3]>0)
@@ -6825,6 +6827,9 @@ void Render::DrawAllViewRoiArrow(int camidx)
 
 void Render::RenderScene(void)
 {
+#if MVDECT
+	IF_MvDetect & if_mv=mv_detectV2;
+#endif
 static bool setpriorityOnce=true;
 if(setpriorityOnce)
 {
@@ -6857,10 +6862,10 @@ if(setpriorityOnce)
 	if(IsMvDetect)
 	{
 #if MVDECT
+		if_mv.ClearAllVector(true);
 		if(mv_open_once)
 		{
-			setFirst();
-		//	printf("setFirst+++++++++\n");
+			if_mv.MsetFirst();
 			mv_open_once=false;
 			mv_close_once=true;
 		}
@@ -6871,10 +6876,10 @@ if(setpriorityOnce)
 	else
 	{
 #if MVDECT
+		if_mv.ClearAllVector(false);
 		if(mv_close_once)
 		{
-			deleteZombie();
-		//	printf("deleteZombie--------------\n");
+			if_mv.MdeleteZombie();
 			mv_open_once=true;
 			mv_close_once=false;
 		}

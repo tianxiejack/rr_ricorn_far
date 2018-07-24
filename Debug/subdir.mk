@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../MvDetect_V2.cpp\
 ../RoiFocusCamidx.cpp\
 ../set_button.cpp\
 ../IPC_Far_Recv_Message.cpp\
@@ -71,6 +72,7 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./MvDetect_V2.o\
 ./RoiFocusCamidx.o\
 ./set_button.o\
 ./IPC_Far_Recv_Message.o\
@@ -135,6 +137,7 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./MvDetect_V2.d\
 ./RoiFocusCamidx.d\
 ./set_button.d\
 ./IPC_Far_Recv_Message.d\
@@ -203,9 +206,9 @@ CPP_DEPS += \
 %.o: ../%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: NVCC Compiler'
-	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DENABLE_ENHANCE_FUNCTION=1 -DNO_ARM_NEON=1 -DWHOLE_PIC=1 -DUSE_BMPCAP=0 -DCAM_COUNT=10 -DMVDECT=1 -DUSE_CAP_SPI=1 -DTRACK_MODE=0 -DUSE_UART=0 -DDOUBLE_SCREEN=1 -DTEST_GAIN=1 -DUSE_12=1 -DUSE_GAIN=1 -DGSTREAM_CAP=1 -I../OSA_CAP/inc -I../GLTool/include -I../Track/inc -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/include/opencv -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -G -g -O0 -ccbin aarch64-linux-gnu-g++ -gencode arch=compute_50,code=sm_50 -m64 -odir "." -M -o "$(@:%.o=%.d)" "$<"
+	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DENABLE_ENHANCE_FUNCTION=1 -DNO_ARM_NEON=1 -DWHOLE_PIC=1 -DUSE_BMPCAP=0 -DCAM_COUNT=10 -DMVDECT=1 -DUSE_CAP_SPI=1 -DTRACK_MODE=0 -DUSE_UART=0 -DDOUBLE_SCREEN=1 -DTEST_GAIN=1 -DUSE_12=1 -DUSE_GAIN=1 -DGSTREAM_CAP=1 -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/GL -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/include/opencv -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/include -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -G -g -O0 -ccbin aarch64-linux-gnu-g++ -gencode arch=compute_50,code=sm_50 -m64 -odir "." -M -o "$(@:%.o=%.d)" "$<"
 
-	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DENABLE_ENHANCE_FUNCTION=1 -DNO_ARM_NEON=1 -DWHOLE_PIC=1 -DDOUBLE_SCREEN=1 -DUSE_BMPCAP=0 -DMVDECT=1 -DUSE_CAP_SPI=1 -DCAM_COUNT=10 -DTRACK_MODE=0 -DUSE_UART=0 -DTEST_GAIN=1 -DUSE_12=1 -DUSE_GAIN=1 -DGSTREAM_CAP=1 -I../Track/inc -I../OSA_CAP/inc -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/include -I/usr/include/opencv -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -G -g -O0 --compile -m64 -ccbin aarch64-linux-gnu-g++  -x c++ -o  "$@" "$<"
+	/usr/local/cuda-8.0/bin/nvcc -DDISABLE_NEON_DEI=1 -DENABLE_ENHANCE_FUNCTION=1 -DNO_ARM_NEON=1 -DWHOLE_PIC=1 -DDOUBLE_SCREEN=1 -DUSE_BMPCAP=0 -DMVDECT=1 -DUSE_CAP_SPI=1 -DCAM_COUNT=10 -DTRACK_MODE=0 -DUSE_UART=0 -DTEST_GAIN=1 -DUSE_12=1 -DUSE_GAIN=1 -DGSTREAM_CAP=1 -I../OSA_CAP/inc -I/usr/include/GL -I../GLTool/include -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/aarch64-linux-gnu/glib-2.0/include -I/usr/lib/aarch64-linux-gnu/include -I/usr/include -I/usr/include/opencv -I/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include -G -g -O0 --compile -m64 -ccbin aarch64-linux-gnu-g++  -x c++ -o  "$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

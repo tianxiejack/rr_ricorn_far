@@ -2,24 +2,24 @@
 #include"StlGlDefines.h"
 #include <stdio.h>
 #include"RoiFocusCamidx.h"
-
 #if 1
 extern unsigned char * p_newestMvSrc[CAM_COUNT];
 #if MVDECT
 extern MvDetect mv_detect;
-MotionDetectorROI   mdRoi_mainA(4,&mv_detect,MAIN),mdRoi_subA(4,&mv_detect,SUB);
-#endif
+extern MvDetectV2 mv_detectV2;
+MotionDetectorROI   mdRoi_mainA(4,&mv_detectV2,MAIN),mdRoi_subA(4,&mv_detectV2,SUB);
 
-MotionDetectorROI::MotionDetectorROI(int sumTarget,MvDetect *pmv,int mainOrsub):
+#endif
+MotionDetectorROI::MotionDetectorROI(int sumTarget,IF_MvDetect *pmv,int mainOrsub):
 m_pmv(pmv),m_sumTarget(sumTarget),m_MAIN_SUB(mainOrsub)
 {
 	for(int i=0;i<m_sumTarget;i++)
 	{
 		targetRect[i].camIdx=0;
-		targetRect[i].outRect.x=200;
-		targetRect[i].outRect.y=200;
-		targetRect[i].outRect.width=400;
-		targetRect[i].outRect.height=400;
+		targetRect[i].outRect.targetRect.x=200;
+		targetRect[i].outRect.targetRect.y=200;
+		targetRect[i].outRect.targetRect.width=400;
+		targetRect[i].outRect.targetRect.height=400;
 
 	RoiSrc[i]=(unsigned char *)malloc(ROIW*ROIH*3);
 	}
@@ -35,8 +35,8 @@ bool CmpYsmaller(const mvRect &mv1,const mvRect  &mv2);
 bool CmpYbigger(const mvRect &mv1,const mvRect  &mv2);
 bool CmpAREAbigger( const mvRect &mv1, const mvRect  &mv2)
 {
-	float area1=mv1.outRect.x*mv1.outRect.y;
-	float area2=mv2.outRect.x*mv2.outRect.y;
+	float area1=mv1.outRect.targetRect.x*mv1.outRect.targetRect.y;
+	float area2=mv2.outRect.targetRect.x*mv2.outRect.targetRect.y;
 	if(area1==area2)
 	{
 		return CmpXsamller( mv1,mv2);
@@ -90,13 +90,13 @@ bool CmpXsamller( const mvRect &mv1, const mvRect  &mv2)
 	else if(mv1.x_angle() == mv2.x_angle()
 			||mv1.y_angle() == mv2.y_angle())
 	{
-		if(mv1.outRect.width!=mv2.outRect.width)
+		if(mv1.outRect.targetRect.width!=mv2.outRect.targetRect.width)
 		{
-			return mv1.outRect.width<mv2.outRect.width;
+			return mv1.outRect.targetRect.width<mv2.outRect.targetRect.width;
 		}
-		else if(mv1.outRect.width==mv2.outRect.width)
+		else if(mv1.outRect.targetRect.width==mv2.outRect.targetRect.width)
 		{
-			return mv1.outRect.height<mv2.outRect.height;
+			return mv1.outRect.targetRect.height<mv2.outRect.targetRect.height;
 		}
 	}
 }
@@ -114,13 +114,13 @@ bool CmpXbigger(const mvRect &mv1,const mvRect  &mv2)
 	else if(mv1.x_angle() == mv2.x_angle()
 				||mv1.y_angle() == mv2.y_angle())
 		{
-			if(mv1.outRect.width!=mv2.outRect.width)
+			if(mv1.outRect.targetRect.width!=mv2.outRect.targetRect.width)
 			{
-				return mv1.outRect.width>mv2.outRect.width;
+				return mv1.outRect.targetRect.width>mv2.outRect.targetRect.width;
 			}
-			else if(mv1.outRect.width==mv2.outRect.width)
+			else if(mv1.outRect.targetRect.width==mv2.outRect.targetRect.width)
 			{
-				return mv1.outRect.height>mv2.outRect.height;
+				return mv1.outRect.targetRect.height>mv2.outRect.targetRect.height;
 			}
 		}
 }
@@ -138,13 +138,13 @@ bool CmpYsmaller(const mvRect &mv1,const mvRect  &mv2)
 	else if(mv1.y_angle() == mv2.y_angle()
 				||mv1.x_angle() == mv2.x_angle())
 	{
-		if(mv1.outRect.height!=mv2.outRect.height)
+		if(mv1.outRect.targetRect.height!=mv2.outRect.targetRect.height)
 		{
-			return mv1.outRect.height<mv2.outRect.height;
+			return mv1.outRect.targetRect.height<mv2.outRect.targetRect.height;
 		}
-		else if(mv1.outRect.height==mv2.outRect.height)
+		else if(mv1.outRect.targetRect.height==mv2.outRect.targetRect.height)
 		{
-			return mv1.outRect.width<mv2.outRect.width;
+			return mv1.outRect.targetRect.width<mv2.outRect.targetRect.width;
 		}
 	}
 }
@@ -162,13 +162,13 @@ bool CmpYbigger(const mvRect &mv1,const mvRect  &mv2)
 		else if(mv1.y_angle() == mv2.y_angle()
 						||mv1.x_angle() == mv2.x_angle())
 			{
-				if(mv1.outRect.height!=mv2.outRect.height)
+				if(mv1.outRect.targetRect.height!=mv2.outRect.targetRect.height)
 				{
-					return mv1.outRect.height>mv2.outRect.height;
+					return mv1.outRect.targetRect.height>mv2.outRect.targetRect.height;
 				}
-				else if(mv1.outRect.height==mv2.outRect.height)
+				else if(mv1.outRect.targetRect.height==mv2.outRect.targetRect.height)
 				{
-					return mv1.outRect.width>mv2.outRect.width;
+					return mv1.outRect.targetRect.width>mv2.outRect.targetRect.width;
 				}
 			}
 }
@@ -229,10 +229,10 @@ unsigned char * MotionDetectorROI::GetRoiSrc(int targetidx)
 		drawh=ROIH;
 		temp=targetRect[targetidx];
 
-	drawx=temp.outRect.x;
-	drawy=temp.outRect.y;
-	draww=temp.outRect.width;
-	drawh=temp.outRect.height;
+	drawx=temp.outRect.targetRect.x;
+	drawy=temp.outRect.targetRect.y;
+	draww=temp.outRect.targetRect.width;
+	drawh=temp.outRect.targetRect.height;
 	 midx=drawx+draww/2;
 	 midy=drawy+drawh/2;
 

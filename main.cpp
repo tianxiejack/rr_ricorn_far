@@ -18,9 +18,10 @@
 #if MVDETECTOR_MODE
 #include "mvDetector.hpp"
 #endif
+#if MVDECT
 #include"MvDetect.h"
-
-
+#include "mvdetectInterface.h"
+#endif
 #include "BMPCaptureGroup.h"
 #include"PanoCaptureGroup.h"
 #include"ChosenCaptureGroup.h"
@@ -35,6 +36,7 @@ GLEnv env2;
 
 #if MVDECT
 extern MvDetect mv_detect;
+extern MvDetectV2 mv_detectV2;
 #endif
 float track_pos[4];
 
@@ -70,13 +72,16 @@ void mvDetectorDraw(std::vector<TRK_RECT_INFO> &resTarget,int chId)
 #endif
 int main(int argc, char** argv)
 {
-		IPC_Init_All();
+#if MVDECT
+	IF_MvDetect & if_mv=mv_detectV2;
+#endif
+	IPC_Init_All();
 #if USE_CAP_SPI
 	SpiSet();
 	//InitIPCModule();
 #endif
 #if MVDECT
-	mv_detect.init(1920,1080);
+	if_mv.init(1920,1080);
 #endif
 	Parayml param;
 	if(!param.readParams("./Param.yml"))

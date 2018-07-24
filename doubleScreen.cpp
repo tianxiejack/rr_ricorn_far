@@ -33,8 +33,6 @@ bool isToshow=false;
 int ScreenState=-1;
 
 extern MotionDetectorROI
-mdRoi_mainT,
-mdRoi_subT,
 mdRoi_mainA,
 mdRoi_subA;
 void InitBowlDS()

@@ -28,7 +28,10 @@
 #include <malloc.h>
 #include <omp.h>
 #include"Thread_Priority.h"
+#if MVDECT
 #include"MvDetect.h"
+#include "mvdetectInterface.h"
+#endif
 #include "thread_idle.h"
 #include"MvDrawRect.h"
 #include <cuda.h>
@@ -73,6 +76,7 @@ unsigned char * vga_data=NULL;
 
 #if MVDECT
  MvDetect mv_detect;
+extern MvDetectV2 mv_detectV2;
 #endif
 HDv4l_cam::HDv4l_cam(int devId,int width,int height):io(IO_METHOD_USERPTR),imgwidth(width),
 imgheight(height),buffers(NULL),memType(MEMORY_NORMAL),cur_CHANnum(0),
@@ -680,6 +684,9 @@ void YUYVEnhance(unsigned char * dst,unsigned char * src,int w,int h)
 */
 int HDv4l_cam::read_frame(int now_pic_format)
 {
+#if MVDECT
+	IF_MvDetect & if_mv=mv_detectV2;
+#endif
 	struct v4l2_buffer buf;
 	int i=0;
 	static int  count=0;
@@ -764,13 +771,12 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						{
 						{
 							#if MVDECT
-							//if(mv_detect.MDisStart())
 							if(IsMvDetect)
 							{
 							if(nowGrayidx>=1&&nowGrayidx<=10)
 							{
 								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
-								mv_detect.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+								if_mv.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
 								p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
 							}
 							}
@@ -809,14 +815,14 @@ int HDv4l_cam::read_frame(int now_pic_format)
 #if MVDECT
 								if(IsMvDetect)
 								{
-									mv_detect.SetoutRect();
+									if_mv.SetoutRect();
 									if(nowpicW==1280)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
+										if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
 									}
 									else if (nowpicW==1920)
 									{
-										mv_detect.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
+										if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
 									}
 								}
 #endif
