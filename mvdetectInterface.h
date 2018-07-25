@@ -56,8 +56,8 @@ public:
 	 void MsetFirst(){};
 	 void MdeleteZombie(){};
 	void uyvy2gray(unsigned char* src,unsigned char* dst,int idx,int width=MAX_SCREEN_WIDTH,int height=MAX_SCREEN_HEIGHT);
-	void SetLineY(int idx,int startY){lineY[idx]=startY;};
-	void SetLinedalta(int idx,int delta){linedelta[idx]=delta;};
+	void SetLineY(int idx,int startY){/*lineY[idx]=startY;*/};
+	void SetLinedalta(int idx,int delta){/*linedelta[idx]=delta;*/};
 	void ReSetLineY();
 	float GetRoiStartY_OffsetCoefficient(int idx);
     int lineY[CAM_COUNT];

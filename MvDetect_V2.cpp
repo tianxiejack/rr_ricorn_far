@@ -29,9 +29,13 @@ MvDetectV2 mv_detectV2(pMvIF);
 
 
 
-BaseMvDetect::BaseMvDetect():half_RoiAreah(0.3)
+BaseMvDetect::BaseMvDetect():half_RoiAreah(0.5)
 {
-
+	for(int i=0;i<CAM_COUNT;i++)
+	{
+		lineY[i]=540;
+		linedelta[i]=0;
+	}
 }
 
 
@@ -161,8 +165,6 @@ MvDetectV2::MvDetectV2(CMvDectInterface *pmvIf):
 			{
 				printf("pSemMV OSA_semCreate failed\n");
 			}
-			lineY[i]=540;
-			linedelta[i]=0;
 		}
 }
 MvDetectV2::~MvDetectV2()
@@ -191,13 +193,13 @@ void MvDetectV2::ClearAllVector(bool IsOpen)
 {
 	if(IsOpen)
 	{
-		for(int i=0;i<CAM_COUNT;i++)
+/*		for(int i=0;i<CAM_COUNT;i++)
 		{
 			tempRect_Srcptr[i].clear();
 			outRect[i].clear();
 		}
 		m_WholeRect[0].clear();
-		m_WholeRect[1].clear();
+		m_WholeRect[1].clear();*/
 	}
 	else
 		m_pMovDetector->mvPause();

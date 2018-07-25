@@ -29,12 +29,12 @@ public:
 	void ClearAllVector(bool IsOpen=true){
 		if(!IsOpen)
 		{
-			for(int i=0;i<CAM_COUNT;i++)
+		/*	for(int i=0;i<CAM_COUNT;i++)
 			{
 				outRect[i].clear();
 			}
 			m_WholeRect[0].clear();
-			m_WholeRect[1].clear();
+			m_WholeRect[1].clear();*/
 		}
 	};
 private:
