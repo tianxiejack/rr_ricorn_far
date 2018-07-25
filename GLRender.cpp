@@ -720,7 +720,7 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		//SecondDisplayMode(SECOND_PURE_MODE),
 		fboMode(FBO_ALL_VIEW_559_MODE),
 		displayMode(CHECK_MYSELF),
-		SecondDisplayMode(SECOND_559_ALL_VIEW_MODE),
+		SecondDisplayMode(SECOND_CHECK_MYSELF),
 
 		p_DynamicTrack(NULL),m_DynamicWheelAngle(0.0f),
 		stopcenterviewrotate(FALSE),rotateangle_per_second(10),set_scan_region_angle(SCAN_REGION_ANGLE),
@@ -841,7 +841,7 @@ static void captureSDICam(GLubyte *ptr, int index,GLEnv &env)
 	#if TRACK_MODE
 	Point p1,p2;
 	p1.x=track_pos[0];
-	p1.y=track_pos[1];setFirst
+	p1.y=track_pos[1];
 	p2.x=p1.x+track_pos[2];
 	p2.y=p1.y+track_pos[3];
 	if(track_pos[2]>0&&track_pos[3]>0)
@@ -7533,11 +7533,6 @@ if(setpriorityOnce)
 	//	Show_first_mode(readFirstMode());
 		billBoardx=0;
 		billBoardy=g_windowHeight;
-	//p_ChineseCBillBoard->ChooseTga=CHECK_SELF_T;
-	//RenderChineseCharacterBillBoardAt(billBoardx+g_windowWidth-g_windowWidth/1.1, billBoardy-g_windowHeight*1/3, g_windowHeight*1/2, g_windowHeight*1/2);
-
-
-		selfcheck.CalculateTime(1);
 		#if USE_UART
 		if(zodiac_msg.CheckFine()==SELFCHECK_IDLE)
 		{

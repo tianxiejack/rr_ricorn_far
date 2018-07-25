@@ -28,24 +28,6 @@ void Render::FBOdraw()
 		RenderLeftPanoView(env,0,1080.0*864.0/1080.0,1920.0, 1080.0*216.0/1080.0,MAIN,false);
 		if(displayMode!=TRIM_MODE)
 		RenderOnetimeView(env,0,0,1920.0*1152/1920, 1080.0*648/1080,MAIN);
-
-#if 0
-	//	gettimeofday(&startT[4],0);
-		 if(g_windowHeight==768)
-		{
-			RenderRightPanoView(env,0,g_windowHeight*538.0/768.0,g_windowWidth, g_windowHeight*116.0/768.0,MAIN,0,0,0,0,true);
-			RenderLeftPanoView(env,0,g_windowHeight*655.0/768.0,g_windowWidth, g_windowHeight*115.0/768.0,MAIN,false);
-		if(displayMode!=TRIM_MODE)
-			RenderOnetimeView(env,0,0,g_windowWidth*944.0/1024.0, g_windowHeight*537.0/768.0,MAIN);
-		}
-		 else
-			{
-			RenderRightPanoView(env,0,g_windowHeight*648.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,0,0,0,0,true);
-			RenderLeftPanoView(env,0,g_windowHeight*864.0/1080.0,g_windowWidth, g_windowHeight*216.0/1080.0,MAIN,false);
-			if(displayMode!=TRIM_MODE)
-			RenderOnetimeView(env,0,0,g_windowWidth*1152/1920, g_windowHeight*648/1080,MAIN);
-			}
-#endif
 		break;
 
 	case FBO_PURE_MODE:

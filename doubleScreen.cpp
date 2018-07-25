@@ -12,6 +12,7 @@ extern MVModeSwith   mvSwitch;
 #include"IPC_Far_Recv_Message.h"
 #include"MvDrawRect.h"
 #include"RoiFocusCamidx.h"
+#include "CheckMyself.h"
 extern thread_idle tIdle;
 extern Render render;
 extern MvDetect mv_detect;
@@ -27,11 +28,11 @@ extern bool DetectMainOpen;
 extern bool enable_hance;
 extern bool Main_enable_hance;
 extern bool Sub_enable_hance;
-
+extern bool IstoShowDeviceState[2];
 extern int Enhance_level;
 bool isToshow=false;
 int ScreenState=-1;
-
+extern SelfCheck selfcheck;
 extern MotionDetectorROI
 mdRoi_mainA,
 mdRoi_subA;
@@ -712,7 +713,47 @@ void Render::RenderSceneDS()
 
 				}
 		}
+		else 	if(SecondDisplayMode==SECOND_CHECK_MYSELF)
+		{
+		int	billBoardx=0;
+		int	billBoardy=g_windowHeight;
+			selfcheck.CalculateTime(1);
+			if(selfcheck.IsIDLE()==SELFCHECK_IDLE)
+			{
+				if(selfcheck.IsOnesec())
+				{
+					p_ChineseCBillBoard->ChooseTga=IDLE_T;
+					RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+				}
+			}
+			else 	if(selfcheck.IsIDLE()==SELFCHECK_PASS)
+			{
+				p_ChineseCBillBoard->ChooseTga=FINE_T;
+				RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+				static int a=0;
+				if(a++==50)
+				{
+					SecondDisplayMode=SECOND_559_ALL_VIEW_MODE;
+				a=0;
+				}
+			}
+			else if(selfcheck.IsIDLE()==SELFCHECK_FAIL)
+			{
+					p_ChineseCBillBoard->ChooseTga=WRONG_T;
+			RenderChineseCharacterBillBoardAt(env,g_windowWidth*360.0/1920.0, billBoardy-g_windowHeight*2/3.3, g_windowWidth*1.0/2.5, g_windowHeight*1/2*1.5);
+			static int b=0;
+					if(b++==50)
+					{
+					SecondDisplayMode=SECOND_559_ALL_VIEW_MODE;
+					b=0;
+					}
 
+			}
+		}
+			if(IstoShowDeviceState[SUB])
+			{
+				showDeviceState();
+			}
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
 {
@@ -1036,6 +1077,9 @@ void Render::ProcessOitKeysDS(GLEnv &m_env,unsigned char key, int x, int y)
 {
 	switch(key)
 		{
+	case '?':
+		IstoShowDeviceState[SUB]=!IstoShowDeviceState[SUB];
+		break;
 	case'+':
 		delayT+=1;
 		printf("delayT=%f\n",delayT);
