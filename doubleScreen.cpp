@@ -750,9 +750,19 @@ void Render::RenderSceneDS()
 
 			}
 		}
-			if(IstoShowDeviceState[SUB])
+			if(	SecondDisplayMode==SECOND_559_ALL_VIEW_MODE)
 			{
-				showDeviceState();
+				static int ct=0;
+				static bool toshow=true;
+				if(ct++==200)
+				{
+					toshow=false;
+				}
+				if(toshow)
+				{
+					showDeviceState();
+				}
+
 			}
 }
 void Render::SetupRCDS(int windowWidth, int windowHeight)
