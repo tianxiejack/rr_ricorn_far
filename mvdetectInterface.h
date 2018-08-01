@@ -43,9 +43,6 @@ public:
 		m_WholeRect[1].clear();
 	}
 	 void	 DrawRectOnpic(unsigned char *src,int capidx,int cc);
-	 void init(int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT){};
-	 void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT){};
-	 void SetoutRect(){};
 	 std::vector<mvRect> *Getm_WholeRect(int mainOrsub)
 	{
 		m_WholeRect[mainOrsub].clear();
@@ -53,8 +50,8 @@ public:
 			m_WholeRect[mainOrsub].insert(m_WholeRect[mainOrsub].end(),outRect[i].begin(),outRect[i].end());
 		return &m_WholeRect[mainOrsub];
 	}
-	 void MsetFirst(){};
-	 void MdeleteZombie(){};
+	// void MsetFirst(){};
+//	 void MdeleteZombie(){};
 	void uyvy2gray(unsigned char* src,unsigned char* dst,int idx,int width=MAX_SCREEN_WIDTH,int height=MAX_SCREEN_HEIGHT);
 	void SetLineY(int idx,int startY){/*lineY[idx]=startY;*/};
 	void SetLinedalta(int idx,int delta){/*linedelta[idx]=delta;*/};

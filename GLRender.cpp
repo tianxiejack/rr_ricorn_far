@@ -801,7 +801,9 @@ Render::~Render()
 		if(Petal_OverLap[i])
 			delete Petal_OverLap[i];
 	}
-	delete [] button_array;
+	multiLayerButtonGroup * p=dynamic_cast<multiLayerButtonGroup *> (button_array);
+	if(p!=NULL)
+		delete p;
 }
 
 
