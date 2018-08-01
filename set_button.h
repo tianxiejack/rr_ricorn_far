@@ -29,6 +29,10 @@ public:
 	virtual void Update_State()=0;
 	virtual void init_button_group(GLShaderManager * shaderManager,GLMatrixStack * modelViewMatrix,
 			GLMatrixStack * projectionMtrx,GLFrustum *     pViewFrustrm)=0;
+	virtual void SetEnableDraw(bool enable)=0;
+	virtual bool GetEnableDraw()=0;
+	virtual void SetcurrentActiveBGIndex(int idx)=0;
+	virtual void SetSubmenuKeycode(int keycode)=0;
 
 };
 

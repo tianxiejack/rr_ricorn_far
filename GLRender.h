@@ -901,7 +901,7 @@ public:
 	 void processKeycode(int keycode);
 private:
 		int touch_pos_x,touch_pos_y;
-		multiLayerButtonGroup * button_array;
+		InterfaceButtonGroup * button_array;
 };
 
 void* getDefaultShaderMgr();
