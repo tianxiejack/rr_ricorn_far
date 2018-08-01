@@ -67,6 +67,7 @@
 #include "thread_idle.h"
 #include "menu_button.h"
 #include "RoiFocusCamidx.h"
+#include "multiLayerButtonGroup.h"
 #if MVDECT         
 #include"MvDrawRect.h"
 #include"MvModeSwith.h"
