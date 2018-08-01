@@ -44,7 +44,7 @@ public:
 	}
 	 void	 DrawRectOnpic(unsigned char *src,int capidx,int cc);
  	void init(int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT){};
-        void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,i
+        void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
         void SetoutRect(){};
 
 	 std::vector<mvRect> *Getm_WholeRect(int mainOrsub)
