@@ -553,7 +553,6 @@ private:
 	void GenerateTriangleView();
 	void DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub=MAIN);
 	void DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOrsub=MAIN);
-
 	void initAlphaMask();
 	void DrawVehicle();
 	void DrawSlideonPanel(GLEnv &m_env);
@@ -747,14 +746,16 @@ private:
 #define VGA_TEXTURE_COUNT (VGA_CAM_COUNT)
 #define SDI_TEXTURE_COUNT (SDI_CAM_COUNT)
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
-#define PETAL_TEXTURE_COUNT (1+3)
+#define PETAL_TEXTURE_COUNT (1+2)
 
 #define ALPHA_TEXTURE_IDX0	(1)
-#define ALPHA_TEXTURE_IDX	(1+1)
-#define ALPHA_TEXTURE_IDX1	(1+2)
+#define ALPHA_TEXTURE_IDX	(2)
 
 	GLuint textures[PETAL_TEXTURE_COUNT];
 	GLuint GL_TextureIDs[PETAL_TEXTURE_COUNT];
+
+	GLuint textures_sub[1];
+	GLuint GL_TextureIDs_sub[1];
 
 	DynamicTrack *p_DynamicTrack;
 	CornerMarkerGroup *p_CornerMarkerGroup;
@@ -762,7 +763,6 @@ private:
 	float   m_DynamicWheelAngle;
 	GLuint alphaMask[ALPHA_MASK_HEIGHT*ALPHA_MASK_WIDTH];//={0};
 	GLuint alphaMask0[ALPHA_MASK_HEIGHT*ALPHA_MASK_WIDTH];//={0};
-	GLuint alphaMask1[ALPHA_MASK_HEIGHT*ALPHA_MASK_WIDTH];//={0};
 
 	STLASCIILoader BowlLoader;
 	STLASCIILoader PanelLoader;
@@ -805,13 +805,6 @@ private:
 	GLuint iconRuler90Textures[1];
 	GLuint GL_IconRuler180TextureIDs[1];
 	GLuint iconRuler180Textures[1];
-
-	GLuint GL_IconRuler45_small_TextureIDs[1];
-	GLuint iconRuler45_small_Textures[1];
-	GLuint GL_IconRuler90_small_TextureIDs[1];
-	GLuint iconRuler90_small_Textures[1];
-	GLuint GL_IconRuler180_small_TextureIDs[1];
-	GLuint iconRuler180_small_Textures[1];
 
 	inline void setMouseCor(int x, int y){MOUSEx = x;  MOUSEy = y;};
 	inline void setMouseButton(int button){BUTTON=button;};

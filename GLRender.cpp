@@ -780,9 +780,6 @@ Render::~Render()
 	glDeleteTextures(1,iconRuler45Textures);
 	glDeleteTextures(1,iconRuler90Textures);
 	glDeleteTextures(1,iconRuler180Textures);
-	glDeleteTextures(1,iconRuler45_small_Textures);
-	glDeleteTextures(1,iconRuler90_small_Textures);
-	glDeleteTextures(1,iconRuler180_small_Textures);
 #endif
 	delete p_ForeSightFacade;
 	delete p_ForeSightFacade2;
@@ -805,6 +802,7 @@ Render::~Render()
 	multiLayerButtonGroup * p=dynamic_cast<multiLayerButtonGroup *> (button_array);
 	if(p!=NULL)
 		delete p;
+
 }
 
 
@@ -949,7 +947,6 @@ static void captureCamFish(GLubyte *ptr, int index,GLEnv &env)
 	env.GetPanoCaptureGroup()->captureCamFish(ptr,index);
 }
 
-#if 1
 static void captureRuler45Cam(GLubyte *ptr, int index,GLEnv &env)
 {
 #if USE_ICON
@@ -969,25 +966,6 @@ static void captureRuler180Cam(GLubyte *ptr, int index,GLEnv &env)
 #endif
 }
 
-static void captureRuler45_small_Cam(GLubyte *ptr, int index,GLEnv &env)
-{
-#if USE_ICON
-	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_45_small_DEGREESCALE);
-#endif
-}
-static void captureRuler90_small_Cam(GLubyte *ptr, int index,GLEnv &env)
-{
-#if USE_ICON
-	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_90_small_DEGREESCALE);
-#endif
-}
-static void captureRuler180_small_Cam(GLubyte *ptr, int index,GLEnv &env)
-{
-#if USE_ICON
-	env.GetMiscCaptureGroup()->captureCam(ptr,ICON_180_small_DEGREESCALE);
-#endif
-}
-#endif
 /* Sets up Projection matrix according to command switch -o or -p */
 /* called from initgl and the window resize function */
 void Render::SetView(int Width, int Height)
@@ -1263,13 +1241,6 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
 				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask0);
 
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX1]);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,ALPHA_MASK_WIDTH, ALPHA_MASK_HEIGHT, 0,
-				GL_RGBA, GL_UNSIGNED_BYTE, alphaMask1);
 	}
 	glGenTextures(12, GL_TargetTextures);
 			for(int i = 0; i < 12; i++){
@@ -1390,45 +1361,6 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH, RULER_HEIGHT, 0,
 					format, GL_UNSIGNED_BYTE, 0);
 		}
-
-		glGenTextures(1, iconRuler45_small_Textures);
-		for(int i = 0; i < 1; i++){
-			glBindTexture(GL_TEXTURE_2D, iconRuler45_small_Textures[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
-					format, GL_UNSIGNED_BYTE, 0);
-		}
-
-		glGenTextures(1, iconRuler90_small_Textures);
-		for(int i = 0; i < 1; i++){
-			glBindTexture(GL_TEXTURE_2D, iconRuler90_small_Textures[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
-					format, GL_UNSIGNED_BYTE, 0);
-		}
-
-		glGenTextures(1, iconRuler180_small_Textures);
-		for(int i = 0; i < 1; i++){
-			glBindTexture(GL_TEXTURE_2D, iconRuler180_small_Textures[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-			glTexImage2D(GL_TEXTURE_2D,0,nComponents,RULER_WIDTH_2, RULER_HEIGHT_2, 0,
-					format, GL_UNSIGNED_BYTE, 0);
-		}
 #endif
 	}
 	glMatrixMode(GL_MODELVIEW);
@@ -1479,25 +1411,18 @@ void Render::GenerateGLTextureIds()
 	    GL_TextureIDs[i] = GL_TextureIDs[i-1] + 1;
 	}
 
+	textureCount = sizeof(GL_TextureIDs_sub)/sizeof(GL_TextureIDs_sub[0]);
+	GL_TextureIDs_sub[0] = GL_TEXTURE12;
+	for(int i = 1; i < textureCount; i++){
+		GL_TextureIDs_sub[i] = GL_TextureIDs_sub[i-1] + 1;
+	}
+
 	textureCount = sizeof(GL_ExtensionTextureIDs)/sizeof(GL_ExtensionTextureIDs[0]);
 	GL_ExtensionTextureIDs[0] = GL_TEXTURE25;
 	for(int i = 1; i < textureCount; i++){
 		GL_ExtensionTextureIDs[i] = GL_ExtensionTextureIDs[i-1] + 1;
 	}
 
-/*
-	textureCount = sizeof(GL_VGATextureIDs)/sizeof(GL_VGATextureIDs[0]);
-	GL_VGATextureIDs[0] = GL_TEXTURE22;
-	for(int i = 1; i < textureCount; i++){
-		GL_VGATextureIDs[i] = GL_VGATextureIDs[i-1] + 1;
-	}
-
-	textureCount = sizeof(GL_SDITextureIDs)/sizeof(GL_SDITextureIDs[0]);
-	GL_SDITextureIDs[0] = GL_TEXTURE23;
-	for(int i = 1; i < textureCount; i++){
-		GL_SDITextureIDs[i] = GL_SDITextureIDs[i-1] + 1;
-	}
-*/
 	textureCount = sizeof(GL_TargetTextureIDs)/sizeof(GL_TargetTextureIDs[0]);
 	GL_TargetTextureIDs[0] = GL_TEXTURE4;
 	for(int i = 1; i < textureCount; i++){
@@ -1509,8 +1434,6 @@ void Render::GenerateGLTextureIds()
 	for(int i = 1; i < textureCount; i++){
 		GL_ChosenTextureIDs[i] = GL_ChosenTextureIDs[i-1] + 1;
 	}
-
-
 
 	textureCount = sizeof(GL_FBOTextureIDs)/sizeof(GL_FBOTextureIDs[0]);
 	GL_FBOTextureIDs[0] = GL_TEXTURE31;
@@ -1542,21 +1465,6 @@ void Render::GenerateGLTextureIds()
 	GL_IconRuler180TextureIDs[0] = GL_TEXTURE19;
 	for(int i = 1; i < textureCount; i++){
 		GL_IconRuler180TextureIDs[i] = GL_IconRuler180TextureIDs[i-1] + 1;
-	}
-	textureCount = sizeof(GL_IconRuler45_small_TextureIDs)/sizeof(GL_IconRuler45_small_TextureIDs[0]);
-	GL_IconRuler45_small_TextureIDs[0] = GL_TEXTURE28;
-	for(int i = 1; i < textureCount; i++){
-		GL_IconRuler45_small_TextureIDs[i] = GL_IconRuler45_small_TextureIDs[i-1] + 1;
-	}
-	textureCount = sizeof(GL_IconRuler90_small_TextureIDs)/sizeof(GL_IconRuler90_small_TextureIDs[0]);
-	GL_IconRuler90_small_TextureIDs[0] = GL_TEXTURE29;
-	for(int i = 1; i < textureCount; i++){
-		GL_IconRuler90_small_TextureIDs[i] = GL_IconRuler90_small_TextureIDs[i-1] + 1;
-	}
-	textureCount = sizeof(GL_IconRuler180_small_TextureIDs)/sizeof(GL_IconRuler180_small_TextureIDs[0]);
-	GL_IconRuler180_small_TextureIDs[0] = GL_TEXTURE30;
-	for(int i = 1; i < textureCount; i++){
-		GL_IconRuler180_small_TextureIDs[i] = GL_IconRuler180_small_TextureIDs[i-1] + 1;
 	}
 #endif
 }
@@ -2597,8 +2505,6 @@ void Render::DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub)
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
 		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
 		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX1]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX1]);
 
 		for(int i = 0; i < CAM_COUNT; i++){
 			glActiveTexture(GL_TextureIDs[i]);
@@ -2633,13 +2539,6 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 	//#pragma omp parallel sections
 	{
 		//bind alpha mask to texture6, render the imagei, imagei+1 and alphaMask on petal_overlap[i]
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX1]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX1]);
-
 		if(p_petalNum==NULL)
 		{
 				glActiveTexture(GL_TextureIDs[0]);
@@ -2670,7 +2569,12 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				 (*m_env.GetPanel_Petal(i)).Draw();
 
-				if(	enable_hance)
+					glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
+						glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
+						glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
+						glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
+
+				 if(	enable_hance)
 				{
 					switch(Enhance_level)
 				{
@@ -2764,16 +2668,6 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 		}
 		m_env.GetmodelViewMatrix()->PopMatrix();
 	}
-
-
-
-
-#ifdef GET_ALARM_AERA
-	glReadBuffer(GL_FRONT);
-
-	glReadPixels(0,0,720,576,GL_BGRA_EXT,GL_UNSIGNED_BYTE,screen_data_1920X1080);
-
-#endif
 }
 
 void Render::initAlphaMask()
@@ -2826,16 +2720,6 @@ void Render::initAlphaMask()
 		}
 	}
 
-	pPixel = alphaMask1;
-	for(int y = 0 ; y < ALPHA_MASK_HEIGHT; y ++)
-	{
-		for(int x = 0; x <ALPHA_MASK_WIDTH; x++)
-		{
-			GLubyte alpha = 0;//255;//255*x/(ALPHA_MASK_WIDTH-1);
-			GLuint pix = *(pPixel+y*ALPHA_MASK_WIDTH+x);
-			*(pPixel+y*ALPHA_MASK_WIDTH+x) = (pix & 0x00FFFFFF)| (alpha<<24);
-		}
-	}
 }
 
 void Render::InitForesightGroupTrack(GLEnv &m_env)
@@ -6830,7 +6714,7 @@ void Render::DrawAllViewRoiArrow(int camidx)
 
 void Render::RenderScene(void)
 {
-#if MVDECT
+	#if MVDECT
 	IF_MvDetect & if_mv=mv_detectV2;
 #endif
 static bool setpriorityOnce=true;
@@ -7970,7 +7854,6 @@ if(setpriorityOnce)
 		showDeviceState();
 	}
 	button_array->Group_Draw();
-
 }
 
 
@@ -13142,42 +13025,6 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		}
 		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+17+type);//ICON texture start from 16
 		break;
-
-	case RULER_45_samll:
-			glActiveTexture(GL_IconRuler45_small_TextureIDs[idx]);
-
-			if(needSendData){
-						m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler45_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler45_small_Cam,ICON_45_small_DEGREESCALE+MAGICAL_NUM);
-			}
-			else{
-				glBindTexture(GL_TEXTURE_2D, iconRuler45_small_Textures[idx]);
-			}
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+28);//ICON texture start from 16
-			break;
-		case RULER_90_small:
-			m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
-			glActiveTexture(GL_IconRuler90_small_TextureIDs[idx]);
-
-			if(needSendData){
-				m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler90_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler90_small_Cam,ICON_90_small_DEGREESCALE+MAGICAL_NUM);
-			}
-			else{
-				glBindTexture(GL_TEXTURE_2D, iconRuler90_small_Textures[idx]);
-			}
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+29);//ICON texture start from 16
-			break;
-		case RULER_180_small:
-		//	m_env.GetmodelViewMatrix()->Scale(322/324.0,1.0,1.0);
-			glActiveTexture(GL_IconRuler180_small_TextureIDs[idx]);
-
-			if(needSendData){
-				m_env.Getp_PBORulerSmallMgr()->sendData(m_env,iconRuler180_small_Textures[idx], (PFN_PBOFILLBUFFER)captureRuler180_small_Cam,ICON_180_small_DEGREESCALE+MAGICAL_NUM);
-			}
-			else{
-				glBindTexture(GL_TEXTURE_2D, iconRuler180_small_Textures[idx]);
-			}
-			shaderManager.UseStockShader(GLT_SHADER_TEXTURE_REPLACE,m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), idx+30);//ICON texture start from 16
-			break;
 	}
 
 
@@ -13192,15 +13039,6 @@ void Render::DrawRulerVideo(GLEnv &m_env,bool needSendData,int type)
 		break;
 	case RULER_180:
 		m_env.Getdegreescale180Batch()->Draw();
-		break;
-	case RULER_45_samll:
-		m_env.Getdegreescale45_small_Batch()->Draw();
-		break;
-	case RULER_90_small:
-		m_env.Getdegreescale90_small_Batch()->Draw();
-		break;
-	case RULER_180_small:
-		m_env.Getdegreescale180_small_Batch()->Draw();
 		break;
 	}
 
