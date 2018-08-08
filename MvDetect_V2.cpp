@@ -25,7 +25,7 @@ unsigned char * p_newestMvSrc[CAM_COUNT]={NULL,NULL,NULL,NULL,NULL,NULL,NULL
 ,NULL,NULL,NULL};
 CMvDectInterface   *pMvIF=NULL;
 #if MVDECT
-MvDetectV2 mv_detectV2(pMvIF);
+MvDetectV2 mv_detectV2;
 
 
 
@@ -151,8 +151,7 @@ void BaseMvDetect::DrawRectOnpic(unsigned char *src,int capidx,int cc)
 		}
 }
 
-MvDetectV2::MvDetectV2(CMvDectInterface *pmvIf):
-		m_pMovDetector(pmvIf)
+MvDetectV2::MvDetectV2()
 {
 	int ret=-1;
 	for(int i=0;i<CAM_COUNT;i++)
@@ -202,7 +201,9 @@ void MvDetectV2::ClearAllVector(bool IsOpen)
 		m_WholeRect[1].clear();*/
 	}
 	else
-		m_pMovDetector->mvPause();
+	{
+		//m_pMovDetector->mvPause();
+	}
 }
 void MvDetectV2::init(int w,int h)
 {
@@ -218,6 +219,40 @@ void MvDetectV2::m_mvDetect(int idx,unsigned char* inframe,int w,int h)
 		Mat gm(h*half_RoiAreah*2,w,CV_8UC1,grayFrame[idx]);
 		if(m_pMovDetector != NULL)
 			m_pMovDetector->setFrame(gm,gm.cols,gm.rows,idx,parm_accuracy,parm_inputArea,parm_inputMaxArea,parm_threshold);
+		/*
+			OSA_semWait(this->GetpSemMV(idx),100000);
+			tempRect_Srcptr[idx].clear();
+	TRK_RECT_INFO tri[4];
+
+			tri[0].index=idx;
+			tri[0].targetRect.x=1920/2;
+			tri[0].targetRect.y=1080/2;
+			tri[0].targetRect.width=1920/4;
+			tri[0].targetRect.height=1080/4;
+
+			tri[1].index=idx;
+			tri[1].targetRect.x=200;
+			tri[1].targetRect.y=200;
+			tri[1].targetRect.width=1920/4;
+			tri[1].targetRect.height=1080/4;
+
+			tri[2].index=idx;
+			tri[2].targetRect.x=1500;
+			tri[2].targetRect.y=800;
+			tri[2].targetRect.width=200;
+			tri[2].targetRect.height=200;
+
+			tri[3].index=idx;
+			tri[3].targetRect.x=600;
+			tri[3].targetRect.y=400;
+			tri[3].targetRect.width=1920/2;
+			tri[3].targetRect.height=1080/2;
+			for(int i=0;i<20;i++)
+			{
+				for(int j=0;j<3;j++)
+					tempRect_Srcptr[idx].push_back(tri[j]);
+			}
+			OSA_semSignal(this->GetpSemMV(idx));*/
 }
 
 

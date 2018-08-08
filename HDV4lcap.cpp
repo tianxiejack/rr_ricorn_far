@@ -745,11 +745,9 @@ int HDv4l_cam::read_frame(int now_pic_format)
 						chid[MAIN]=0;
 						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[0];
-						
 						}
 						else
 						{
-
 						chid[MAIN]=nowGrayidx+1;
 						//nowGrayidx=mv_count;
 						transformed_src_main=&MVDECT_data_main[nowGrayidx-1];
@@ -827,7 +825,7 @@ int HDv4l_cam::read_frame(int now_pic_format)
 								}
 #endif
 							}
-								//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+
 						}
 						if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
 						{

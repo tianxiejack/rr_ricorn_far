@@ -68,21 +68,22 @@
 #include "menu_button.h"
 #include "RoiFocusCamidx.h"
 #include "multiLayerButtonGroup.h"
+
 #if MVDECT         
 #include"MvDrawRect.h"
-#include"MvModeSwith.h"
 
 
 
 
 extern bool toprint;
-extern MVModeSwith   mvSwitch;
-extern MotionDetectorROI
-mdRoi_mainA,
-mdRoi_subA;
  extern MvDetect mv_detect;
  extern MvDetectV2 mv_detectV2;
 #endif
+
+ extern MotionDetectorROI
+ mdRoi_mainA,
+ mdRoi_subA;
+
  int Enhance_level=1;
  float angle_XXX=0.0;
  float pt_angle=0.0;
@@ -2539,6 +2540,11 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 	//#pragma omp parallel sections
 	{
 		//bind alpha mask to texture6, render the imagei, imagei+1 and alphaMask on petal_overlap[i]
+		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
+		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
+		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
+		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
+
 		if(p_petalNum==NULL)
 		{
 				glActiveTexture(GL_TextureIDs[0]);
@@ -2568,11 +2574,6 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 				}else
 					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
 				 (*m_env.GetPanel_Petal(i)).Draw();
-
-					glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
-						glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
-						glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
-						glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
 
 				 if(	enable_hance)
 				{
@@ -2720,6 +2721,16 @@ void Render::initAlphaMask()
 		}
 	}
 
+/*	pPixel = alphaMask1;
+	for(int y = 0 ; y < ALPHA_MASK_HEIGHT; y ++)
+	{
+		for(int x = 0; x <ALPHA_MASK_WIDTH; x++)
+		{
+			GLubyte alpha = 0;//255;//255*x/(ALPHA_MASK_WIDTH-1);
+			GLuint pix = *(pPixel+y*ALPHA_MASK_WIDTH+x);
+			*(pPixel+y*ALPHA_MASK_WIDTH+x) = (pix & 0x00FFFFFF)| (alpha<<24);
+		}
+	}*/
 }
 
 void Render::InitForesightGroupTrack(GLEnv &m_env)
@@ -6749,7 +6760,7 @@ if(setpriorityOnce)
 	if(IsMvDetect)
 	{
 #if MVDECT
-		if_mv.ClearAllVector(true);
+	//	if_mv.ClearAllVector(true);
 		if(mv_open_once)
 		{
 			if_mv.MsetFirst();
@@ -6763,7 +6774,7 @@ if(setpriorityOnce)
 	else
 	{
 #if MVDECT
-		if_mv.ClearAllVector(false);
+	//	if_mv.ClearAllVector(false);
 		if(mv_close_once)
 		{
 			if_mv.MdeleteZombie();
@@ -7003,7 +7014,7 @@ if(setpriorityOnce)
 				glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 				glDisable(GL_SCISSOR_TEST);
 
-				mdRoi_mainA.DrawAllRectOri(MAIN);
+			mdRoi_mainA.DrawAllRectOri(MAIN);
 			TargectTelView(env,g_subwindowWidth*10/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A0);
 			TargectTelView(env,g_subwindowWidth*344/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A1);
 			TargectTelView(env,g_subwindowWidth*678/1920.0,g_subwindowHeight*92.0/1080.0,g_subwindowWidth*324.0/1920.0, g_subwindowHeight*324.0/1080.0,MAIN_TARGET_A2);

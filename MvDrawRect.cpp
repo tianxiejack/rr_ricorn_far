@@ -8,8 +8,8 @@ extern unsigned char * p_newestMvSrc[CAM_COUNT];
 extern MvDetect mv_detect;
 extern MvDetectV2 mv_detectV2;
 MotionDetectorROI   mdRoi_mainA(4,&mv_detectV2,MAIN),mdRoi_subA(4,&mv_detectV2,SUB);
-
 #endif
+
 MotionDetectorROI::MotionDetectorROI(int sumTarget,IF_MvDetect *pmv,int mainOrsub):
 m_pmv(pmv),m_sumTarget(sumTarget),m_MAIN_SUB(mainOrsub)
 {
@@ -21,7 +21,7 @@ m_pmv(pmv),m_sumTarget(sumTarget),m_MAIN_SUB(mainOrsub)
 		targetRect[i].outRect.targetRect.width=400;
 		targetRect[i].outRect.targetRect.height=400;
 
-	RoiSrc[i]=(unsigned char *)malloc(ROIW*ROIH*3);
+		RoiSrc[i]=(unsigned char *)malloc(ROIW*ROIH*3);
 	}
 //	tempSrc4=(unsigned char *)malloc(FPGA_SCREEN_HEIGHT*FPGA_SCREEN_WIDTH*4);
 //	tempSrc6=(unsigned char *)malloc(SDI_HEIGHT*SDI_WIDTH*4);
@@ -180,9 +180,40 @@ void MotionDetectorROI:: DrawAllRectOri(int mainOrsub,int fourOrsix)
 	vector<mvRect> *wholeVrcv;
 	vector<mvRect> tempV;
 	wholeVrcv=m_pmv->Getm_WholeRect(mainOrsub);
+/*	mvRect mvr[4];
+		int idx=0;
+		mvr[0].outRect.index=idx;
+		mvr[0].outRect.targetRect.x=1920/2;
+		mvr[0].outRect.targetRect.y=1080/2;
+		mvr[0].outRect.targetRect.width=1920/4;
+		mvr[0].outRect.targetRect.height=1080/4;
+		idx=1;
+		mvr[1].outRect.index=idx;
+		mvr[1].outRect.targetRect.x=200;
+		mvr[1].outRect.targetRect.y=200;
+		mvr[1].outRect.targetRect.width=1920/4;
+		mvr[1].outRect.targetRect.height=1080/4;
+		idx=2;
+		mvr[2].outRect.index=idx;
+		mvr[2].outRect.targetRect.x=1500;
+		mvr[2].outRect.targetRect.y=800;
+		mvr[2].outRect.targetRect.width=200;
+		mvr[2].outRect.targetRect.height=200;
+		idx=3;
+		mvr[3].outRect.index=idx;
+		mvr[3].outRect.targetRect.x=600;
+		mvr[3].outRect.targetRect.y=400;
+		mvr[3].outRect.targetRect.width=1920/2;
+		mvr[3].outRect.targetRect.height=1080/2;
+		for(int i=0;i<20;i++)
+		{
+			for(int j=0;j<3;j++)
+				tempV.push_back(mvr[j]);
+		}
+*/
 		for(int i=0;i<wholeVrcv->size();i++)
 		{
-				tempV.push_back((*wholeVrcv)[i]);
+			tempV.push_back((*wholeVrcv)[i]);
 		}
 	wholeV=&tempV;
 
@@ -197,9 +228,9 @@ void MotionDetectorROI:: DrawAllRectOri(int mainOrsub,int fourOrsix)
 		{
 			if(wholeV->size()>m_sumTarget)//个数大于m_sumTarget
 			{
-				if(i>=0&&i<=m_sumTarget) //前m_sumTarget个
+				if(i>=0&&i<m_sumTarget) //前m_sumTarget个
 				{
-						targetRect[i]=(*wholeV)[i];
+					targetRect[i]=(*wholeV)[i];
 					//将前m_sumTarget个保留以显示图片
 				}
 			}
@@ -244,8 +275,6 @@ if(midy<HALF_ROIH)
 	drawy=0;
 else if(midy>=SDI_HEIGHT-HALF_ROIH)
 	drawy=SDI_HEIGHT-ROIH-1;
-
-
 //printf("targetidx=%d  camidx=%d  drawx=%d drawy=%d,w=%d,=%d\n",targetidx,temp.camIdx,drawx,drawy,draww,drawh);
 	RectfromSrc(-1,targetidx,temp.camIdx,drawx,drawy,draww,drawh);
 

@@ -23,7 +23,6 @@ class MotionDetectorROI//:public IF_MotionDetectorROI
 public :
 	MotionDetectorROI(int sumTarget,IF_MvDetect *pmv,int mainOrsub);
 	void DrawAllRectOri(int mainOrsub,int fourOrsix=0);
-	void MRectangle(int fourOrsix,mvRect *p);
 	void RectfromSrc(int fourOrsix,int targetidx,int camIdx,int x,int y,int w,int h);
 	unsigned char * GetRoiSrc(int targetidx);
 private:

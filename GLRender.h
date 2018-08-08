@@ -553,6 +553,7 @@ private:
 	void GenerateTriangleView();
 	void DrawBowl(GLEnv &m_env,bool needSendData,int mainOrsub=MAIN);
 	void DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOrsub=MAIN);
+
 	void initAlphaMask();
 	void DrawVehicle();
 	void DrawSlideonPanel(GLEnv &m_env);
@@ -749,7 +750,7 @@ private:
 #define PETAL_TEXTURE_COUNT (1+2)
 
 #define ALPHA_TEXTURE_IDX0	(1)
-#define ALPHA_TEXTURE_IDX	(2)
+#define ALPHA_TEXTURE_IDX	(1+1)
 
 	GLuint textures[PETAL_TEXTURE_COUNT];
 	GLuint GL_TextureIDs[PETAL_TEXTURE_COUNT];

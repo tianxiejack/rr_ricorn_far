@@ -68,7 +68,7 @@ public:
 class MvDetectV2:public BaseMvDetect
 {
 public:
-	MvDetectV2(CMvDectInterface *pmvIf);
+	MvDetectV2();
 	~MvDetectV2();
 	void init(int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
 	void m_mvDetect(int idx,unsigned char* inframe,int w=MAX_SCREEN_WIDTH,int h=MAX_SCREEN_HEIGHT);
