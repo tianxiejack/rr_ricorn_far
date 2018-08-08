@@ -180,40 +180,9 @@ void MotionDetectorROI:: DrawAllRectOri(int mainOrsub,int fourOrsix)
 	vector<mvRect> *wholeVrcv;
 	vector<mvRect> tempV;
 	wholeVrcv=m_pmv->Getm_WholeRect(mainOrsub);
-/*	mvRect mvr[4];
-		int idx=0;
-		mvr[0].outRect.index=idx;
-		mvr[0].outRect.targetRect.x=1920/2;
-		mvr[0].outRect.targetRect.y=1080/2;
-		mvr[0].outRect.targetRect.width=1920/4;
-		mvr[0].outRect.targetRect.height=1080/4;
-		idx=1;
-		mvr[1].outRect.index=idx;
-		mvr[1].outRect.targetRect.x=200;
-		mvr[1].outRect.targetRect.y=200;
-		mvr[1].outRect.targetRect.width=1920/4;
-		mvr[1].outRect.targetRect.height=1080/4;
-		idx=2;
-		mvr[2].outRect.index=idx;
-		mvr[2].outRect.targetRect.x=1500;
-		mvr[2].outRect.targetRect.y=800;
-		mvr[2].outRect.targetRect.width=200;
-		mvr[2].outRect.targetRect.height=200;
-		idx=3;
-		mvr[3].outRect.index=idx;
-		mvr[3].outRect.targetRect.x=600;
-		mvr[3].outRect.targetRect.y=400;
-		mvr[3].outRect.targetRect.width=1920/2;
-		mvr[3].outRect.targetRect.height=1080/2;
-		for(int i=0;i<20;i++)
-		{
-			for(int j=0;j<3;j++)
-				tempV.push_back(mvr[j]);
-		}
-*/
 		for(int i=0;i<wholeVrcv->size();i++)
 		{
-			tempV.push_back((*wholeVrcv)[i]);
+				tempV.push_back((*wholeVrcv)[i]);
 		}
 	wholeV=&tempV;
 

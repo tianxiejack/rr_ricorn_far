@@ -8553,7 +8553,7 @@ void  Render::Save0pos()
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 GLEnv & env=env1;
-
+IF_MvDetect & if_mv=mv_detectV2;
 	int Now_Window_Width,Now_Window_Height;
 	Now_Window_Width=glutGet(GLUT_WINDOW_WIDTH);
 	Now_Window_Width=glutGet(GLUT_WINDOW_HEIGHT);
@@ -8602,39 +8602,32 @@ GLEnv & env=env1;
 			if(DetectMainOpen==false
 				&&DetectSubOpen==false)
 			{
-		//		printf("QQQQ_Main_mv=false,Sub_mv=false ------MV=false\n");
 				IsMvDetect=false;
 			}
 			if(DetectMainOpen==true
 			||DetectSubOpen==true)
 			{
-			//	printf("QQQQ_MV=true\n");
 				IsMvDetect=true;
 			}
 			break;
 		case 'o':
 			DetectMainOpen=false;
-		//	printf("ooooo____Main_mv=false!\n");
 			if(DetectMainOpen==false
 				&&DetectSubOpen==false)
 			{
-		//		printf("oooo___MV=false!\n");
 				IsMvDetect=false;
+				if_mv.ClearAllVector(false);
 			}
 			break;
 		case 'O':
 			DetectMainOpen=true;
-	//		printf("OOOO——————Main_mv=true!\n");
 			if(DetectMainOpen==true
 			||DetectSubOpen==true)
 			{
 				IsMvDetect=true;
-	//			printf("OOOO-------MV=true!\n");
 			}
 			tIdle.threadRun(MVDECT_CN);
 			tIdle.threadRun(MVDECT_ADD_CN);
-			//mv_detect.OpenMD(MAIN);
-		//	mode = OitVehicle::USER_OIT;
 			break;
 		case 'b':
 			chooseMenu=(chooseMenu+1)%19;
@@ -8643,14 +8636,9 @@ GLEnv & env=env1;
 			mode = OitVehicle::USER_BLEND;
 			break;
 		case '1':
-			//xxx+=1;
-			//printf("xxx=%f\n",xxx);
 			displayMode=ALL_VIEW_MODE;
 			break;
 		case '2':
-			//xxx-=1;
-			//printf("xxx=%f\n",xxx);
-			//todo
 			if(rember_tel==TELESCOPE_FRONT_MODE
 					||rember_tel==TELESCOPE_RIGHT_MODE
 					||rember_tel==TELESCOPE_BACK_MODE
@@ -8662,18 +8650,11 @@ GLEnv & env=env1;
 			{
 				displayMode=TELESCOPE_FRONT_MODE;
 			}
-		//	else
-		//		displayMode=last_mode;
-
 			break;
 		case '3':
-		//	yyy+=1;
-		//	printf("yyy=%f\n",yyy);
 			displayMode=CHOSEN_VIEW_MODE;
 			break;
 		case '4':
-		//yyy-=1;
-		//printf("yyy=%f\n",yyy);
 			displayMode=PURE_MODE;
 			break;
 		case '5':
