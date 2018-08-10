@@ -45,10 +45,14 @@ public:
 	 void	 DrawRectOnpic(unsigned char *src,int capidx,int cc);
 	 std::vector<mvRect> *Getm_WholeRect(int mainOrsub)
 	{
-		m_WholeRect[mainOrsub].clear();
+		 int MAX_RECT_NUM=30;
+		 m_WholeRect[mainOrsub].clear();
 		for(int i=0;i<CAM_COUNT;i++)
-			m_WholeRect[mainOrsub].insert(m_WholeRect[mainOrsub].end(),outRect[i].begin(),outRect[i].end());
-		return &m_WholeRect[mainOrsub];
+		{
+			if(outRect[i].size()<=MAX_RECT_NUM)
+				m_WholeRect[mainOrsub].insert(m_WholeRect[mainOrsub].end(),outRect[i].begin(),outRect[i].end());
+		}
+			return &m_WholeRect[mainOrsub];
 	}
 	virtual	 void MsetFirst(){};
 	virtual	 void MdeleteZombie(){};
