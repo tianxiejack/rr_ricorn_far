@@ -12,7 +12,28 @@ const char * stitchStart  = "GPU: start";
 const char * stitchRecover= "GPU: recover";
 
 static int pano_stitch_state=0;
-
+/*
+void RunStitch(int idx)
+{
+	char ss[]="M_stitchX.sh";
+	char aa[]={0};
+	sprintf(aa,"%s_%.2d",ss,idx);
+	pid_t pid=fork();
+	if(pid<0)
+	{
+		printf("fork failed!!!\n");
+		exit(0);
+	}
+	else  if(pid==0)//child
+	{
+		execl("/bin/sh","sh",aa,NULL);
+		exit(0);
+	}
+	else//father
+	{
+	}
+}
+*/
 int initStitchConfig(bool needSavePic)
 {
 	GLEnv &env =env1;

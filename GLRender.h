@@ -121,6 +121,7 @@ public:
     void showDeviceState();
 
     void DrawAllViewRoiArrow(int camidx);
+    void RunStitch();
 private:
 	#if TRACK_MODE
 	int getTrkId(int displayMode,int nextMode);

@@ -78,11 +78,13 @@
 extern bool toprint;
  extern MvDetect mv_detect;
  extern MvDetectV2 mv_detectV2;
-#endif
-
  extern MotionDetectorROI
  mdRoi_mainA,
  mdRoi_subA;
+
+#endif
+
+
 
  int Enhance_level=1;
  float angle_XXX=0.0;
@@ -222,7 +224,61 @@ float define_rotate_angle[10]        ={      0.0,      0.0,      0.0,      0.0, 
 float define_move_hor_scale[10]      ={     1.83,      1.5,     1.41,     1.76,      1.6,     1.79,     1.43,      1.9,     1.79,     1.74};
 float define_move_ver_scale[10]      ={     1.12,      1.12,     1.07,     1.06,     1.16,     1.36,     1.24,     1.32,     1.32,     1.19};
 
+void Render::RunStitch()
+{
+	pid_t pid=fork();
+	if(pid<0)
+	{
+		printf("fork failed!!!\n");
+		exit(0);
+	}
+	else  if(pid==0)//child
+	{
+		execl("/bin/sh","sh","cmd_pano.sh",NULL);
+		exit(0);
+	}
+	else//father
+	{
+	}
+}
 
+void Send_ini(char *pfileName)
+{
+	pid_t pid=fork();
+		if(pid<0)
+		{
+			printf("fork failed!!!\n");
+			exit(0);
+		}
+		else  if(pid==0)//child
+		{
+			execl("/bin/sh","sh",pfileName,NULL);
+			exit(0);
+		}
+		else//father
+		{
+		}
+}
+
+void KillAll(char *pfileName)
+{
+	pid_t pid=fork();
+	if(pid<0)
+	{
+		printf("fork failed!!!\n");
+		exit(0);
+	}
+	else  if(pid==0)//child
+	{
+		execl("/usr/bin/killall","killall",pfileName,NULL);
+		exit(0);
+		//	execl("/usr/bin/killall","killall","LIN_Streamer",NULL);
+	}
+	else//father
+	{
+
+	}
+}
 
 void readcanshu()
 {
@@ -1024,7 +1080,8 @@ void Render::GetFPS()
 // This is the first opportunity to do any OpenGL related tasks.
 void Render::SetupRC(int windowWidth, int windowHeight)
 {
-		ChangeMainChosenCamidx(1);
+	execl;
+	ChangeMainChosenCamidx(1);
 		ChangeSubChosenCamidx(1);
 		Read0pos();
 	GLEnv & env=env1;
@@ -8553,7 +8610,9 @@ void  Render::Save0pos()
 void Render::ProcessOitKeys(GLEnv &m_env,unsigned char key, int x, int y)
 {
 GLEnv & env=env1;
+#if MVDECT
 IF_MvDetect & if_mv=mv_detectV2;
+#endif
 	int Now_Window_Width,Now_Window_Height;
 	Now_Window_Width=glutGet(GLUT_WINDOW_WIDTH);
 	Now_Window_Width=glutGet(GLUT_WINDOW_HEIGHT);
@@ -8616,7 +8675,9 @@ IF_MvDetect & if_mv=mv_detectV2;
 				&&DetectSubOpen==false)
 			{
 				IsMvDetect=false;
+#if MVDECT
 				if_mv.ClearAllVector(false);
+#endif
 			}
 			break;
 		case 'O':
@@ -8960,7 +9021,8 @@ IF_MvDetect & if_mv=mv_detectV2;
 			}
 			break;
 		case 'h':
-			if(displayMode=CHOSEN_VIEW_MODE)
+			displayMode=CHOSEN_VIEW_MODE;
+			if(displayMode==CHOSEN_VIEW_MODE)
 			{
 				for(int i=0;i<CAM_COUNT;i++)
 				{
@@ -8971,8 +9033,11 @@ IF_MvDetect & if_mv=mv_detectV2;
 				}
 				//render.ProcessOitKeys(env,'H', 0, 0);
 			}
+
 			break;
 		case 'H':
+			KillAll("LIN_Streamer");
+			sleep(2);
 			//system("./cmd_pano.sh");
 		{
 			//int aret=123;
@@ -9959,6 +10024,7 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
            		WritePanoFloatDataFromFile(PANO_FLOAT_DATA_FILENAME,PanoFloatData);
            		WriteRotateAngleDataToFile(PANO_ROTATE_ANGLE_FILENAME,rotate_angle);
            		WritePanoHorVerScaleData(PANO_HOR_VER_SCALE_FILE,move_hor_scale,move_ver_scale);
+           		Send_ini("autoSync.sh");
            	}
 		else if(FREE_VIEW_MODE == displayMode){//save current position to YML file
 			mPresetCamGroup.SetCameraFrame(p_BillBoard->m_Direction,  m_freeCamera.GetFrame());
@@ -10107,6 +10173,7 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 
 		break;
 	case 7:
+		break;
 	case 8:
 		break;
 	case 9:
@@ -10169,6 +10236,14 @@ void Render::specialkeyPressed (GLEnv &m_env,int key, int x, int y)
 #endif
 		}
 		break;
+	case SPECIAL_KEY_HOME:
+		KillAll("LIN_Streamer");
+		break;
+	case SPECIAL_KEY_END :
+	//	KillAll("gedit");
+		RunStitch();
+		break;
+
 	case SPECIAL_KEY_UP:
 	case SPECIAL_KEY_DOWN:
 	case SPECIAL_KEY_LEFT:
