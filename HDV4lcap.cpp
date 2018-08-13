@@ -1,3 +1,4 @@
+#include "GLRender.h"
 #include "HDV4lcap.h"
 #include <string.h>
 #include <stdio.h>
@@ -37,10 +38,11 @@
 #include <cuda.h>
 #include <cuda_gl_interop.h>
 #include <cuda_runtime_api.h>
+#include "IF_Ferry_Company.h"
 extern thread_idle tIdle;
 extern Alg_Obj * queue_main_sub;
 #define MEMCPY memcpy
-
+extern Render render;
 #define INPUT_IMAGE_WIDTH 1920
 #define INPUT_IMAGE_HEIGHT 1080
 bool IsMvDetect=false;
@@ -763,106 +765,126 @@ int HDv4l_cam::read_frame(int now_pic_format)
 					default:
 						break;
 					}
-					if(chid[MAIN]!=-1) //车长
-					{
-						if(now_pic_format==MVDECT_CN
-								||now_pic_format==MVDECT_ADD_CN)//移动检测
-						{
-						{
-							#if MVDECT
-							if(IsMvDetect)
-							{
-							if(nowGrayidx>=1&&nowGrayidx<=10)
-							{
-								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
-								if_mv.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
-								p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
-							}
-							}
-							#endif
-						}
-						}
-						else //４副　６副　　车长１０选一
-						{
-							if(now_pic_format==MAIN_CN)
-							{
-								for(int i=0;i<CAM_COUNT;i++)
-								{
-									if(saveSinglePic[i]==true)
-									{
-										saveSinglePic[i]=false;
-										sprintf(filename,"%2d.bmp",i);
-										save_single_pic(filename,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-									}
-								}
-								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-							}
-							else
-							{
-//#if ENABLE_ENHANCE_FUNCTION
-							if(	enable_hance)
-							{
-								CC_enh_mvd=2;
-								memcpy(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW*nowpicH*2);
-							}
-							else
-							{
-								CC_enh_mvd=3;
-								UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-							}
-							//４副　６副
-#if MVDECT
-								if(IsMvDetect)
-								{
-									if_mv.SetoutRect();
-									if(nowpicW==1280)
-									{
-										if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
-									}
-									else if (nowpicW==1920)
-									{
-										if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
-									}
-								}
-#endif
-							}
-
-						}
-						if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
-						{
-							if(getEmpty(&*transformed_src_main, chid[MAIN]))
-							{
-							}
-						}
-					}
-					if(chid[SUB]!=-1)//驾驶员
-					{
-						if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
-						{
-							UYVY2UYV(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
-						}
-						else if(now_pic_format==MVDECT_CN
-								||MVDECT_ADD_CN==now_pic_format)//移动检测
-						{
-						}
-						else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
-						{
-					//		memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*4);
-						}
-						if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
-						{
-							if(getEmpty(&*transformed_src_sub, chid[SUB]))
-							{
-							}
-						}
-					}
-
-
+if(chid[MAIN] != -1) 			//车长
+{
+	if(now_pic_format==MVDECT_CN
+			||now_pic_format==MVDECT_ADD_CN)//移动检测
+	{
+		{
+			#if MVDECT
+			if(IsMvDetect)
+			{
+				if(nowGrayidx>=1&&nowGrayidx<=10)
+				{
+					UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,SDI_WIDTH,SDI_HEIGHT);
+					if_mv.m_mvDetect(nowGrayidx,(unsigned char *)buffers[buf.index].start, SDI_WIDTH, SDI_HEIGHT);
+					p_newestMvSrc[nowGrayidx-1]=*transformed_src_main;
+				}
 			}
-					if (-1 ==xioctl(m_devFd, VIDIOC_QBUF, &buf)){
-						fprintf(stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno));
-						exit(EXIT_FAILURE);
-					}
+			#endif
+		}
+	}
+	else //４副　６副　　车长１０选一
+	{
+		if(now_pic_format==MAIN_CN)
+		{
+			for(int i=0;i<CAM_COUNT;i++)
+			{
+				if(saveSinglePic[i]==true)
+				{
+					saveSinglePic[i]=false;
+					sprintf(filename,"%2d.bmp",i);
+					save_single_pic(filename,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+				}
+			}
+			UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+		}
+		else
+		{		
+			//#if ENABLE_ENHANCE_FUNCTION
+		
+			if( enable_hance )
+			{
+				CC_enh_mvd=2;
+				memcpy(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW*nowpicH*2);
+			}
+			else
+			{
+				//CC_enh_mvd=3;
+				//UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+				if(render.Get_FerryCompany()!=NULL)
+				{
+				
+					render.Get_FerryCompany()->IQ_Put_Data(*transformed_src_main, 
+									(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH,3);
+				
+				}
+				else
+				{
+					CC_enh_mvd=3;
+					UYVY2UYV(*transformed_src_main,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+				}	
+			}		
+
+			
+			//４副　６副
+		#if MVDECT
+			if( IsMvDetect )
+			{
+				if_mv.SetoutRect();
+				if(nowpicW==1280)
+				{
+					if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_FOUR,CC_enh_mvd);
+				}
+				else if (nowpicW==1920)
+				{
+					if_mv.DrawRectOnpic(*transformed_src_main,MAIN_FPGA_SIX,CC_enh_mvd);
+				}
+			}
+		#endif
+
+		}
+		//memcpy(*transformed_src_main,buffers[buf.index].start,SDI_WIDTH*SDI_HEIGHT*2);
+	}
+	
+	if(Data2Queue(*transformed_src_main,nowpicW,nowpicH,chid[MAIN]))
+	{
+		if(getEmpty(&*transformed_src_main, chid[MAIN]))
+		{
+		}
+	}
+}
+
+
+
+		if(chid[SUB]!=-1)//驾驶员
+		{
+			if(now_pic_format==SUB_CN)//如果等于驾驶员十选一，则要进行rgb转换
+			{
+				UYVY2UYV(*transformed_src_sub,(unsigned char *)buffers[buf.index].start,nowpicW,nowpicH);
+			}
+			else if(now_pic_format==MVDECT_CN
+					||MVDECT_ADD_CN==now_pic_format)//移动检测
+			{
+			}
+			else//如果不等于驾驶员十选一＆不等于检测的gray数据，则直接将main里的已经转换好的数据进行拷贝
+			{
+		//		memcpy(*transformed_src_sub,*transformed_src_main,nowpicW*nowpicH*4);
+			}
+			if(Data2Queue(*transformed_src_sub,nowpicW,nowpicH,chid[SUB]))
+			{
+				if(getEmpty(&*transformed_src_sub, chid[SUB]))
+				{
+				}
+			}
+		}
+	}
+			 
+	if (-1 ==xioctl(m_devFd, VIDIOC_QBUF, &buf)){
+		fprintf(stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	
 	return 0;
 }
 

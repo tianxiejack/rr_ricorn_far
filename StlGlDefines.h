@@ -8,6 +8,17 @@
 #ifndef STLGLDEFINES_H_
 #define STLGLDEFINES_H_
 
+
+
+
+#define ALPHA_TEXTURE_IDX0	(1)
+#define ALPHA_TEXTURE_IDX	(2)
+#define ALPHA_TEXTURE_IDX1	(1+2)
+
+typedef unsigned char uint8;
+typedef unsigned int uint32;
+
+
 #define CORE_AND_POS_LIMIT  4.5
 #define INNER_RECT_AND_PANO_ONE_TIME_CAM_LIMIT 7.7
 #define	OUTER_RECT_AND_PANO_TWO_TIMES_CAM_LIMIT 16.8

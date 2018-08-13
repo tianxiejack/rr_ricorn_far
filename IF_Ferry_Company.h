@@ -9,8 +9,12 @@
 #define IF_FERRY_COMPANY_H_
 
 #include "IF_Ferry.h"
-enum{
-	BOTH_FERRY,
+#include<vector>
+#include<iostream>
+
+using namespace std;
+enum Ferry_Types{
+	FERRY_MNOMVNOENH_SNOMVNOENH,
 	MAIN_FERRY,
 	SUB_FERRY,
 	BOTH_ENHANCE_FERRY,
@@ -23,23 +27,24 @@ class IF_Ferry_Company
 {
 public:
 	virtual void SwitchFerry(int ferryId)=0;
-	virtual  void IQ_Put_Data(unsigned char *src ,unsigned char *dst)=0;
-	virtual  void DQ_Get_Data(unsigned char *src ,unsigned char *dst)=0;
-	virtual  void ProcessTexture()=0;
+	virtual  void IQ_Put_Data(unsigned char *src ,unsigned char *dst,int w,int h,int cc)=0;
+	virtual  void DQ_Get_Data(unsigned char *src ,unsigned char *dst,int FpgaDataType)=0;
+	virtual  void ProcessTexture( bool needSendData, int idx,enum GLT_STOCK_SHADER shaderId, int shaderIdoverlap,int *p_petalNum, GLuint *textures)=0;
+	virtual IF_Ferry* getCurFerry()=0;
 };
 
 class Ferry_Company:public IF_Ferry_Company
 {
 public:
-	Ferry_Company(vector<IF_Ferry *> p_ferry
-	);
+	Ferry_Company(std::vector<IF_Ferry *> p_ferry);
 	~Ferry_Company();
 	void SwitchFerry(int ferryId);
-	 void IQ_Put_Data(unsigned char *src ,unsigned char *dst);
-	 void DQ_Get_Data(unsigned char *src ,unsigned char *dst);
-	 void ProcessTexture();
+	void IQ_Put_Data(unsigned char *src ,unsigned char *dst,int w,int h,int cc);
+	void DQ_Get_Data(unsigned char *src ,unsigned char *dst,int FpgaDataType);
+	void ProcessTexture(bool needSendData, int idx,enum GLT_STOCK_SHADER shaderId, int shaderIdoverlap,int *p_petalNum, GLuint *textures);
+	IF_Ferry* getCurFerry(){return p_Current_ferry; };
 private:
-	 vector<IF_Ferry *> mp_ferry
+	 std::vector<IF_Ferry *> m_ptrferry;
 	 IF_Ferry * p_Current_ferry;
 };
 

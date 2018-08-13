@@ -4,6 +4,11 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../Render_Agent.cpp\
+../Impl_IF_Ferry.cpp\
+../Impl_IF_Get_Tikets.cpp\
+../Impl_IF_Order_Tickets_Bhv.cpp\
+../Impl_Transport_Bhv.cpp\
 ../MvDetect_V2.cpp\
 ../RoiFocusCamidx.cpp\
 ../set_button.cpp\
@@ -72,6 +77,11 @@ OBJ_SRCS += \
 ../tank1215_b_m1.obj 
 
 OBJS += \
+./Render_Agent.o\
+./Impl_IF_Ferry.o\
+./Impl_IF_Get_Tikets.o\
+./Impl_IF_Order_Tickets_Bhv.o\
+./Impl_Transport_Bhv.o\
 ./MvDetect_V2.o\
 ./RoiFocusCamidx.o\
 ./set_button.o\
@@ -137,6 +147,11 @@ OBJS += \
 ./v4l2camera.o 
 
 CPP_DEPS += \
+./Render_Agent.d\
+./Impl_IF_Ferry.d\
+./Impl_IF_Get_Tikets.d\
+./Impl_IF_Order_Tickets_Bhv.d\
+./Impl_Transport_Bhv.d\
 ./MvDetect_V2.d\
 ./RoiFocusCamidx.d\
 ./set_button.d\

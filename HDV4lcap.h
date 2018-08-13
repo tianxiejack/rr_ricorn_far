@@ -23,6 +23,8 @@ using namespace cv;
 //#include "struct.hpp"
 #include "osa_buf.h"
 #include"queue_display.h"
+#include "IF_Order_Tickets_Bhv.h"
+
 using namespace cv;
 //#define SHOW_TIMES
 #define CLEAR(x) memset(&(x), 0, sizeof(x))

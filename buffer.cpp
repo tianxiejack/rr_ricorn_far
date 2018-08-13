@@ -9,6 +9,7 @@
 #include "StlGlDefines.h"
 #include"MvModeSwith.h"
 #include<omp.h>
+#include "Render_Agent.h"
 using namespace std;
 extern MVModeSwith   mvSwitch;
 //using namespace cv;
@@ -224,9 +225,6 @@ void get_buffer(unsigned char* ptr, int chId)
 			OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 		}
 	}
-
-
-
 //    if(cnt >= 2)
 //	    printf("chId:%d,cnt:%d\n",chId,cnt);
 
@@ -240,16 +238,28 @@ void get_buffer(unsigned char* ptr, int chId)
 	{
 		w=FPGA_SCREEN_WIDTH;
 	}
+	
 #if USE_CPU
-	memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
+		memcpy(ptr,bufdata,w*SDI_HEIGHT*3);
 #else
-	static int a=0;
-int h=SDI_HEIGHT/4;
-//#pragma omp parallel for
-		for(int i=0;i<4;i++)
+		static int a=0;
+	int h=SDI_HEIGHT/4;
+
+	//#pragma omp parallel for
+
+	/*	for(int i=0;i<4;i++)
 		{
-	memcpy(ptr+w*h*3*i,bufdata+w*h*3*i,w*h*3);
+			memcpy(ptr+w*h*3*i,bufdata+w*h*3*i,w*h*3);
 		}
+	*/
+	if(chId==MAIN_FPGA_FOUR)
+	{
+		Render_Agent::GetData(bufdata,ptr,MAIN_FPGA_FOUR);
+	}
+	else if(chId==MAIN_FPGA_SIX){
+		Render_Agent::GetData(bufdata,ptr,MAIN_FPGA_SIX);
+	}
+
 #endif
 	OSA_bufPutEmpty(&alg_handle->bufHndl[chId],bufId);
 }

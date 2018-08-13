@@ -22,6 +22,10 @@
 #include "RenderMain.h"
 #include "common.h"
 #include "main.h"
+#include "IF_Ferry.h"
+#include "IF_Ferry_Company.h"
+#include "IF_Transport_Bhv.h"
+
 #ifdef CAPTURE_SCREEN
 #include "cabinCapture.h"
 #endif
@@ -73,6 +77,7 @@
 #include"MvDrawRect.h"
 
 
+#include "IF_Ferry.h"
 
 
 extern bool toprint;
@@ -788,6 +793,7 @@ Render::Render():g_subwindowWidth(0),g_subwindowHeight(0),g_windowWidth(0),g_win
 		RulerAngle(0.0),
 		PanoLen(0),
 		SightWide(0),
+		m_pCompany(NULL),
 		m_VGAVideoId(VGA_CAM_0),
 		m_SDIVideoId(SDI_CAM_0),
 		p_CornerMarkerGroup(NULL),
@@ -913,7 +919,7 @@ static void captureSDICam(GLubyte *ptr, int index,GLEnv &env)
 	#endif
 }
 
-static void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
+ void capturePanoCam(GLubyte *ptr, int index,GLEnv &env)
 {
 	env.GetPanoCaptureGroup()->captureCam(ptr,index);
 }
@@ -1425,6 +1431,35 @@ void Render::SetupRC(int windowWidth, int windowHeight)
 	button_array = new multiLayerButtonGroup(this,MENU_GROUP_COUNT);
 	button_array->init_button_group(&shaderManager,env.GetmodelViewMatrix(), env.GetprojectionMatrix(),env.GetviewFrustum());
 	button_array->SetEnableDraw(true);//show menu
+
+/*
+(IF_Transport_Bhv *itb, IF_Get_Tickets_Bhv *igtb,IF_Order_Tickets_Bhv *iotb,
+			 GLuint *textureID,
+			 GLEnv &menv,
+			 GLBatch *p_petals,
+			 GLBatch *p_overlap,  // Getp_Panel_Petal_OverLap
+			 int w,
+			 int h,
+			 int cc)
+	*/
+	IF_Ferry * ferry_MnoMvnoEnh_SnoMvnoEnh = new Ferry(
+	new Decorator_ChooseShader_Bhv(
+	new Core_Same_Transport_Bhv(),
+	&shaderManager),
+	new Get_Same_Tickets_Bhv(),
+	new Order_Same_Tickets_Bhv(),
+	env, 
+	env.GetPanel_Petal(0), 
+	env.Getp_Panel_Petal_OverLap(0),
+	SDI_WIDTH,
+	SDI_HEIGHT,
+	3,
+	GLT_SHADER_TEXTURE_BLENDING,
+	GLT_SHADER_TEXTURE_BRIGHT,
+	true);
+	m_ptrFerry.push_back(ferry_MnoMvnoEnh_SnoMvnoEnh);
+	m_pCompany=new Ferry_Company(m_ptrFerry);
+	m_pCompany->SwitchFerry(FERRY_MNOMVNOENH_SNOMVNOENH);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2594,13 +2629,18 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 #endif
 	glDisable(GL_BLEND);
 	m_env.GetmodelViewMatrix()->PushMatrix();
-	//#pragma omp parallel sections
-	{
-		//bind alpha mask to texture6, render the imagei, imagei+1 and alphaMask on petal_overlap[i]
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
-		glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
-		glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
+//#pragma omp parallel sections
+
+#if 1
+
+	m_pCompany->getCurFerry()->ProcessTexture(needSendData, -1,p_petalNum);
+
+#else
+
+	glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX]);
+	glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX]);
+	glActiveTexture(GL_TextureIDs[ALPHA_TEXTURE_IDX0]);
+	glBindTexture(GL_TEXTURE_2D, textures[ALPHA_TEXTURE_IDX0]);
 
 		if(p_petalNum==NULL)
 		{
@@ -2608,7 +2648,9 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 				for(int i = 0; i < 2; i++){
 						SEND_TEXTURE_TO_PETAL(i,m_env);
 			}
-			for(int i = 0; i < CAM_COUNT; i++){
+			
+			for(int i = 0; i < CAM_COUNT; i++)   /*Choose Shader----- Dec*/
+			{
 				if(	enable_hance)
 				{
 					switch(Enhance_level)
@@ -2628,9 +2670,12 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 					default:
 						break;
 					}
-				}else
-					shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-				 (*m_env.GetPanel_Petal(i)).Draw();
+				}
+				else
+				shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, 
+							m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+
+				 (*m_env.GetPanel_Petal(i)).Draw();  /*Draw----Ferry_Process---> Petal*/
 
 				 if(	enable_hance)
 				{
@@ -2690,42 +2735,44 @@ void Render::DrawPanel(GLEnv &m_env,bool needSendData,int *p_petalNum,int mainOr
 										break;
 									}
 
-							}
-						else
-						shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
-				//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
-				(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
-				{
-					if(enable_hance)
-					{
-						switch(Enhance_level){
-				case 1:
-					USE_ENHANCE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-					break;
-				case 2:
-					USE_ENHANCE_15_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-					break;
-				case 3:
-					USE_ENHANCE_08_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-					break;
-				case 4:
-					USE_ENHANCE_YELLOW_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-					break;
-				default:
-					break;
-						}
-					}
-					else
-					{
-					USE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
-					}
-				}
-				m_env.Getp_Panel_Petal_OverLap(p_petalNum[i])->Draw();
-					}
-				}
 		}
-		m_env.GetmodelViewMatrix()->PopMatrix();
+		else
+		shaderManager.UseStockShader(GLT_SHADER_TEXTURE_BRIGHT, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), 0,i);
+		//shaderManager.UseStockShader(GLT_SHADER_ORI, m_env.GettransformPipeline()->GetModelViewProjectionMatrix(), (i)%CAM_COUNT);
+		(*m_env.GetPanel_Petal(p_petalNum[i])).Draw();
+		{
+			if(enable_hance)
+			{
+					switch(Enhance_level)
+					{
+							case 1:
+								USE_ENHANCE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+								break;
+							case 2:
+								USE_ENHANCE_15_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+								break;
+							case 3:
+								USE_ENHANCE_08_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+								break;
+							case 4:
+								USE_ENHANCE_YELLOW_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+								break;
+							default:
+								break;
+					}
+				}
+				else
+				{
+					USE_TEXTURE_ON_PETAL_OVERLAP(m_env,p_petalNum[i]);
+				}
+			}
+			m_env.Getp_Panel_Petal_OverLap(p_petalNum[i])->Draw();
+		}
 	}
+}
+#endif
+	m_env.GetmodelViewMatrix()->PopMatrix();
+
 }
 
 void Render::initAlphaMask()

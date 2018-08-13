@@ -52,7 +52,11 @@
 #include"GLEnv.h"
 #include "set_button.h"
 #include"IPC_Far_Recv_Message.h"
+class IF_Ferry_Company;
+class IF_Ferry;
+
 using namespace std;
+extern void capturePanoCam(GLubyte *ptr, int index,GLEnv &env);
 
 class RenderMain;
 static const int ALPHA_MASK_HEIGHT= DEFAULT_IMAGE_HEIGHT;
@@ -123,6 +127,9 @@ public:
     void DrawAllViewRoiArrow(int camidx);
     void RunStitch();
 private:
+	std::vector<IF_Ferry*> m_ptrFerry;
+	IF_Ferry_Company *m_pCompany;
+	
 	#if TRACK_MODE
 	int getTrkId(int displayMode,int nextMode);
 	void clearTrackParams();
@@ -750,8 +757,6 @@ private:
 #define CHOSEN_TEXTURE_COUNT (CHOSEN_CAM_COUNT)
 #define PETAL_TEXTURE_COUNT (1+2)
 
-#define ALPHA_TEXTURE_IDX0	(1)
-#define ALPHA_TEXTURE_IDX	(1+1)
 
 	GLuint textures[PETAL_TEXTURE_COUNT];
 	GLuint GL_TextureIDs[PETAL_TEXTURE_COUNT];
@@ -894,6 +899,12 @@ public:
 	 int GetTouchPosY(){return touch_pos_y;};
 	 int getGroupMenuIndex() ;
 	 void processKeycode(int keycode);
+	 IF_Ferry_Company * Get_FerryCompany(){return m_pCompany; };
+
+		GLuint *Get_textures(){return textures;};
+		GLuint *Get_GL_TextureIDs(){return GL_TextureIDs;};
+		GLuint *Get_textures_sub(){return textures_sub;};
+		GLuint *Get_GL_TextureIDs_sub(){return GL_TextureIDs_sub;};
 private:
 		int touch_pos_x,touch_pos_y;
 		InterfaceButtonGroup * button_array;
